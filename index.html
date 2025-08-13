@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAI優化運務人員調派建議系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+        }
+
+        .form-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #e74c3c;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #27ae60;
+        }
+
+        .result-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: bold;
+            color: #34495e;
+        }
+
+        .result-value {
+            color: #2c3e50;
+        }
+
+        .priority-high { color: #e74c3c; font-weight: bold; }
+        .priority-medium { color: #f39c12; font-weight: bold; }
+        .priority-low { color: #27ae60; font-weight: bold; }
+
+        .status-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: #ecf0f1;
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        .status-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .status-tab.active {
+            background: #3498db;
+            color: white;
+        }
+
+        .error-message {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .success-message {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚛 GAI優化運務人員調派建議系統</h1>
+            <p>冷鏈物流智能調派解決方案</p>
+        </div>
+
+        <div class="main-content">
+            <!-- 訂單輸入區域 -->
+            <div class="form-section">
+                <h2>📋 新增配送訂單</h2>
+                <form id="orderForm">
+                    <div class="form-group">
+                        <label for="destination">目的地</label>
+                        <input type="text" id="destination" name="destination" required placeholder="請輸入配送目的地">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="deliveryDate">配送日期</label>
+                        <input type="date" id="deliveryDate" name="deliveryDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="deliveryTime">配送時間</label>
+                        <input type="time" id="deliveryTime" name="deliveryTime" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priority">優先級</label>
+                        <select id="priority" name="priority" required>
+                            <option value="">請選擇優先級</option>
+                            <option value="高">高 - 緊急配送</option>
+                            <option value="中">中 - 一般配送</option>
+                            <option value="低">低 - 彈性配送</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cargoType">貨物類型</label>
+                        <select id="cargoType" name="cargoType" required>
+                            <option value="">請選擇貨物類型</option>
+                            <option value="冷凍食品">冷凍食品 (-18°C)</option>
+                            <option value="冷藏食品">冷藏食品 (0-4°C)</option>
+                            <option value="醫療用品">醫療用品 (2-8°C)</option>
+                            <option value="生鮮蔬果">生鮮蔬果 (0-10°C)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="weight">貨物重量 (公斤)</label>
+                        <input type="number" id="weight" name="weight" required min="1" placeholder="請輸入貨物重量">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="specialRequirements">特殊需求</label>
+                        <textarea id="specialRequirements" name="specialRequirements" rows="3" placeholder="請描述任何特殊配送需求"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn" id="submitBtn">
+                        🤖 GAI智能調派分析
+                    </button>
+                </form>
+
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+            </div>
+
+            <!-- 結果顯示區域 -->
+            <div class="results-section">
+                <h2>🎯 調派建議結果</h2>
+                
+                <div class="status-tabs">
+                    <button class="status-tab active" onclick="showTab('recommendations')">智能推薦</button>
+                    <button class="status-tab" onclick="showTab('history')">歷史記錄</button>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="loading-spinner"></div>
+                    <p>GAI正在分析最佳調派方案...</p>
+                </div>
+
+                <div id="recommendationsTab" class="tab-content">
+                    <div id="results"></div>
+                </div>
+
+                <div id="historyTab" class="tab-content" style="display: none;">
+                    <button class="btn" onclick="loadHistory()">載入歷史記錄</button>
+                    <div id="historyResults"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Apps Script Web App URL
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwoJf91fGTL3dCytGRhS3WV0dfoL6P1hwA5OOdLFO1xxO-fYHLlqYcSRvJ6gkiMhMWxCA/exec';
+        
+        // 設定今天為最小日期
+        document.getElementById('deliveryDate').min = new Date().toISOString().split('T')[0];
+
+        // 表單提交處理
+        document.getElementById('orderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const errorMessage = document.getElementById('errorMessage');
+            const successMessage = document.getElementById('successMessage');
+            
+            // 重置訊息
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            results.innerHTML = '';
+            
+            // 顯示載入狀態
+            submitBtn.disabled = true;
+            submitBtn.textContent = '分析中...';
+            loading.style.display = 'block';
+            
+            // 收集表單資料
+            const formData = new FormData(this);
+            const orderData = Object.fromEntries(formData.entries());
+            orderData.timestamp = new Date().toISOString();
+            
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'createOrder',
+                        data: orderData
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayRecommendations(result.recommendations);
+                    successMessage.textContent = '調派建議已成功生成！';
+                    successMessage.style.display = 'block';
+                    
+                    // 清空表單
+                    this.reset();
+                } else {
+                    throw new Error(result.error || '系統發生錯誤');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = '系統錯誤：' + error.message;
+                errorMessage.style.display = 'block';
+            } finally {
+                // 恢復按鈕狀態
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🤖 GAI智能調派分析';
+                loading.style.display = 'none';
+            }
+        });
+
+        // 顯示調派建議
+        function displayRecommendations(recommendations) {
+            const results = document.getElementById('results');
+            
+            if (!recommendations || recommendations.length === 0) {
+                results.innerHTML = '<p>目前沒有可用的調派建議</p>';
+                return;
+            }
+            
+            let html = '';
+            recommendations.forEach((rec, index) => {
+                const priorityClass = rec.priority === '高' ? 'priority-high' : 
+                                    rec.priority === '中' ? 'priority-medium' : 'priority-low';
+                
+                html += `
+                    <div class="result-card">
+                        <h3>🎯 推薦方案 ${index + 1}</h3>
+                        <div class="result-item">
+                            <span class="result-label">司機姓名：</span>
+                            <span class="result-value">${rec.driverName}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">車輛編號：</span>
+                            <span class="result-value">${rec.vehicleId}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">車輛類型：</span>
+                            <span class="result-value">${rec.vehicleType}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">目的地：</span>
+                            <span class="result-value">${rec.destination}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">配送時間：</span>
+                            <span class="result-value">${rec.deliveryDate} ${rec.deliveryTime}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">優先級：</span>
+                            <span class="result-value ${priorityClass}">${rec.priority}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">匹配分數：</span>
+                            <span class="result-value">${rec.matchScore}%</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">預估完成時間：</span>
+                            <span class="result-value">${rec.estimatedCompletion}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            results.innerHTML = html;
+        }
+
+        // 標籤切換
+        function showTab(tabName) {
+            // 更新標籤狀態
+            document.querySelectorAll('.status-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 顯示對應內容
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+        }
+
+        // 載入歷史記錄
+        async function loadHistory() {
+            const historyResults = document.getElementById('historyResults');
+            historyResults.innerHTML = '<div class="loading"><div class="loading-spinner"></div><p>載入歷史記錄中...</p></div>';
+            
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'getHistory'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayHistory(result.history);
+                } else {
+                    throw new Error(result.error || '載入歷史記錄失敗');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                historyResults.innerHTML = `<p style="color: #e74c3c;">載入失敗：${error.message}</p>`;
+            }
+        }
+
+        // 顯示歷史記錄
+        function displayHistory(history) {
+            const historyResults = document.getElementById('historyResults');
+            
+            if (!history || history.length === 0) {
+                historyResults.innerHTML = '<p>目前沒有歷史記錄</p>';
+                return;
+            }
+            
+            let html = '';
+            history.forEach((record, index) => {
+                const priorityClass = record.priority === '高' ? 'priority-high' : 
+                                    record.priority === '中' ? 'priority-medium' : 'priority-low';
+                
+                html += `
+                    <div class="result-card">
+                        <h3>📋 訂單記錄 ${index + 1}</h3>
+                        <div class="result-item">
+                            <span class="result-label">建立時間：</span>
+                            <span class="result-value">${new Date(record.timestamp).toLocaleString('zh-TW')}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">目的地：</span>
+                            <span class="result-value">${record.destination}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">配送時間：</span>
+                            <span class="result-value">${record.deliveryDate} ${record.deliveryTime}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">優先級：</span>
+                            <span class="result-value ${priorityClass}">${record.priority}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">貨物類型：</span>
+                            <span class="result-value">${record.cargoType}</span>
+                        </div>
+                        <div class="result-item">
+                            <span class="result-label">重量：</span>
+                            <span class="result-value">${record.weight} 公斤</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            historyResults.innerHTML = html;
+        }
+
+        // 頁面載入完成後的初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('GAI優化運務人員調派建議系統已載入');
+        });
+    </script>
+</body>
+</html>
