@@ -1330,11 +1330,9 @@
                             ` : ''}
                         </div>
                         <div class="card-actions">
-                                                    <button onclick="app.contactDriver('${driver['員工編號'] || driver.id}')" 
-                                class="contact-btn" 
-                                style="background-color: #007bff; color: white; border: none;">
-                            📞 聯絡
-                        </button>
+                                                  <button onclick="app.contactDriver('${driver['員工編號'] || driver.id}')" class="contact-btn">
+                                📞 聯絡
+                            </button>
 
                             <button onclick="app.viewDriverDetail('${driver['員工編號'] || driver.id}')" class="detail-btn">
                                 📋 詳情
