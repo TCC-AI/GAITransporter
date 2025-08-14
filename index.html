@@ -1565,7 +1565,7 @@
                 const highPriorityTasks = this.tasks.filter(t => t.level === 'P' && t['配送狀態'] === '待派');
                 const availableADrivers = this.drivers.filter(d => (d['級別'] || d.level) === 'A' && (d['狀態'] || d.status) === '可派遣');
                 if (highPriorityTasks.length > availableADrivers.length) {
-                    alerts.push('P級任務數量超過可用A級司機數量');
+                    alerts.push('P級任務數量超過可用A3級司機數量');
                 }
                 
                 // 檢查工時超限
