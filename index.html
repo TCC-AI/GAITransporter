@@ -1024,15 +1024,15 @@
                     <div class="value" id="total-tasks">0</div>
                 </div>
                 <div class="kpi-card">
-                    <h3>P級任務</h3>
+                    <h3>B1級任務</h3>
                     <div class="value" id="p-tasks">0</div>
                 </div>
                 <div class="kpi-card">
-                    <h3>Q級任務</h3>
+                    <h3>B2級任務</h3>
                     <div class="value" id="q-tasks">0</div>
                 </div>
                 <div class="kpi-card">
-                    <h3>R級任務</h3>
+                    <h3>B3級任務</h3>
                     <div class="value" id="r-tasks">0</div>
                 </div>
                 <div class="kpi-card">
@@ -1137,7 +1137,7 @@
 
     <script>
         // Google Apps Script Web App URL (需要替換為實際的 URL)
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxNYbgJc4_Ur8XyWrHFAAhtjPPN6ujIUnhAAEubbwd3c0KX4czhUBKfJeD9Kspc9fNo-Q/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzchCWms7QgI__MZdJXxFiJWAIWIbx2OddCG-V84LMxS0ftHuI967QznKmBORljVtZSoA/exec';
 
         // 主要應用程式類別
         class DispatchApp {
@@ -1542,9 +1542,9 @@
             
             updateTaskKPI(tasks) {
               const totalTasks = tasks.length;
-              const pTasks = tasks.filter(t => t.level === 'P').length;
-              const qTasks = tasks.filter(t => t.level === 'Q').length;
-              const rTasks = tasks.filter(t => t.level === 'R').length;
+              const pTasks = tasks.filter(t => t.level === 'B3').length;
+              const qTasks = tasks.filter(t => t.level === 'B2').length;
+              const rTasks = tasks.filter(t => t.level === 'B1').length;
               
               document.getElementById('total-tasks').textContent = totalTasks;
               document.getElementById('p-tasks').textContent = pTasks;
@@ -1582,7 +1582,7 @@
                 const highPriorityTasks = this.tasks.filter(t => t.level === 'P' && t['配送狀態'] === '待派');
                 const availableADrivers = this.drivers.filter(d => (d['級別'] || d.level) === 'A' && (d['狀態'] || d.status) === '可派遣');
                 if (highPriorityTasks.length > availableADrivers.length) {
-                    alerts.push('P級任務數量超過可用A3級司機數量');
+                    alerts.push('B3級任務數量超過可用A3級司機數量');
                 }
                 
                 // 檢查工時超限
