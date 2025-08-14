@@ -1137,7 +1137,7 @@
 
     <script>
         // Google Apps Script Web App URL (需要替換為實際的 URL)
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwnqHHw5S-ryJK-jxsshZ2jL2BbEDMDFX54lhWF6pSxCTbJkduwf6hq2niNfhTdarSDLw/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbySwOoPUE74KeW-lwKAuke7iC1_1-4URksgKQcejEsKZpUIN2U6NYLhDXzSoVwRmmLcsw/exec';
 
         // 主要應用程式類別
         class DispatchApp {
@@ -1216,54 +1216,55 @@
                 this.renderVehicles();
             }
             
-            // 在 DispatchApp 類別中更新 renderTasks() 方法
+            // 修正 renderTasks() 函數
             renderTasks() {
-              const container = document.getElementById('tasks-container');
-              const loading = document.getElementById('tasks-loading');
-              
-              loading.classList.remove('show');
-              container.innerHTML = '';
-              
-              const filteredTasks = this.getFilteredTasks();
-              
-              if (filteredTasks.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無符合條件的任務</div>';
-                return;
-              }
-              
-              filteredTasks.forEach(task => {
-                const card = document.createElement('div');
-                card.className = `task-card priority-${task.level}`;
-                card.draggable = true;
-                card.dataset.taskId = task.id;
+                const container = document.getElementById('tasks-container');
+                const loading = document.getElementById('tasks-loading');
                 
-                // 拖放事件
-                card.addEventListener('dragstart', this.handleDragStart.bind(this));
-                card.addEventListener('dragend', this.handleDragEnd.bind(this));
+                loading.classList.remove('show');
+                container.innerHTML = '';
                 
-                card.innerHTML = `
-                  <div class="task-header">
-                    <strong>${task['配送單號'] || task['任務編號'] || task.id}</strong>
-                    <span class="priority-badge ${task.level}">${task.level}</span>
-                  </div>
-                  <div class="task-details">
-                    <div><strong>客戶:</strong> ${task['客戶簡稱'] || task['客戶名稱'] || '未指定'}</div>
-                    <div><strong>配送點:</strong> ${task['配送點簡稱'] || task['配送地點'] || '未指定'}</div>
-                    <div><strong>日期:</strong> ${task['日期'] || '未指定'}</div>
-                    <div><strong>狀態:</strong> ${task['配送狀態'] || '待派'}</div>
-                    <div><strong>C欄位值:</strong> <span style="font-weight:bold;color:#00b4db;">${task[Object.keys(task)[2]] || 'N/A'}</span></div>
-                    ${task['配送備註'] ? `<div><strong>備註:</strong> ${task['配送備註']}</div>` : ''}
-                  </div>
-                  <button onclick="app.generateSuggestions('${task.id}')" class="suggest-btn">
-                    💡 產生建議
-                  </button>
-                `;
+                const filteredTasks = this.getFilteredTasks();
                 
-                container.appendChild(card);
-              });
-              
-              // 更新 KPI 數據
-              this.updateTaskKPI(filteredTasks);
+                if (filteredTasks.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無符合條件的任務</div>';
+                    return;
+                }
+                
+                filteredTasks.forEach(task => {
+                    const card = document.createElement('div');
+                    card.className = `task-card priority-${task.level}`;
+                    card.draggable = true;
+                    card.dataset.taskId = task.id;
+                    
+                    // 拖放事件
+                    card.addEventListener('dragstart', this.handleDragStart.bind(this));
+                    card.addEventListener('dragend', this.handleDragEnd.bind(this));
+                    
+                    card.innerHTML = `
+                        <div class="task-header">
+                            <strong>${task['配送單號'] || task['任務編號'] || task.id}</strong>
+                            <span class="priority-badge ${task.level}">${task.level}</span>
+                        </div>
+                        <div class="task-details">
+                            <div><strong>配送日期:</strong> ${task['配送日期'] || task['日期'] || '未指定'}</div>
+                            <div><strong>路線名稱:</strong> ${task['路線名稱'] || '未指定'}</div>
+                            <div><strong>板數總和:</strong> ${task['板數總和'] || '未指定'}</div>
+                            <div><strong>取貨:</strong> ${task['取貨'] || '未指定'}</div>
+                            <div><strong>配送:</strong> ${task['配送'] || '未指定'}</div>
+                            <div><strong>狀態:</strong> ${task['配送狀態'] || '待派'}</div>
+                            ${task['配送備註'] ? `<div><strong>備註:</strong> ${task['配送備註']}</div>` : ''}
+                        </div>
+                        <button onclick="app.generateSuggestions('${task.id}')" class="suggest-btn">
+                            💡 產生建議
+                        </button>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+                
+                // 更新 KPI 數據
+                this.updateTaskKPI(filteredTasks);
             }
             
             // 渲染司機列表
