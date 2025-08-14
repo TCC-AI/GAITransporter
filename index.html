@@ -1243,7 +1243,7 @@
                     
                     card.innerHTML = `
                         <div class="task-header">
-                            <strong>${task['配送單號'] || task['任務編號'] || task.id}</strong>
+                            <strong>${task['路線名稱'] || task.id}</strong>
                             <span class="priority-badge ${task.level}">${task.level}</span>
                         </div>
                         <div class="task-details">
