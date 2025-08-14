@@ -873,7 +873,7 @@
 
     <script>
         // Google Apps Script URL (請替換為您的實際部署URL)
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzijMkquLj3NHF_yyyUJB8c-A-CQXFo6qrV4fV1b28DWPUjmU-8dJRivbTXv3cQo1peqw/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxijco-lKVwaFr4omzCSyxAHnK0ThyaXz6PJGXk_n6IurjFd8JXi6C4WKaOYUwOnFwcCA/exec';
         
         // 全域變數
         let currentData = {
@@ -1214,23 +1214,28 @@
             return statusMap[status] || 'pending';
         }
 
-        // Google Apps Script 呼叫
+        // Google Apps Script 呼叫 - 使用 GET 請求避免 CORS
         async function callGAS(action, data = {}) {
             try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        data: data
-                    })
+                const params = new URLSearchParams({
+                    action: action,
+                    data: JSON.stringify(data)
                 });
                 
+                const response = await fetch(`${GAS_URL}?${params.toString()}`, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 return await response.json();
+                
             } catch (error) {
                 console.error('GAS 呼叫失敗:', error);
+                showMessage(`連線錯誤: ${error.message}`, 'error');
                 return { success: false, error: error.message };
             }
         }
