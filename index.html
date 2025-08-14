@@ -1556,6 +1556,23 @@
               // 如果頁面上沒有Q級和R級的顯示區域，可以動態加入
               // 或者更新現有的KPI顯示
             }
+            // 更新 KPI 數據
+                updateKPI() {
+                    const totalTasks = this.tasks.length;
+                    const pTasks = this.tasks.filter(t => t.level === 'P').length;
+                    const qTasks = this.tasks.filter(t => t.level === 'Q').length;
+                    const rTasks = this.tasks.filter(t => t.level === 'R').length;
+                    const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派' || t['配送狀態'] === '進行中').length;
+                    const assignRate = totalTasks > 0 ? Math.round((assignedTasks / totalTasks) * 100) : 0;
+                    const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
+                    
+                    document.getElementById('total-tasks').textContent = totalTasks;
+                    document.getElementById('p-tasks').textContent = pTasks;
+                    document.getElementById('q-tasks').textContent = qTasks;
+                    document.getElementById('r-tasks').textContent = rTasks;
+                    document.getElementById('assign-rate').textContent = `${assignRate}%`;
+                    document.getElementById('available-vehicles').textContent = availableVehicles;
+                }
             
             // 檢查告警
             checkAlerts() {
