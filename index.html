@@ -5,6 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAI優化運務人員調派建議系統</title>
     <style>
+        /* 司機級別顏色 - 根據您的需求調整 */
+.driver-card.level-A1 { 
+    border-left: 4px solid #28a745; /* A1 = 綠色 */
+    box-shadow: 0 4px 20px rgba(40, 167, 69, 0.1);
+}
+.driver-card.level-A2 { 
+    border-left: 4px solid #dc3545; /* A2 = 紅色 */
+    box-shadow: 0 4px 20px rgba(220, 53, 69, 0.1);
+}
+.driver-card.level-A3 { 
+    border-left: 4px solid #ffc107; /* A3 = 金色 */
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.1);
+}
+
+.level-badge.level-a1 {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%); /* A1 = 綠色漸層 */
+    color: white;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.level-badge.level-a2 {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); /* A2 = 紅色漸層 */
+    color: white;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.level-badge.level-a3 {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%); /* A3 = 金色漸層 */
+    color: #212529;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
         * {
             margin: 0;
             padding: 0;
@@ -1043,15 +1075,16 @@
                     <option value="丁">丁類</option>
                 </select>
             </div>
-            <div class="filter-group">
+                        <div class="filter-group">
                 <label>司機等級</label>
                 <select id="driver-level-filter" onchange="applyFilters()">
                     <option value="">全部</option>
-                    <option value="A">A3級</option>
-                    <option value="B">A2級</option>
-                    <option value="C">A1級</option>
+                    <option value="A1">A1級</option>
+                    <option value="A2">A2級</option>
+                    <option value="A3">A3級</option>
                 </select>
             </div>
+
             <div class="filter-group">
                 <label>配送狀態</label>
                 <select id="status-filter" onchange="applyFilters()">
@@ -1246,7 +1279,8 @@
                 
                 filteredDrivers.forEach(driver => {
                     const card = document.createElement('div');
-                    card.className = `driver-card level-${driver['級別'] || driver.level || 'C'}`;
+                    const driverLevel = driver['級別'] || driver.level || 'A1';
+                    card.className = `driver-card level-${driverLevel}`; // 直接使用 A1, A2, A3
                     card.dataset.driverId = driver['員工編號'] || driver.id;
                     
                     // 拖放目標事件
@@ -1396,17 +1430,18 @@
                         return status || '可派遣';
                 }
             }
-
+            
+            // 修改 getLevelBadgeColor 函數
             getLevelBadgeColor(level) {
                 switch(level) {
-                    case 'A':
-                        return 'level-a';
-                    case 'B':
-                        return 'level-b';
-                    case 'C':
-                        return 'level-c';
+                    case 'A1':
+                        return 'level-a1';
+                    case 'A2':
+                        return 'level-a2';
+                    case 'A3':
+                        return 'level-a3';
                     default:
-                        return 'level-c';
+                        return 'level-a1'; // 預設為 A1
                 }
             }
 
