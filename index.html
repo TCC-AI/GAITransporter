@@ -873,7 +873,7 @@
 
     <script>
         // Google Apps Script URL (請替換為您的實際部署URL)
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxijco-lKVwaFr4omzCSyxAHnK0ThyaXz6PJGXk_n6IurjFd8JXi6C4WKaOYUwOnFwcCA/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbx2oTifhaAu_jiUwC49pSBuzmJm48AvOofV9qE1zGxdGiSfJ-61ZdFRiwRu7NbV5jWcwQ/exec';
         
         // 全域變數
         let currentData = {
@@ -921,27 +921,20 @@
             try {
                 showLoading();
                 
-                // 模擬從 Google Sheet 載入資料
                 const response = await callGAS('getDashboardData');
                 
-                if (response.success) {
+                if (response && response.success) {
                     updateKPIs(response.data);
                     updateAlerts(response.alerts);
                 } else {
-                    // 使用示例資料
-                    updateKPIs({
-                        totalTasks: 45,
-                        assignedRate: 78,
-                        onlineVehicles: 32,
-                        priorityP: 8,
-                        priorityQ: 15,
-                        priorityR: 22
-                    });
+                    console.error('載入儀表板資料失敗:', response?.error);
+                    showMessage('載入儀表板資料失敗', 'error');
                 }
                 
                 hideLoading();
             } catch (error) {
                 console.error('載入儀表板資料失敗:', error);
+                showMessage('載入儀表板資料失敗: ' + error.message, 'error');
                 hideLoading();
             }
         }
@@ -972,21 +965,17 @@
             try {
                 const response = await callGAS('getTasks');
                 
-                if (response.success) {
+                if (response && response.success) {
                     currentData.tasks = response.data;
                     updateTasksTable();
                     updateKanbanBoard();
                 } else {
-                    // 使用示例資料
-                    currentData.tasks = generateSampleTasks();
-                    updateTasksTable();
-                    updateKanbanBoard();
+                    console.error('載入任務資料失敗:', response?.error);
+                    showMessage('載入任務資料失敗', 'error');
                 }
             } catch (error) {
                 console.error('載入任務資料失敗:', error);
-                currentData.tasks = generateSampleTasks();
-                updateTasksTable();
-                updateKanbanBoard();
+                showMessage('載入任務資料失敗: ' + error.message, 'error');
             }
         }
 
@@ -1075,15 +1064,16 @@
             try {
                 const response = await callGAS('getDrivers');
                 
-                if (response.success) {
+                if (response && response.success) {
                     currentData.drivers = response.data;
                 } else {
-                    currentData.drivers = generateSampleDrivers();
+                    console.error('載入司機資料失敗:', response?.error);
+                    showMessage('載入司機資料失敗', 'error');
                 }
                 updateDriversTable();
             } catch (error) {
                 console.error('載入司機資料失敗:', error);
-                currentData.drivers = generateSampleDrivers();
+                showMessage('載入司機資料失敗: ' + error.message, 'error');
                 updateDriversTable();
             }
         }
@@ -1139,15 +1129,16 @@
             try {
                 const response = await callGAS('getVehicles');
                 
-                if (response.success) {
+                if (response && response.success) {
                     currentData.vehicles = response.data;
                 } else {
-                    currentData.vehicles = generateSampleVehicles();
+                    console.error('載入車輛資料失敗:', response?.error);
+                    showMessage('載入車輛資料失敗', 'error');
                 }
                 updateVehiclesTable();
             } catch (error) {
                 console.error('載入車輛資料失敗:', error);
-                currentData.vehicles = generateSampleVehicles();
+                showMessage('載入車輛資料失敗: ' + error.message, 'error');
                 updateVehiclesTable();
             }
         }
@@ -1214,30 +1205,63 @@
             return statusMap[status] || 'pending';
         }
 
-        // Google Apps Script 呼叫 - 使用 GET 請求避免 CORS
+        // Google Apps Script 呼叫 - 使用 JSONP 完全避免 CORS
         async function callGAS(action, data = {}) {
-            try {
+            return new Promise((resolve, reject) => {
+                // 建立唯一的回調函數名稱
+                const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+                
+                // 設定全域回調函數
+                window[callbackName] = function(response) {
+                    // 清理
+                    delete window[callbackName];
+                    if (document.head.contains(script)) {
+                        document.head.removeChild(script);
+                    }
+                    resolve(response);
+                };
+                
+                // 準備參數
                 const params = new URLSearchParams({
                     action: action,
-                    data: JSON.stringify(data)
+                    data: JSON.stringify(data),
+                    callback: callbackName
                 });
                 
-                const response = await fetch(`${GAS_URL}?${params.toString()}`, {
-                    method: 'GET',
-                    mode: 'cors'
-                });
+                // 建立 script 標籤
+                const script = document.createElement('script');
+                script.src = `${GAS_URL}?${params.toString()}`;
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                // 錯誤處理
+                script.onerror = function() {
+                    delete window[callbackName];
+                    if (document.head.contains(script)) {
+                        document.head.removeChild(script);
+                    }
+                    reject(new Error('載入腳本失敗'));
+                };
                 
-                return await response.json();
+                // 超時處理
+                const timeout = setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        if (document.head.contains(script)) {
+                            document.head.removeChild(script);
+                        }
+                        reject(new Error('請求超時'));
+                    }
+                }, 15000); // 15秒超時
                 
-            } catch (error) {
-                console.error('GAS 呼叫失敗:', error);
-                showMessage(`連線錯誤: ${error.message}`, 'error');
-                return { success: false, error: error.message };
-            }
+                // 成功時清除超時
+                const originalCallback = window[callbackName];
+                window[callbackName] = function(response) {
+                    clearTimeout(timeout);
+                    originalCallback(response);
+                };
+                
+                // 添加到頁面
+                document.head.appendChild(script);
+            });
         }
 
         // 自動配對功能
