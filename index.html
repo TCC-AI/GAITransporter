@@ -13,137 +13,184 @@
 
         body {
             font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            background-color: #f0f2f5;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 25%, #00b4db 75%, #0083b0 100%);
+            background-attachment: fixed;
             color: #333;
+            min-height: 100vh;
         }
 
         /* Header 樣式 */
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 35%, #00b4db 100%);
             color: white;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         header h1 {
-            font-size: 24px;
-            margin-bottom: 15px;
+            font-size: 28px;
+            margin-bottom: 20px;
             text-align: center;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            font-weight: 600;
         }
 
         .toolbar {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 15px;
             flex-wrap: wrap;
         }
 
         .toolbar button {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 6px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 14px;
-            transition: all 0.3s ease;
-            background: rgba(255,255,255,0.2);
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
             color: white;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
         .toolbar button:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.15) 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
 
         .toolbar button.primary {
-            background: #ff6b6b;
-            border-color: #ff6b6b;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 50%, #ff4757 100%);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
         }
 
         .toolbar button.primary:hover {
-            background: #ff5252;
+            background: linear-gradient(135deg, #ff5252 0%, #e53e3e 50%, #ff3742 100%);
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
         }
 
         /* 主控台 KPI 區域 */
         .dashboard {
-            padding: 20px;
-            background: white;
-            margin: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+            margin: 25px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .kpi-section {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
         }
 
         .kpi-card {
-            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 50%, #006a8e 100%);
             color: white;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 25px;
+            border-radius: 16px;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 180, 219, 0.25);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 45px rgba(0, 180, 219, 0.35);
+        }
+
+        .kpi-card:hover::before {
+            opacity: 1;
         }
 
         .kpi-card h3 {
             font-size: 14px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             opacity: 0.9;
+            font-weight: 500;
         }
 
         .kpi-card .value {
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 32px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .alert-section {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border: 1px solid rgba(255, 234, 167, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
             display: none;
+            box-shadow: 0 4px 20px rgba(255, 234, 167, 0.3);
         }
 
         .alert-item {
             display: flex;
             align-items: center;
-            margin: 5px 0;
+            margin: 8px 0;
             color: #856404;
+            font-weight: 500;
         }
 
         .alert-item::before {
             content: "⚠️";
-            margin-right: 8px;
+            margin-right: 10px;
+            font-size: 16px;
         }
 
         /* 調度盤主體 */
         .dispatch-board {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
+            gap: 25px;
+            padding: 25px;
             min-height: 600px;
         }
 
         .column {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             position: relative;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .column h3 {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
-            color: #495057;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(0, 180, 219, 0.2);
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: 600;
         }
 
         .column-content {
@@ -153,259 +200,331 @@
 
         /* 任務卡片 */
         .task-card {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+            border-radius: 12px;
+            padding: 18px;
+            margin: 12px 0;
             border-left: 4px solid;
             cursor: grab;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .task-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
         }
 
         .task-card.priority-P { 
             border-left-color: #e74c3c;
-            background: linear-gradient(90deg, #e74c3c 0%, #e74c3c 4px, white 4px);
+            box-shadow: 0 4px 20px rgba(231, 76, 60, 0.15);
         }
         .task-card.priority-Q { 
             border-left-color: #f39c12;
-            background: linear-gradient(90deg, #f39c12 0%, #f39c12 4px, white 4px);
+            box-shadow: 0 4px 20px rgba(243, 156, 18, 0.15);
         }
         .task-card.priority-R { 
             border-left-color: #27ae60;
-            background: linear-gradient(90deg, #27ae60 0%, #27ae60 4px, white 4px);
+            box-shadow: 0 4px 20px rgba(39, 174, 96, 0.15);
         }
 
         .task-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .task-header strong {
             font-size: 16px;
             color: #2c3e50;
+            font-weight: 600;
         }
 
         .priority-badge {
-            background: #3498db;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
             color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
         }
 
-        .priority-badge.P { background: #e74c3c; }
-        .priority-badge.Q { background: #f39c12; }
-        .priority-badge.R { background: #27ae60; }
+        .priority-badge.P { 
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            box-shadow: 0 2px 10px rgba(231, 76, 60, 0.3);
+        }
+        .priority-badge.Q { 
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            box-shadow: 0 2px 10px rgba(243, 156, 18, 0.3);
+        }
+        .priority-badge.R { 
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            box-shadow: 0 2px 10px rgba(39, 174, 96, 0.3);
+        }
 
         .task-details {
             font-size: 13px;
             color: #666;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         .task-details div {
-            margin: 3px 0;
+            margin: 4px 0;
         }
 
         .suggest-btn {
-            background: #74b9ff;
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 10px 16px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 12px;
-            margin-top: 10px;
+            font-weight: 500;
+            margin-top: 12px;
             width: 100%;
-            transition: background 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(0, 180, 219, 0.2);
         }
 
         .suggest-btn:hover {
-            background: #0984e3;
+            background: linear-gradient(135deg, #0083b0 0%, #006a8e 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 180, 219, 0.3);
         }
 
         /* 司機和車輛卡片 */
         .driver-card, .vehicle-card {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+            border-radius: 12px;
+            padding: 18px;
+            margin: 12px 0;
+            border: 2px solid rgba(0, 180, 219, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            backdrop-filter: blur(10px);
         }
 
         .driver-card:hover, .vehicle-card:hover {
-            border-color: #74b9ff;
-            transform: translateY(-2px);
+            border-color: rgba(0, 180, 219, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
         }
 
-        .driver-card.level-A { border-left: 4px solid #e74c3c; }
-        .driver-card.level-B { border-left: 4px solid #f39c12; }
-        .driver-card.level-C { border-left: 4px solid #27ae60; }
+        .driver-card.level-A { 
+            border-left: 4px solid #e74c3c;
+            box-shadow: 0 4px 20px rgba(231, 76, 60, 0.1);
+        }
+        .driver-card.level-B { 
+            border-left: 4px solid #f39c12;
+            box-shadow: 0 4px 20px rgba(243, 156, 18, 0.1);
+        }
+        .driver-card.level-C { 
+            border-left: 4px solid #27ae60;
+            box-shadow: 0 4px 20px rgba(39, 174, 96, 0.1);
+        }
 
-        .vehicle-card.type-甲 { border-left: 4px solid #9b59b6; }
-        .vehicle-card.type-乙 { border-left: 4px solid #3498db; }
-        .vehicle-card.type-丙 { border-left: 4px solid #1abc9c; }
-        .vehicle-card.type-丁 { border-left: 4px solid #95a5a6; }
+        .vehicle-card.type-甲 { 
+            border-left: 4px solid #9b59b6;
+            box-shadow: 0 4px 20px rgba(155, 89, 182, 0.1);
+        }
+        .vehicle-card.type-乙 { 
+            border-left: 4px solid #3498db;
+            box-shadow: 0 4px 20px rgba(52, 152, 219, 0.1);
+        }
+        .vehicle-card.type-丙 { 
+            border-left: 4px solid #1abc9c;
+            box-shadow: 0 4px 20px rgba(26, 188, 156, 0.1);
+        }
+        .vehicle-card.type-丁 { 
+            border-left: 4px solid #95a5a6;
+            box-shadow: 0 4px 20px rgba(149, 165, 166, 0.1);
+        }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .card-title {
-            font-weight: bold;
+            font-weight: 600;
             color: #2c3e50;
+            font-size: 15px;
         }
 
         .status-badge {
-            padding: 3px 8px;
-            border-radius: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
             font-size: 11px;
-            font-weight: bold;
+            font-weight: 600;
         }
 
-        .status-badge.available { background: #d4edda; color: #155724; }
-        .status-badge.assigned { background: #f8d7da; color: #721c24; }
-        .status-badge.busy { background: #fff3cd; color: #856404; }
+        .status-badge.available { 
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            box-shadow: 0 2px 8px rgba(21, 87, 36, 0.1);
+        }
+        .status-badge.assigned { 
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            box-shadow: 0 2px 8px rgba(114, 28, 36, 0.1);
+        }
+        .status-badge.busy { 
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            color: #856404;
+            box-shadow: 0 2px 8px rgba(133, 100, 4, 0.1);
+        }
 
         /* 建議面板 */
         .suggestions-panel {
             position: fixed;
-            right: 20px;
+            right: 25px;
             top: 50%;
             transform: translateY(-50%);
-            width: 400px;
+            width: 420px;
             max-height: 80vh;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
             display: none;
             z-index: 1000;
             overflow: hidden;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .suggestions-panel h3 {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 20px;
+            padding: 20px 25px;
             margin: 0;
             font-size: 16px;
+            font-weight: 600;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
         }
 
         .suggestions-content {
-            padding: 20px;
-            max-height: calc(80vh - 60px);
+            padding: 25px;
+            max-height: calc(80vh - 80px);
             overflow-y: auto;
         }
 
         .assignment-suggestion {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.6) 100%);
+            border: 1px solid rgba(0, 180, 219, 0.1);
+            border-radius: 12px;
+            padding: 18px;
+            margin: 12px 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         }
 
         .assignment-suggestion:hover {
-            border-color: #74b9ff;
-            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.2);
+            border-color: rgba(0, 180, 219, 0.3);
+            box-shadow: 0 8px 30px rgba(0, 180, 219, 0.15);
+            transform: translateY(-2px);
         }
 
         .suggestion-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .rank {
-            background: #6c757d;
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
             color: white;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
         }
 
         .score-badge {
-            background: #28a745;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
             font-size: 12px;
-            font-weight: bold;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
         }
 
         .accept-btn {
-            background: #28a745;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
             border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
+            padding: 8px 16px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 12px;
-            transition: background 0.3s ease;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
         }
 
         .accept-btn:hover {
-            background: #218838;
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
         }
 
         .suggestion-details {
             font-size: 13px;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         .suggestion-details > div {
-            margin: 5px 0;
+            margin: 6px 0;
         }
 
         .reasons ul, .risks ul {
-            margin: 5px 0 5px 20px;
+            margin: 8px 0 8px 20px;
         }
 
         .reasons li {
             color: #28a745;
+            font-weight: 500;
         }
 
         .risks li {
             color: #dc3545;
+            font-weight: 500;
         }
 
         .close-panel {
             position: absolute;
-            top: 15px;
-            right: 20px;
+            top: 20px;
+            right: 25px;
             background: none;
             border: none;
             color: white;
-            font-size: 20px;
+            font-size: 24px;
             cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .close-panel:hover {
+            transform: scale(1.2);
         }
 
         /* 載入動畫 */
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 25px;
         }
 
         .loading.show {
@@ -413,13 +532,13 @@
         }
 
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #74b9ff;
+            border: 3px solid rgba(0, 180, 219, 0.1);
+            border-top: 3px solid #00b4db;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 35px;
+            height: 35px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            margin: 0 auto 15px;
         }
 
         @keyframes spin {
@@ -431,7 +550,7 @@
         @media (max-width: 1200px) {
             .dispatch-board {
                 grid-template-columns: 1fr;
-                gap: 15px;
+                gap: 20px;
             }
             
             .suggestions-panel {
@@ -452,78 +571,125 @@
             }
             
             .toolbar button {
-                width: 200px;
+                width: 220px;
             }
             
             .kpi-section {
                 grid-template-columns: 1fr;
             }
+            
+            .dashboard, .dispatch-board {
+                margin: 15px;
+                padding: 20px;
+            }
         }
 
         /* 拖放效果 */
         .drag-over {
-            background-color: #e3f2fd !important;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
             border: 2px dashed #2196f3 !important;
+            box-shadow: 0 8px 30px rgba(33, 150, 243, 0.3) !important;
         }
 
         .dragging {
-            opacity: 0.5;
-            transform: rotate(5deg);
+            opacity: 0.6;
+            transform: rotate(3deg) scale(0.95);
         }
 
         /* 通知樣式 */
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
+            top: 25px;
+            right: 25px;
+            padding: 18px 24px;
+            border-radius: 12px;
             color: white;
-            font-weight: bold;
+            font-weight: 600;
             z-index: 2000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
+            transform: translateX(450px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
         }
 
         .notification.show {
             transform: translateX(0);
         }
 
-        .notification.success { background: #28a745; }
-        .notification.error { background: #dc3545; }
-        .notification.warning { background: #ffc107; color: #212529; }
-        .notification.info { background: #17a2b8; }
+        .notification.success { 
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        .notification.error { 
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        .notification.warning { 
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #212529;
+        }
+        .notification.info { 
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        }
 
         /* 篩選器 */
         .filters {
-            background: white;
-            margin: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+            margin: 25px;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             display: flex;
-            gap: 15px;
+            gap: 20px;
             flex-wrap: wrap;
             align-items: center;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .filter-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 8px;
         }
 
         .filter-group label {
             font-size: 12px;
             color: #666;
-            font-weight: bold;
+            font-weight: 600;
         }
 
-        .filter-group select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .filter-group select, .filter-group input {
+            padding: 10px 14px;
+            border: 1px solid rgba(0, 180, 219, 0.2);
+            border-radius: 8px;
             font-size: 14px;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            outline: none;
+            border-color: #00b4db;
+            box-shadow: 0 0 0 3px rgba(0, 180, 219, 0.1);
+        }
+
+        /* 滾動條美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #0083b0 0%, #006a8e 100%);
         }
     </style>
 </head>
@@ -583,7 +749,7 @@
             </div>
             <div class="filter-group">
                 <label>客戶等級</label>
-                <select id="level-filter" onchange="applyFilters()">
+                                <select id="level-filter" onchange="applyFilters()">
                     <option value="">全部</option>
                     <option value="P">P級</option>
                     <option value="Q">Q級</option>
@@ -857,7 +1023,7 @@
                     card.innerHTML = `
                         <div class="card-header">
                             <div class="card-title">${vehicle.number || vehicle.id}</div>
-                                                       <span class="status-badge ${vehicle.status === '可用' ? 'available' : 'assigned'}">
+                            <span class="status-badge ${vehicle.status === '可用' ? 'available' : 'assigned'}">
                                 ${vehicle.status || '可用'}
                             </span>
                         </div>
@@ -959,7 +1125,7 @@
                 
                 content.innerHTML = `
                     <h4>📋 任務: ${task['配送單號'] || task.id} 的配對建議</h4>
-                    <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+                    <div style="margin-bottom: 15px; padding: 10px; background: rgba(248, 249, 250, 0.8); border-radius: 8px;">
                         <div><strong>客戶:</strong> ${task['客戶簡稱'] || '未指定'}</div>
                         <div><strong>等級:</strong> ${task.level}</div>
                         <div><strong>配送點:</strong> ${task['配送點簡稱'] || '未指定'}</div>
@@ -1249,7 +1415,7 @@
             }
             
             // 顯示/隱藏載入動畫
-            showLoading(show) {
+                        showLoading(show) {
                 const loadings = document.querySelectorAll('.loading');
                 loadings.forEach(loading => {
                     if (show) {
@@ -1333,6 +1499,25 @@
                     '日期': '2024-12-01',
                     '配送狀態': '已派',
                     level: 'R'
+                },
+                {
+                    id: 'T004',
+                    '配送單號': 'D20241201004',
+                    '客戶簡稱': 'OK便利商店',
+                    '配送點簡稱': '大安店',
+                    '日期': '2024-12-01',
+                    '配送狀態': '待派',
+                    '配送備註': '急件處理',
+                    level: 'P'
+                },
+                {
+                    id: 'T005',
+                    '配送單號': 'D20241201005',
+                    '客戶簡稱': '美廉社',
+                    '配送點簡稱': '中山店',
+                    '日期': '2024-12-01',
+                    '配送狀態': '進行中',
+                    level: 'Q'
                 }
             ];
             
@@ -1366,6 +1551,25 @@
                     type: '自有',
                     skills: '危險品運送',
                     workHours: 4
+                },
+                {
+                    id: 'DR004',
+                    name: '陳六',
+                    level: 'C',
+                    employeeId: 'E004',
+                    status: '可派遣',
+                    type: '加盟',
+                    workHours: 2
+                },
+                {
+                    id: 'DR005',
+                    name: '林七',
+                    level: 'B',
+                    employeeId: 'E005',
+                    status: '可派遣',
+                    type: '自有',
+                    skills: '大型車輛',
+                    workHours: 7
                 }
             ];
             
@@ -1379,7 +1583,8 @@
                     tempZone: '冷凍/冷藏',
                     capacity: '3噸',
                     palletCount: '12板',
-                    equipment: '尾門升降'
+                    equipment: '尾門升降',
+                    location: '台北倉'
                 },
                 {
                     id: 'V002',
@@ -1388,7 +1593,8 @@
                     status: '可用',
                     tempZone: '冷藏',
                     capacity: '2噸',
-                    palletCount: '8板'
+                    palletCount: '8板',
+                    location: '新北倉'
                 },
                 {
                     id: 'V003',
@@ -1397,7 +1603,29 @@
                     status: '已指派',
                     tempZone: '常溫',
                     capacity: '1.5噸',
-                    palletCount: '6板'
+                    palletCount: '6板',
+                    location: '桃園倉'
+                },
+                {
+                    id: 'V004',
+                    number: 'JKL-3456',
+                    type: '甲',
+                    status: '可用',
+                    tempZone: '冷凍',
+                    capacity: '3.5噸',
+                    palletCount: '14板',
+                    equipment: '側門開啟',
+                    location: '台北倉'
+                },
+                {
+                    id: 'V005',
+                    number: 'MNO-7890',
+                    type: '丁',
+                    status: '保養',
+                    tempZone: '常溫',
+                    capacity: '1噸',
+                    palletCount: '4板',
+                    location: '維修廠'
                 }
             ];
             
@@ -1426,13 +1654,132 @@
             if (e.key === 'Escape') {
                 app.closeSuggestions();
             }
+            
+            // Ctrl + G: 產生所有建議
+            if (e.ctrlKey && e.key === 'g') {
+                e.preventDefault();
+                app.generateAllSuggestions();
+            }
+            
+            // Ctrl + C: 衝突檢查
+            if (e.ctrlKey && e.key === 'c') {
+                e.preventDefault();
+                app.conflictCheck();
+            }
         });
         
         // 視窗大小變更時重新調整佈局
         window.addEventListener('resize', function() {
-            // 可以在這裡加入響應式調整邏輯
+            // 響應式調整建議面板位置
+            const panel = document.getElementById('suggestions-panel');
+            if (panel.style.display === 'block') {
+                if (window.innerWidth <= 1200) {
+                    panel.style.width = '100%';
+                    panel.style.height = '100%';
+                    panel.style.top = '0';
+                    panel.style.right = '0';
+                    panel.style.transform = 'none';
+                    panel.style.borderRadius = '0';
+                } else {
+                    panel.style.width = '420px';
+                    panel.style.height = 'auto';
+                    panel.style.maxHeight = '80vh';
+                    panel.style.top = '50%';
+                    panel.style.right = '25px';
+                    panel.style.transform = 'translateY(-50%)';
+                    panel.style.borderRadius = '20px';
+                }
+            }
+        });
+        
+        // 添加頁面載入動畫
+        window.addEventListener('load', function() {
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease-in-out';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+        
+        // 添加平滑滾動效果
+        document.addEventListener('DOMContentLoaded', function() {
+            const style = document.createElement('style');
+            style.textContent = `
+                html {
+                    scroll-behavior: smooth;
+                }
+            `;
+            document.head.appendChild(style);
+        });
+        
+        // 添加觸控支援（移動裝置）
+        let touchStartY = 0;
+        let touchEndY = 0;
+        
+        document.addEventListener('touchstart', function(e) {
+            touchStartY = e.changedTouches[0].screenY;
+        });
+        
+        document.addEventListener('touchend', function(e) {
+            touchEndY = e.changedTouches[0].screenY;
+            handleSwipe();
+        });
+        
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartY - touchEndY;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    // 向上滑動
+                    console.log('向上滑動');
+                } else {
+                    // 向下滑動
+                    console.log('向下滑動');
+                }
+            }
+        }
+        
+        // 添加自動保存功能
+        setInterval(function() {
+            // 每5分鐘自動檢查資料更新
+            if (document.visibilityState === 'visible') {
+                // 只在頁面可見時執行
+                console.log('自動檢查資料更新...');
+                // 這裡可以加入自動更新邏輯
+            }
+        }, 5 * 60 * 1000); // 5分鐘
+        
+        // 添加離線檢測
+        window.addEventListener('online', function() {
+            app.showNotification('網路連線已恢復', 'success');
+        });
+        
+        window.addEventListener('offline', function() {
+            app.showNotification('網路連線中斷，部分功能可能無法使用', 'warning');
+        });
+        
+        // 添加頁面可見性檢測
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                // 頁面重新可見時，檢查是否需要更新資料
+                console.log('頁面重新可見，檢查資料更新...');
+            }
+        });
+        
+        // 防止意外關閉頁面
+        window.addEventListener('beforeunload', function(e) {
+            const unassignedTasks = app.tasks.filter(t => t['配送狀態'] === '待派');
+            if (unassignedTasks.length > 0) {
+                e.preventDefault();
+                e.returnValue = '還有未指派的任務，確定要離開嗎？';
+                return e.returnValue;
+            }
         });
         
     </script>
 </body>
 </html>
+
+
