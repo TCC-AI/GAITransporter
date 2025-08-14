@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -6,36 +7,36 @@
     <title>GAI優化運務人員調派建議系統</title>
     <style>
         /* 司機級別顏色 - 根據您的需求調整 */
-.driver-card.level-A1 { 
-    border-left: 4px solid #96faf8; /* A1 = 綠色 */
-    box-shadow: 0 4px 20px rgba(40, 167, 69, 0.1);
-}
-.driver-card.level-A2 { 
-    border-left: 4px solid #dc3545; /* A2 = 紅色 */
-    box-shadow: 0 4px 20px rgba(220, 53, 69, 0.1);
-}
-.driver-card.level-A3 { 
-    border-left: 4px solid #fcf635; /* A3 = 金色 */
-    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.1);
-}
+        .driver-card.level-A1 { 
+            border-left: 4px solid #00d4aa; /* A1 = 青綠色 */
+            box-shadow: 0 4px 20px rgba(0, 212, 170, 0.15);
+        }
+        .driver-card.level-A2 { 
+            border-left: 4px solid #0099ff; /* A2 = 藍色 */
+            box-shadow: 0 4px 20px rgba(0, 153, 255, 0.15);
+        }
+        .driver-card.level-A3 { 
+            border-left: 4px solid #00b4d8; /* A3 = 深藍色 */
+            box-shadow: 0 4px 20px rgba(0, 180, 216, 0.15);
+        }
 
-.level-badge.level-a1 {
-    background: linear-gradient(135deg, #96faf8 0%, #20c997 100%); /* A1 = 綠色漸層 */
-    color: white;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
+        .level-badge.level-a1 {
+            background: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+        }
 
-.level-badge.level-a2 {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); /* A2 = 紅色漸層 */
-    color: white;
-    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
+        .level-badge.level-a2 {
+            background: linear-gradient(135deg, #0099ff 0%, #0066cc 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 153, 255, 0.3);
+        }
 
-.level-badge.level-a3 {
-    background: linear-gradient(135deg, #fcf635 0%, #e0a800 100%); /* A3 = 金色漸層 */
-    color: #212529;
-    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
-}
+        .level-badge.level-a3 {
+            background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
+        }
 
         * {
             margin: 0;
@@ -45,20 +46,49 @@
 
         body {
             font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 25%, #00b4db 75%, #0083b0 100%);
+            /* 非對稱性藍綠漸層背景 */
+            background: linear-gradient(135deg, #0077b6 0%, #00b4d8 25%, #90e0ef 45%, #00d4aa 70%, #0099ff 100%);
             background-attachment: fixed;
             color: #333;
             min-height: 100vh;
+            position: relative;
+        }
+
+        /* 添加動態背景效果 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 212, 170, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 153, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(0, 180, 216, 0.05) 0%, transparent 50%);
+            z-index: -1;
         }
 
         /* Header 樣式 */
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 35%, #00b4db 100%);
+            background: linear-gradient(135deg, #0077b6 0%, #00b4d8 35%, #00d4aa 100%);
             color: white;
             padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 119, 182, 0.2);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
         }
 
         header h1 {
@@ -84,28 +114,54 @@
             font-size: 14px;
             font-weight: 500;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            /* 藍綠漸層按鈕 */
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.9) 0%, rgba(0, 212, 170, 0.8) 100%);
             color: white;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 
+                0 4px 15px rgba(0, 180, 216, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .toolbar button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .toolbar button:hover::before {
+            left: 100%;
         }
 
         .toolbar button:hover {
-            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.15) 100%);
+            background: linear-gradient(135deg, rgba(0, 153, 255, 0.9) 0%, rgba(0, 180, 216, 0.8) 100%);
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            box-shadow: 
+                0 8px 25px rgba(0, 180, 216, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .toolbar button.primary {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 50%, #ff4757 100%);
+            background: linear-gradient(135deg, #00d4aa 0%, #0099ff 50%, #00b4d8 100%);
             border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+            box-shadow: 
+                0 6px 20px rgba(0, 212, 170, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .toolbar button.primary:hover {
-            background: linear-gradient(135deg, #ff5252 0%, #e53e3e 50%, #ff3742 100%);
-            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+            background: linear-gradient(135deg, #00a085 0%, #0077b6 50%, #0099ff 100%);
+            box-shadow: 
+                0 10px 30px rgba(0, 212, 170, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         /* 主控台 KPI 區域 */
@@ -114,7 +170,9 @@
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
             margin: 25px;
             border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 
+                0 10px 40px rgba(0, 119, 182, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
@@ -127,12 +185,15 @@
         }
 
         .kpi-card {
-            background: linear-gradient(135deg, #00b4db 0%, #0083b0 50%, #006a8e 100%);
+            /* 非對稱藍綠漸層 */
+            background: linear-gradient(135deg, #0077b6 0%, #00b4d8 40%, #00d4aa 100%);
             color: white;
             padding: 25px;
             border-radius: 16px;
             text-align: center;
-            box-shadow: 0 8px 32px rgba(0, 180, 219, 0.25);
+            box-shadow: 
+                0 8px 32px rgba(0, 180, 216, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
@@ -152,7 +213,9 @@
 
         .kpi-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 45px rgba(0, 180, 219, 0.35);
+            box-shadow: 
+                0 15px 45px rgba(0, 180, 216, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .kpi-card:hover::before {
@@ -209,7 +272,9 @@
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
             border-radius: 20px;
             padding: 25px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 
+                0 10px 40px rgba(0, 119, 182, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
             position: relative;
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -219,7 +284,7 @@
             text-align: center;
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 2px solid rgba(0, 180, 219, 0.2);
+            border-bottom: 2px solid rgba(0, 180, 216, 0.2);
             color: #2c3e50;
             font-size: 18px;
             font-weight: 600;
@@ -239,27 +304,31 @@
             border-left: 4px solid;
             cursor: grab;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 
+                0 4px 20px rgba(0, 119, 182, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .task-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            box-shadow: 
+                0 8px 30px rgba(0, 119, 182, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
 
         .task-card.priority-P { 
-            border-left-color: #e74c3c;
-            box-shadow: 0 4px 20px rgba(231, 76, 60, 0.15);
+            border-left-color: #0099ff;
+            box-shadow: 0 4px 20px rgba(0, 153, 255, 0.15);
         }
         .task-card.priority-Q { 
-            border-left-color: #f39c12;
-            box-shadow: 0 4px 20px rgba(243, 156, 18, 0.15);
+            border-left-color: #00b4d8;
+            box-shadow: 0 4px 20px rgba(0, 180, 216, 0.15);
         }
         .task-card.priority-R { 
-            border-left-color: #27ae60;
-            box-shadow: 0 4px 20px rgba(39, 174, 96, 0.15);
+            border-left-color: #00d4aa;
+            box-shadow: 0 4px 20px rgba(0, 212, 170, 0.15);
         }
 
         .task-header {
@@ -276,26 +345,26 @@
         }
 
         .priority-badge {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            background: linear-gradient(135deg, #0077b6 0%, #00b4d8 100%);
             color: white;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
-            box-shadow: 0 2px 10px rgba(52, 152, 219, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3);
         }
 
         .priority-badge.P { 
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            box-shadow: 0 2px 10px rgba(231, 76, 60, 0.3);
+            background: linear-gradient(135deg, #0099ff 0%, #0077b6 100%);
+            box-shadow: 0 4px 12px rgba(0, 153, 255, 0.3);
         }
         .priority-badge.Q { 
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            box-shadow: 0 2px 10px rgba(243, 156, 18, 0.3);
+            background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+            box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
         }
         .priority-badge.R { 
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-            box-shadow: 0 2px 10px rgba(39, 174, 96, 0.3);
+            background: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
+            box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
         }
 
         .task-details {
@@ -309,7 +378,7 @@
         }
 
         .suggest-btn {
-            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            background: linear-gradient(135deg, #00b4d8 0%, #00d4aa 100%);
             color: white;
             border: none;
             padding: 10px 16px;
@@ -320,13 +389,34 @@
             margin-top: 12px;
             width: 100%;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(0, 180, 219, 0.2);
+            box-shadow: 
+                0 4px 15px rgba(0, 180, 216, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .suggest-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .suggest-btn:hover::before {
+            left: 100%;
         }
 
         .suggest-btn:hover {
-            background: linear-gradient(135deg, #0083b0 0%, #006a8e 100%);
+            background: linear-gradient(135deg, #0099ff 0%, #00b4d8 100%);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 180, 219, 0.3);
+            box-shadow: 
+                0 6px 20px rgba(0, 180, 216, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         /* 司機和車輛卡片 */
@@ -335,46 +425,37 @@
             border-radius: 12px;
             padding: 18px;
             margin: 12px 0;
-            border: 2px solid rgba(0, 180, 219, 0.1);
+            border: 2px solid rgba(0, 180, 216, 0.1);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 
+                0 4px 20px rgba(0, 119, 182, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(10px);
         }
 
         .driver-card:hover, .vehicle-card:hover {
-            border-color: rgba(0, 180, 219, 0.3);
+            border-color: rgba(0, 180, 216, 0.3);
             transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-        }
-
-        .driver-card.level-A { 
-            border-left: 4px solid #e74c3c;
-            box-shadow: 0 4px 20px rgba(231, 76, 60, 0.1);
-        }
-        .driver-card.level-B { 
-            border-left: 4px solid #f39c12;
-            box-shadow: 0 4px 20px rgba(243, 156, 18, 0.1);
-        }
-        .driver-card.level-C { 
-            border-left: 4px solid #27ae60;
-            box-shadow: 0 4px 20px rgba(39, 174, 96, 0.1);
+            box-shadow: 
+                0 8px 30px rgba(0, 119, 182, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
 
         .vehicle-card.type-甲 { 
-            border-left: 4px solid #9b59b6;
-            box-shadow: 0 4px 20px rgba(155, 89, 182, 0.1);
+            border-left: 4px solid #0099ff;
+            box-shadow: 0 4px 20px rgba(0, 153, 255, 0.1);
         }
         .vehicle-card.type-乙 { 
-            border-left: 4px solid #3498db;
-            box-shadow: 0 4px 20px rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #00b4d8;
+            box-shadow: 0 4px 20px rgba(0, 180, 216, 0.1);
         }
         .vehicle-card.type-丙 { 
-            border-left: 4px solid #1abc9c;
-            box-shadow: 0 4px 20px rgba(26, 188, 156, 0.1);
+            border-left: 4px solid #00d4aa;
+            box-shadow: 0 4px 20px rgba(0, 212, 170, 0.1);
         }
         .vehicle-card.type-丁 { 
-            border-left: 4px solid #95a5a6;
-            box-shadow: 0 4px 20px rgba(149, 165, 166, 0.1);
+            border-left: 4px solid #0077b6;
+            box-shadow: 0 4px 20px rgba(0, 119, 182, 0.1);
         }
 
         .card-header {
@@ -409,24 +490,6 @@
             text-transform: uppercase;
         }
 
-        .level-badge.level-a {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
-        }
-
-        .level-badge.level-b {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
-        }
-
-        .level-badge.level-c {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-            color: white;
-            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
-        }
-
         .detail-row {
             display: flex;
             justify-content: space-between;
@@ -450,7 +513,7 @@
 
         .skills-tag {
             background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            color: #1976d2;
+            color: #0077b6;
             padding: 2px 8px;
             border-radius: 10px;
             font-size: 10px;
@@ -458,7 +521,7 @@
         }
 
         .phone-number {
-            color: #00b4db;
+            color: #00b4d8;
             font-weight: 600;
         }
 
@@ -479,30 +542,70 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
         .contact-btn {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
             color: white;
-            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+            box-shadow: 
+                0 4px 12px rgba(0, 212, 170, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .contact-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .contact-btn:hover::before {
+            left: 100%;
         }
 
         .contact-btn:hover {
-            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            background: linear-gradient(135deg, #00a085 0%, #007a63 100%);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            box-shadow: 
+                0 6px 16px rgba(0, 212, 170, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .detail-btn {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            background: linear-gradient(135deg, #0077b6 0%, #005577 100%);
             color: white;
-            box-shadow: 0 2px 8px rgba(108, 117, 125, 0.2);
+            box-shadow: 
+                0 4px 12px rgba(0, 119, 182, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .detail-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .detail-btn:hover::before {
+            left: 100%;
         }
 
         .detail-btn:hover {
-            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+            background: linear-gradient(135deg, #005577 0%, #003d55 100%);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+            box-shadow: 
+                0 6px 16px rgba(0, 119, 182, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .status-badge {
@@ -552,7 +655,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 119, 182, 0.5);
             backdrop-filter: blur(5px);
         }
 
@@ -560,7 +663,9 @@
             position: relative;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 
+                0 20px 60px rgba(0, 119, 182, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
             max-width: 500px;
             width: 90%;
             max-height: 80vh;
@@ -570,7 +675,7 @@
         }
 
         .modal-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0077b6 0%, #00b4d8 50%, #00d4aa 100%);
             color: white;
             padding: 20px 25px;
             display: flex;
@@ -643,7 +748,7 @@
             justify-content: flex-end;
         }
 
-        .btn-primary, .btn-secondary {
+                .btn-primary, .btn-secondary {
             padding: 10px 20px;
             border: none;
             border-radius: 8px;
@@ -651,30 +756,70 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
             color: white;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+            box-shadow: 
+                0 4px 15px rgba(0, 212, 170, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
         }
 
         .btn-primary:hover {
-            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            background: linear-gradient(135deg, #00a085 0%, #007a63 100%);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+            box-shadow: 
+                0 6px 20px rgba(0, 212, 170, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            background: linear-gradient(135deg, #0077b6 0%, #005577 100%);
             color: white;
-            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.2);
+            box-shadow: 
+                0 4px 15px rgba(0, 119, 182, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-secondary:hover::before {
+            left: 100%;
         }
 
         .btn-secondary:hover {
-            background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+            background: linear-gradient(135deg, #005577 0%, #003d55 100%);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.3);
+            box-shadow: 
+                0 6px 20px rgba(0, 119, 182, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         /* 建議面板 */
@@ -687,7 +832,9 @@
             max-height: 80vh;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            box-shadow: 
+                0 20px 60px rgba(0, 119, 182, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
             display: none;
             z-index: 1000;
             overflow: hidden;
@@ -696,7 +843,7 @@
         }
 
         .suggestions-panel h3 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0077b6 0%, #00b4d8 50%, #00d4aa 100%);
             color: white;
             padding: 20px 25px;
             margin: 0;
@@ -713,17 +860,21 @@
 
         .assignment-suggestion {
             background: linear-gradient(135deg, rgba(248, 249, 250, 0.8) 0%, rgba(233, 236, 239, 0.6) 100%);
-            border: 1px solid rgba(0, 180, 219, 0.1);
+            border: 1px solid rgba(0, 180, 216, 0.1);
             border-radius: 12px;
             padding: 18px;
             margin: 12px 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            box-shadow: 
+                0 4px 20px rgba(0, 119, 182, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
 
         .assignment-suggestion:hover {
-            border-color: rgba(0, 180, 219, 0.3);
-            box-shadow: 0 8px 30px rgba(0, 180, 219, 0.15);
+            border-color: rgba(0, 180, 216, 0.3);
+            box-shadow: 
+                0 8px 30px rgba(0, 180, 216, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
             transform: translateY(-2px);
         }
 
@@ -735,7 +886,7 @@
         }
 
         .rank {
-            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            background: linear-gradient(135deg, #0077b6 0%, #005577 100%);
             color: white;
             width: 28px;
             height: 28px;
@@ -745,21 +896,25 @@
             justify-content: center;
             font-size: 12px;
             font-weight: 700;
-            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+            box-shadow: 
+                0 4px 15px rgba(0, 119, 182, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .score-badge {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
             color: white;
             padding: 6px 12px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            box-shadow: 
+                0 4px 15px rgba(0, 212, 170, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .accept-btn {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
             color: white;
             border: none;
             padding: 8px 16px;
@@ -768,13 +923,34 @@
             font-size: 12px;
             font-weight: 500;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+            box-shadow: 
+                0 4px 15px rgba(0, 212, 170, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .accept-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .accept-btn:hover::before {
+            left: 100%;
         }
 
         .accept-btn:hover {
-            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            background: linear-gradient(135deg, #00a085 0%, #007a63 100%);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
+            box-shadow: 
+                0 6px 20px rgba(0, 212, 170, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .suggestion-details {
@@ -782,7 +958,7 @@
             line-height: 1.5;
         }
 
-                .suggestion-details > div {
+        .suggestion-details > div {
             margin: 6px 0;
         }
 
@@ -791,7 +967,7 @@
         }
 
         .reasons li {
-            color: #28a745;
+            color: #00a085;
             font-weight: 500;
         }
 
@@ -828,8 +1004,8 @@
         }
 
         .spinner {
-            border: 3px solid rgba(0, 180, 219, 0.1);
-            border-top: 3px solid #00b4db;
+            border: 3px solid rgba(0, 180, 216, 0.1);
+            border-top: 3px solid #00b4d8;
             border-radius: 50%;
             width: 35px;
             height: 35px;
@@ -896,8 +1072,8 @@
         /* 拖放效果 */
         .drag-over {
             background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
-            border: 2px dashed #2196f3 !important;
-            box-shadow: 0 8px 30px rgba(33, 150, 243, 0.3) !important;
+            border: 2px dashed #00b4d8 !important;
+            box-shadow: 0 8px 30px rgba(0, 180, 216, 0.3) !important;
         }
 
         .dragging {
@@ -917,7 +1093,9 @@
             z-index: 2000;
             transform: translateX(450px);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
         }
 
@@ -926,7 +1104,7 @@
         }
 
         .notification.success { 
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
         }
         .notification.error { 
             background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
@@ -936,7 +1114,7 @@
             color: #212529;
         }
         .notification.info { 
-            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+            background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
         }
 
         /* 篩選器 */
@@ -945,7 +1123,9 @@
             margin: 25px;
             padding: 20px;
             border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            box-shadow: 
+                0 8px 32px rgba(0, 119, 182, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
@@ -968,18 +1148,21 @@
 
         .filter-group select, .filter-group input {
             padding: 10px 14px;
-            border: 1px solid rgba(0, 180, 219, 0.2);
+            border: 1px solid rgba(0, 180, 216, 0.2);
             border-radius: 8px;
             font-size: 14px;
             transition: all 0.3s ease;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
             backdrop-filter: blur(10px);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
 
         .filter-group select:focus, .filter-group input:focus {
             outline: none;
-            border-color: #00b4db;
-            box-shadow: 0 0 0 3px rgba(0, 180, 219, 0.1);
+            border-color: #00b4d8;
+            box-shadow: 
+                0 0 0 3px rgba(0, 180, 216, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
         }
 
         /* 滾動條美化 */
@@ -988,21 +1171,84 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
+            background: rgba(0, 119, 182, 0.1);
             border-radius: 10px;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
             border-radius: 10px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #0083b0 0%, #006a8e 100%);
+            background: linear-gradient(135deg, #0077b6 0%, #005577 100%);
+        }
+
+        /* 新增脈動效果 */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 180, 216, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(0, 180, 216, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 180, 216, 0);
+            }
+        }
+
+        .toolbar button.primary {
+            animation: pulse 2s infinite;
+        }
+
+        /* 新增微妙的動畫效果 */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .kpi-card:nth-child(odd) {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .kpi-card:nth-child(even) {
+            animation: float 6s ease-in-out infinite reverse;
+        }
+
+        /* 新增光暈效果 */
+        .suggestions-panel::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00b4d8, #00d4aa, #0099ff, #00b4d8);
+            border-radius: 22px;
+            z-index: -1;
+            opacity: 0.3;
+            filter: blur(10px);
+        }
+
+        /* 新增按鈕點擊效果 */
+        .toolbar button:active,
+        .suggest-btn:active,
+        .contact-btn:active,
+        .detail-btn:active,
+        .accept-btn:active,
+        .btn-primary:active,
+        .btn-secondary:active {
+            transform: translateY(1px) scale(0.98);
         }
     </style>
 </head>
 <body>
+    <!-- HTML 內容保持不變 -->
     <div id="app">
         <!-- 標題列 -->
         <header>
@@ -1075,7 +1321,7 @@
                     <option value="丁">丁類</option>
                 </select>
             </div>
-                        <div class="filter-group">
+            <div class="filter-group">
                 <label>司機等級</label>
                 <select id="driver-level-filter" onchange="applyFilters()">
                     <option value="">全部</option>
@@ -1084,7 +1330,6 @@
                     <option value="A3">A3級</option>
                 </select>
             </div>
-
             <div class="filter-group">
                 <label>配送狀態</label>
                 <select id="status-filter" onchange="applyFilters()">
@@ -1135,7 +1380,9 @@
         </div>
     </div>
 
+    <!-- JavaScript 代碼保持不變 -->
     <script>
+        // 這裡保持原有的 JavaScript 代碼不變
         // Google Apps Script Web App URL (需要替換為實際的 URL)
         const GAS_URL = 'https://script.google.com/macros/s/AKfycbzchCWms7QgI__MZdJXxFiJWAIWIbx2OddCG-V84LMxS0ftHuI967QznKmBORljVtZSoA/exec';
 
@@ -1278,7 +1525,7 @@
                 const filteredDrivers = this.getFilteredDrivers();
                 
                 if (filteredDrivers.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用司機</div>';
+                                        container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用司機</div>';
                     return;
                 }
                 
@@ -1300,7 +1547,7 @@
                         <div class="card-header">
                             <div class="card-title">
                                 <span class="driver-name">${driver['姓名'] || driver.name || '未設定'}</span>
-                                <span class="level-badge ${levelBadgeColor}">${driver['級別'] || driver.level || 'C'}級</span>
+                                <span class="level-badge ${levelBadgeColor}">${driver['級別'] || driver.level || 'A1'}級</span>
                             </div>
                             <span class="status-badge ${statusClass}">
                                 ${this.getStatusText(driver['狀態'] || driver.status)}
@@ -1335,10 +1582,9 @@
                             ` : ''}
                         </div>
                         <div class="card-actions">
-                                                  <button onclick="app.contactDriver('${driver['員工編號'] || driver.id}')" class="contact-btn">
+                            <button onclick="app.contactDriver('${driver['員工編號'] || driver.id}')" class="contact-btn">
                                 📞 聯絡
                             </button>
-
                             <button onclick="app.viewDriverDetail('${driver['員工編號'] || driver.id}')" class="detail-btn">
                                 📋 詳情
                             </button>
@@ -1349,47 +1595,47 @@
                 });
             }
             
-                    // 渲染車輛列表
-        renderVehicles() {
-            const container = document.getElementById('vehicles-container');
-            const loading = document.getElementById('vehicles-loading');
-            
-            loading.classList.remove('show');
-            container.innerHTML = '';
-            
-            const filteredVehicles = this.getFilteredVehicles();
-            
-            if (filteredVehicles.length === 0) {
-                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用車輛</div>';
-                return;
+            // 渲染車輛列表
+            renderVehicles() {
+                const container = document.getElementById('vehicles-container');
+                const loading = document.getElementById('vehicles-loading');
+                
+                loading.classList.remove('show');
+                container.innerHTML = '';
+                
+                const filteredVehicles = this.getFilteredVehicles();
+                
+                if (filteredVehicles.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用車輛</div>';
+                    return;
+                }
+                
+                filteredVehicles.forEach(vehicle => {
+                    const card = document.createElement('div');
+                    card.className = `vehicle-card type-${vehicle.type}`;
+                    card.dataset.vehicleId = vehicle.id;
+                    
+                    // 拖放目標事件
+                    card.addEventListener('dragover', this.handleDragOver.bind(this));
+                    card.addEventListener('drop', this.handleDrop.bind(this));
+                    
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <div class="card-title">${vehicle.id}</div>
+                            <span class="status-badge available">可用</span>
+                        </div>
+                        <div class="card-details">
+                            <div><strong>廠牌:</strong> ${vehicle.brand || '未設定'}</div>
+                            <div><strong>噸數:</strong> ${vehicle.tonnage || '未設定'}</div>
+                            <div><strong>購買日期:</strong> ${vehicle.purchaseDate || '未設定'}</div>
+                            <div><strong>已用天數:</strong> ${vehicle.mileage || '未設定'}</div>
+                            <div><strong>車子年限:</strong> ${vehicle.age || '未設定'}年</div>
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
             }
-            
-            filteredVehicles.forEach(vehicle => {
-                const card = document.createElement('div');
-                card.className = `vehicle-card type-${vehicle.type}`;
-                card.dataset.vehicleId = vehicle.id;
-                
-                // 拖放目標事件
-                card.addEventListener('dragover', this.handleDragOver.bind(this));
-                card.addEventListener('drop', this.handleDrop.bind(this));
-                
-                card.innerHTML = `
-                    <div class="card-header">
-                        <div class="card-title">${vehicle.id}</div>
-                        <span class="status-badge available">可用</span>
-                    </div>
-                    <div class="card-details">
-                        <div><strong>廠牌:</strong> ${vehicle.brand || '未設定'}</div>
-                        <div><strong>噸數:</strong> ${vehicle.tonnage || '未設定'}</div>
-                        <div><strong>購買日期:</strong> ${vehicle.purchaseDate || '未設定'}</div>
-                        <div><strong>已用天數:</strong> ${vehicle.mileage || '未設定'}</div>
-                        <div><strong>車子年限:</strong> ${vehicle.age || '未設定'}年</div>
-                    </div>
-                `;
-                
-                container.appendChild(card);
-            });
-        }
             
             // 新增輔助方法
             getStatusClass(status) {
@@ -1499,7 +1745,7 @@
                                 </div>
                                 <div class="info-item">
                                     <label>級別</label>
-                                    <span class="level-badge ${this.getLevelBadgeColor(driver['級別'] || driver.level)}">${driver['級別'] || driver.level || 'C'}級</span>
+                                    <span class="level-badge ${this.getLevelBadgeColor(driver['級別'] || driver.level)}">${driver['級別'] || driver.level || 'A1'}級</span>
                                 </div>
                                 <div class="info-item">
                                     <label>類型</label>
@@ -1534,7 +1780,8 @@
                             <button onclick="this.closest('.driver-detail-modal').remove()" class="btn-secondary">
                                 關閉
                             </button>
-                                            </div>
+                        </div>
+                    </div>
                 `;
                 
                 document.body.appendChild(modal);
@@ -1554,23 +1801,24 @@
               // 如果頁面上沒有Q級和R級的顯示區域，可以動態加入
               // 或者更新現有的KPI顯示
             }
+            
             // 更新 KPI 數據
-                updateKPI() {
-                    const totalTasks = this.tasks.length;
-                    const pTasks = this.tasks.filter(t => t.level === 'P').length;
-                    const qTasks = this.tasks.filter(t => t.level === 'Q').length;
-                    const rTasks = this.tasks.filter(t => t.level === 'R').length;
-                    const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派' || t['配送狀態'] === '進行中').length;
-                    const assignRate = totalTasks > 0 ? Math.round((assignedTasks / totalTasks) * 100) : 0;
-                    const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
-                    
-                    document.getElementById('total-tasks').textContent = totalTasks;
-                    document.getElementById('p-tasks').textContent = pTasks;
-                    document.getElementById('q-tasks').textContent = qTasks;
-                    document.getElementById('r-tasks').textContent = rTasks;
-                    document.getElementById('assign-rate').textContent = `${assignRate}%`;
-                    document.getElementById('available-vehicles').textContent = availableVehicles;
-                }
+            updateKPI() {
+                const totalTasks = this.tasks.length;
+                const pTasks = this.tasks.filter(t => t.level === 'P').length;
+                const qTasks = this.tasks.filter(t => t.level === 'Q').length;
+                const rTasks = this.tasks.filter(t => t.level === 'R').length;
+                const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派' || t['配送狀態'] === '進行中').length;
+                const assignRate = totalTasks > 0 ? Math.round((assignedTasks / totalTasks) * 100) : 0;
+                const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
+                
+                document.getElementById('total-tasks').textContent = totalTasks;
+                document.getElementById('p-tasks').textContent = pTasks;
+                document.getElementById('q-tasks').textContent = qTasks;
+                document.getElementById('r-tasks').textContent = rTasks;
+                document.getElementById('assign-rate').textContent = `${assignRate}%`;
+                document.getElementById('available-vehicles').textContent = availableVehicles;
+            }
             
             // 檢查告警
             checkAlerts() {
@@ -1931,7 +2179,7 @@
             showLoading(show) {
                 const loadings = document.querySelectorAll('.loading');
                 loadings.forEach(loading => {
-                    if (show) {
+                                        if (show) {
                         loading.classList.add('show');
                     } else {
                         loading.classList.remove('show');
@@ -2131,3 +2379,5 @@
     </script>
 </body>
 </html>
+
+
