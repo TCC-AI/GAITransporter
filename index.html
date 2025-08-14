@@ -1,9 +1,97 @@
+/**
+ * 記錄操作日誌
+ */
+function logOperation(action, params, result) {
+  try {
+    let sheet = getSheet(SHEET_CONFIG.SHEETS.LOGS);
+    if (!sheet) {
+      const spreadsheet = SpreadsheetApp.openById(SHEET_CONFIG.SHEET_ID);
+      sheet = spreadsheet.insertSheet(SHEET_CONFIG.SHEETS.LOGS);
+      
+      const headers = [
+        '時間戳記', '操作', '參數', '結果', '成功', '錯誤訊息', '操作人員'
+      ];
+      sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
+    }
+    
+    const newRow = [
+      new Date(),
+      action,
+      JSON.stringify(params),
+      JSON.stringify(result),
+      result.success,
+      result.error || '',
+      Session.getActiveUser().getEmail()
+    ];
+    
+    const lastRow = sheet.getLastRow();
+    sheet.getRange(lastRow + 1, 1, 1, newRow.length).setValues([newRow]);
+    
+    return true;
+    
+  } catch (error) {
+    Logger.log('Error in logOperation: ' + error.toString());
+    return false;
+  }
+}
+
+/**
+ * 解析時間窗
+ */
+function parseTimeWindow(dateValue, remarks) {
+  try {
+    let startTime = '09:00';
+    let endTime = '17:00';
+    
+    if (remarks) {
+      // 從備註中解析時間窗
+      const timePattern = /(\d{1,2}):(\d{2})\s*[-~到至]\s*(\d{1,2}):(\d{2})/;
+      const match = remarks.match(timePattern);
+      
+      if (match) {
+        startTime = `${match[1].padStart(2, '0')}:${match[2]}`;
+        endTime = `${match[3].padStart(2, '0')}:${match[4]}`;
+      }
+    }
+    
+    return { startTime, endTime };
+    
+  } catch (error) {
+    Logger.log('Error in parseTimeWindow: ' + error.toString());
+    return { startTime: '09:00', endTime: '17:00' };
+  }
+}
+
+/**
+ * 取得工作表參考
+ */
+function getSheet(sheetName) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(SHEET_CONFIG.SHEET_ID);
+    return spreadsheet.getSheetByName(sheetName);
+  } catch (error) {
+    Logger.log(`Error getting sheet ${sheetName}: ${error.toString()}`);
+    return null;
+  }
+}
+
+/**
+ * 包含 HTML 檔案的函數
+ */
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+
+🌐 前端 HTML 檔案 (index.html) - 真實版本
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAI優化運務人員調派建議系統</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,462 +101,359 @@
 
         body {
             font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            background-color: #f0f2f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             color: #333;
         }
 
-        /* Header 樣式 */
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
-        header h1 {
-            font-size: 24px;
-            margin-bottom: 15px;
+        .header {
             text-align: center;
-        }
-
-        .toolbar {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .toolbar button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            background: rgba(255,255,255,0.2);
             color: white;
-            border: 1px solid rgba(255,255,255,0.3);
+            margin-bottom: 30px;
         }
 
-        .toolbar button:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-2px);
-        }
-
-        .toolbar button.primary {
-            background: #ff6b6b;
-            border-color: #ff6b6b;
-        }
-
-        .toolbar button.primary:hover {
-            background: #ff5252;
-        }
-
-        /* 主控台 KPI 區域 */
-        .dashboard {
-            padding: 20px;
-            background: white;
-            margin: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }
-
-        .kpi-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .kpi-card {
-            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.3);
-        }
-
-        .kpi-card h3 {
-            font-size: 14px;
+        .header h1 {
+            font-size: 2.5rem;
             margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
             opacity: 0.9;
         }
 
-        .kpi-card .value {
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .alert-section {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            display: none;
-        }
-
-        .alert-item {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-            color: #856404;
-        }
-
-        .alert-item::before {
-            content: "⚠️";
-            margin-right: 8px;
-        }
-
-        /* 調度盤主體 */
-        .dispatch-board {
+        /* KPI 儀表板樣式 */
+        .kpi-dashboard {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            padding: 20px;
-            min-height: 600px;
+            margin-bottom: 30px;
         }
 
-        .column {
-            background: white;
-            border-radius: 12px;
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
             padding: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            position: relative;
-        }
-
-        .column h3 {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
-            color: #495057;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
         }
 
-        .column-content {
-            max-height: 500px;
-            overflow-y: auto;
+        .kpi-card:hover {
+            transform: translateY(-5px);
         }
 
-        /* 任務卡片 */
-        .task-card {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            border-left: 4px solid;
-            cursor: grab;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .kpi-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #667eea;
         }
 
-        .task-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
         }
 
-        .task-card.priority-P { 
-            border-left-color: #e74c3c;
-            background: linear-gradient(90deg, #e74c3c 0%, #e74c3c 4px, white 4px);
-        }
-        .task-card.priority-Q { 
-            border-left-color: #f39c12;
-            background: linear-gradient(90deg, #f39c12 0%, #f39c12 4px, white 4px);
-        }
-        .task-card.priority-R { 
-            border-left-color: #27ae60;
-            background: linear-gradient(90deg, #27ae60 0%, #27ae60 4px, white 4px);
-        }
-
-        .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .kpi-label {
+            font-size: 0.9rem;
+            color: #666;
             margin-bottom: 10px;
         }
 
-        .task-header strong {
-            font-size: 16px;
-            color: #2c3e50;
-        }
-
-        .priority-badge {
-            background: #3498db;
-            color: white;
+        .kpi-change {
+            font-size: 0.8rem;
             padding: 4px 8px;
             border-radius: 12px;
-            font-size: 12px;
             font-weight: bold;
         }
 
-        .priority-badge.P { background: #e74c3c; }
-        .priority-badge.Q { background: #f39c12; }
-        .priority-badge.R { background: #27ae60; }
-
-        .task-details {
-            font-size: 13px;
-            color: #666;
-            line-height: 1.4;
+        .kpi-change.positive {
+            background: #d4edda;
+            color: #155724;
         }
 
-        .task-details div {
-            margin: 3px 0;
+        .kpi-change.negative {
+            background: #f8d7da;
+            color: #721c24;
         }
 
-        .suggest-btn {
-            background: #74b9ff;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            margin-top: 10px;
-            width: 100%;
-            transition: background 0.3s ease;
+        /* 主要內容區域 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
         }
 
-        .suggest-btn:hover {
-            background: #0984e3;
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* 司機和車輛卡片 */
-        .driver-card, .vehicle-card {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        .section-title {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
         }
 
-        .driver-card:hover, .vehicle-card:hover {
-            border-color: #74b9ff;
-            transform: translateY(-2px);
+        /* 篩選器樣式 */
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
         }
 
-        .driver-card.level-A { border-left: 4px solid #e74c3c; }
-        .driver-card.level-B { border-left: 4px solid #f39c12; }
-        .driver-card.level-C { border-left: 4px solid #27ae60; }
-
-        .vehicle-card.type-甲 { border-left: 4px solid #9b59b6; }
-        .vehicle-card.type-乙 { border-left: 4px solid #3498db; }
-        .vehicle-card.type-丙 { border-left: 4px solid #1abc9c; }
-        .vehicle-card.type-丁 { border-left: 4px solid #95a5a6; }
-
-        .card-header {
+        .filter-group {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
+            flex-direction: column;
         }
 
-        .card-title {
-            font-weight: bold;
-            color: #2c3e50;
+        .filter-group label {
+            font-size: 0.9rem;
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: white;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 表格樣式 */
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
         }
 
         .status-badge {
-            padding: 3px 8px;
+            padding: 4px 8px;
             border-radius: 12px;
-            font-size: 11px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-assigned {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-in-progress {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-completed {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .level-p {
+            background: #f8d7da;
+            color: #721c24;
             font-weight: bold;
         }
 
-        .status-badge.available { background: #d4edda; color: #155724; }
-        .status-badge.assigned { background: #f8d7da; color: #721c24; }
-        .status-badge.busy { background: #fff3cd; color: #856404; }
-
-        /* 建議面板 */
-        .suggestions-panel {
-            position: fixed;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 400px;
-            max-height: 80vh;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            display: none;
-            z-index: 1000;
-            overflow: hidden;
+        .level-q {
+            background: #fff3cd;
+            color: #856404;
+            font-weight: bold;
         }
 
-        .suggestions-panel h3 {
-            background: #667eea;
-            color: white;
-            padding: 15px 20px;
-            margin: 0;
-            font-size: 16px;
+        .level-r {
+            background: #d4edda;
+            color: #155724;
+            font-weight: bold;
         }
 
-        .suggestions-content {
-            padding: 20px;
-            max-height: calc(80vh - 60px);
+        /* 操作按鈕 */
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+
+        /* 建議卡片樣式 */
+        .suggestions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 400px;
             overflow-y: auto;
         }
 
-        .assignment-suggestion {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
+        .suggestion-card {
+            background: white;
+            border: 1px solid #e0e0e0;
             border-radius: 8px;
             padding: 15px;
-            margin: 10px 0;
             transition: all 0.3s ease;
         }
 
-        .assignment-suggestion:hover {
-            border-color: #74b9ff;
-            box-shadow: 0 4px 15px rgba(116, 185, 255, 0.2);
+        .suggestion-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
         }
 
         .suggestion-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: between;
             align-items: center;
             margin-bottom: 10px;
         }
 
-        .rank {
-            background: #6c757d;
+        .suggestion-score {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
             font-weight: bold;
-        }
-
-        .score-badge {
-            background: #28a745;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .accept-btn {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: background 0.3s ease;
-        }
-
-        .accept-btn:hover {
-            background: #218838;
         }
 
         .suggestion-details {
-            font-size: 13px;
+            font-size: 0.85rem;
+            color: #666;
             line-height: 1.4;
         }
 
-        .suggestion-details > div {
-            margin: 5px 0;
-        }
-
-        .reasons ul, .risks ul {
-            margin: 5px 0 5px 20px;
-        }
-
-        .reasons li {
-            color: #28a745;
-        }
-
-        .risks li {
-            color: #dc3545;
-        }
-
-        .close-panel {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
+        .suggestion-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
         }
 
         /* 載入動畫 */
         .loading {
-            display: none;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .loading.show {
-            display: block;
-        }
-
-        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #74b9ff;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
         }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-
-        /* 響應式設計 */
-        @media (max-width: 1200px) {
-            .dispatch-board {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            
-            .suggestions-panel {
-                position: fixed;
-                top: 0;
-                right: 0;
-                width: 100%;
-                height: 100%;
-                transform: none;
-                border-radius: 0;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .toolbar {
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            .toolbar button {
-                width: 200px;
-            }
-            
-            .kpi-section {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* 拖放效果 */
-        .drag-over {
-            background-color: #e3f2fd !important;
-            border: 2px dashed #2196f3 !important;
-        }
-
-        .dragging {
-            opacity: 0.5;
-            transform: rotate(5deg);
         }
 
         /* 通知樣式 */
@@ -479,960 +464,1225 @@
             padding: 15px 20px;
             border-radius: 8px;
             color: white;
-            font-weight: bold;
-            z-index: 2000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
+            font-weight: 500;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
         }
 
-        .notification.show {
-            transform: translateX(0);
+        .notification.success {
+            background: #28a745;
         }
 
-        .notification.success { background: #28a745; }
-        .notification.error { background: #dc3545; }
-        .notification.warning { background: #ffc107; color: #212529; }
-        .notification.info { background: #17a2b8; }
+        .notification.error {
+            background: #dc3545;
+        }
 
-        /* 篩選器 */
-        .filters {
-            background: white;
-            margin: 20px;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        .notification.warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .filters {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* 全螢幕載入遮罩 */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* 操作面板 */
+        .action-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .action-buttons-row {
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
             align-items: center;
         }
 
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .filter-group label {
-            font-size: 12px;
+        .last-updated {
+            font-size: 0.8rem;
             color: #666;
-            font-weight: bold;
-        }
-
-        .filter-group select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
+            text-align: center;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <!-- 標題列 -->
-        <header>
-            <h1>🚛 GAI優化運務人員調派建議系統</h1>
-            <div class="toolbar">
-                <button onclick="loadData()">🔄 重新載入資料</button>
-                <button onclick="autoAssignAll()" class="primary">🤖 一鍵自動配對</button>
-                <button onclick="generateAllSuggestions()">💡 產生所有建議</button>
-                <button onclick="conflictCheck()">⚠️ 衝突檢查</button>
-                <button onclick="publishToApp()">📱 發佈到司機APP</button>
-            </div>
-        </header>
+    <div class="container">
+        <!-- 標題區域 -->
+        <div class="header">
+            <h1><i class="fas fa-truck"></i> GAI優化運務人員調派建議系統</h1>
+            <p>基於 Google Sheets 的智能配送調度管理平台</p>
+        </div>
 
-        <!-- 主控台 KPI 區域 -->
-        <div class="dashboard">
-            <div class="kpi-section">
-                <div class="kpi-card">
-                    <h3>今日任務總數</h3>
-                    <div class="value" id="total-tasks">0</div>
-                </div>
-                <div class="kpi-card">
-                    <h3>P級任務</h3>
-                    <div class="value" id="p-tasks">0</div>
-                </div>
-                <div class="kpi-card">
-                    <h3>Q級任務</h3>
-                    <div class="value" id="q-tasks">0</div>
-                </div>
-                <div class="kpi-card">
-                    <h3>R級任務</h3>
-                    <div class="value" id="r-tasks">0</div>
-                </div>
-                <div class="kpi-card">
-                    <h3>已指派率</h3>
-                    <div class="value" id="assign-rate">0%</div>
-                </div>
-                <div class="kpi-card">
-                    <h3>可用車輛</h3>
-                    <div class="value" id="available-vehicles">0</div>
-                </div>
-            </div>
-            
-            <div id="alert-section" class="alert-section">
-                <div id="alerts-content"></div>
+        <!-- KPI 儀表板 -->
+        <div class="kpi-dashboard" id="kpiDashboard">
+            <!-- KPI 卡片將由 JavaScript 動態生成 -->
+        </div>
+
+        <!-- 操作面板 -->
+        <div class="action-panel">
+            <div class="action-buttons-row">
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> 重新整理
+                </button>
+                <button class="btn btn-success" onclick="autoAssignAll()">
+                    <i class="fas fa-magic"></i> 自動配對全部
+                </button>
+                <button class="btn btn-warning" onclick="publishToApp()">
+                    <i class="fas fa-paper-plane"></i> 發佈到APP
+                </button>
+                <button class="btn btn-secondary" onclick="exportResults()">
+                    <i class="fas fa-download"></i> 匯出結果
+                </button>
             </div>
         </div>
 
-        <!-- 篩選器 -->
-        <div class="filters">
-            <div class="filter-group">
-                <label>日期</label>
-                <input type="date" id="date-filter" onchange="applyFilters()">
+        <!-- 主要內容區域 -->
+        <div class="main-content">
+            <!-- 待派任務區域 -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-tasks"></i> 待派任務管理
+                </h2>
+                
+                <!-- 任務篩選器 -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>日期</label>
+                        <input type="date" id="taskDateFilter" onchange="filterTasks()">
+                    </div>
+                    <div class="filter-group">
+                        <label>狀態</label>
+                        <select id="taskStatusFilter" onchange="filterTasks()">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>客戶等級</label>
+                        <select id="taskLevelFilter" onchange="filterTasks()">
+                            <option value="">全部</option>
+                            <option value="P">P級 (優先)</option>
+                            <option value="Q">Q級 (一般)</option>
+                            <option value="R">R級 (彈性)</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>客戶</label>
+                        <select id="taskCustomerFilter" onchange="filterTasks()">
+                            <option value="">全部客戶</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 任務表格 -->
+                <div class="table-container">
+                    <table id="tasksTable">
+                        <thead>
+                            <tr>
+                                <th>配送單號</th>
+                                <th>客戶</th>
+                                <th>等級</th>
+                                <th>狀態</th>
+                                <th>配送時間</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasksTableBody">
+                            <!-- 資料將由 JavaScript 動態載入 -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="filter-group">
-                <label>客戶等級</label>
-                <select id="level-filter" onchange="applyFilters()">
-                    <option value="">全部</option>
-                    <option value="P">P級</option>
-                    <option value="Q">Q級</option>
-                    <option value="R">R級</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>車輛類型</label>
-                <select id="vehicle-type-filter" onchange="applyFilters()">
-                    <option value="">全部</option>
-                    <option value="甲">甲類</option>
-                    <option value="乙">乙類</option>
-                    <option value="丙">丙類</option>
-                    <option value="丁">丁類</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>司機等級</label>
-                <select id="driver-level-filter" onchange="applyFilters()">
-                    <option value="">全部</option>
-                    <option value="A">A級</option>
-                    <option value="B">B級</option>
-                    <option value="C">C級</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label>配送狀態</label>
-                <select id="status-filter" onchange="applyFilters()">
-                    <option value="">全部</option>
-                    <option value="待派">待派</option>
-                    <option value="已派">已派</option>
-                    <option value="進行中">進行中</option>
-                    <option value="完成">完成</option>
-                </select>
+
+            <!-- 配對建議區域 -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-lightbulb"></i> AI 配對建議
+                </h2>
+                
+                <div id="selectedTaskInfo" style="display: none;">
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4>選中任務：<span id="selectedTaskId"></span></h4>
+                        <p>客戶：<span id="selectedTaskCustomer"></span></p>
+                        <p>等級：<span id="selectedTaskLevel"></span></p>
+                        <p>配送時間：<span id="selectedTaskTime"></span></p>
+                    </div>
+                </div>
+
+                <div id="suggestionsContainer" class="suggestions-container">
+                    <div style="text-align: center; color: #666; padding: 40px;">
+                        <i class="fas fa-hand-pointer" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                        <p>請選擇一個待派任務以查看 AI 配對建議</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- 調度盤主體 -->
-        <main class="dispatch-board">
-            <div class="column">
-                <h3>📋 待配送任務</h3>
-                <div class="loading" id="tasks-loading">
-                    <div class="spinner"></div>
-                    <div>載入任務中...</div>
+        <!-- 資源管理區域 -->
+        <div class="main-content">
+            <!-- 司機管理 -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-users"></i> 司機資源管理
+                </h2>
+                
+                <!-- 司機篩選器 -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>等級</label>
+                        <select id="driverLevelFilter" onchange="filterDrivers()">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>狀態</label>
+                        <select id="driverStatusFilter" onchange="filterDrivers()">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="column-content" id="tasks-container"></div>
-            </div>
-            
-            <div class="column">
-                <h3>🚛 可用車輛</h3>
-                <div class="loading" id="vehicles-loading">
-                    <div class="spinner"></div>
-                    <div>載入車輛中...</div>
-                </div>
-                <div class="column-content" id="vehicles-container"></div>
-            </div>
-            
-            <div class="column">
-                <h3>👨‍💼 可派司機</h3>
-                <div class="loading" id="drivers-loading">
-                    <div class="spinner"></div>
-                    <div>載入司機中...</div>
-                </div>
-                <div class="column-content" id="drivers-container"></div>
-            </div>
-        </main>
 
-        <!-- 建議面板 -->
-        <div id="suggestions-panel" class="suggestions-panel">
-            <h3>💡 配對建議</h3>
-            <button class="close-panel" onclick="closeSuggestions()">×</button>
-            <div class="suggestions-content" id="suggestions-content"></div>
+                <!-- 司機表格 -->
+                <div class="table-container">
+                    <table id="driversTable">
+                        <thead>
+                            <tr>
+                                <th>編號</th>
+                                <th>姓名</th>
+                                <th>等級</th>
+                                <th>狀態</th>
+                                <th>今日工時</th>
+                                <th>準點率</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driversTableBody">
+                            <!-- 資料將由 JavaScript 動態載入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 車輛管理 -->
+            <div class="section">
+                <h2 class="section-title">
+                    <i class="fas fa-truck"></i> 車輛資源管理
+                </h2>
+                
+                <!-- 車輛篩選器 -->
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>類型</label>
+                        <select id="vehicleTypeFilter" onchange="filterVehicles()">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>狀態</label>
+                        <select id="vehicleStatusFilter" onchange="filterVehicles()">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 車輛表格 -->
+                <div class="table-container">
+                    <table id="vehiclesTable">
+                        <thead>
+                            <tr>
+                                <th>車牌</th>
+                                <th>類型</th>
+                                <th>容量</th>
+                                <th>狀態</th>
+                                <th>今日使用</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vehiclesTableBody">
+                            <!-- 資料將由 JavaScript 動態載入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 最後更新時間 -->
+        <div class="last-updated" id="lastUpdated">
+            最後更新：載入中...
         </div>
     </div>
 
+    <!-- JavaScript 程式碼 -->
     <script>
-        // Google Apps Script Web App URL (需要替換為實際的 URL)
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwEPSec3Y-AnAP1JvPY4OGjvPkNfjZLgc1dByfHSfzSV9qjF1GYaGEvyVkdUBEx_1ULSg/exec';
+        // 全域變數
+        let currentTasks = [];
+        let currentDrivers = [];
+        let currentVehicles = [];
+        let dropdownData = {};
+        let selectedTaskId = null;
 
-        // 主要應用程式類別
-        class DispatchApp {
-            constructor() {
-                this.tasks = [];
-                this.drivers = [];
-                this.vehicles = [];
-                this.assignments = [];
-                this.filters = {
-                    date: '',
-                    level: '',
-                    vehicleType: '',
-                    driverLevel: '',
-                    status: ''
-                };
+        // Web App URL - 請替換為您的實際 URL
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbz3EjwUQqpR9PzYN6iB04rwfCtYYNr8MlNLp_WM6MngmQF_nQOWxQGOgHl1pwn2szilRA/exec';
+
+        /**
+         * 頁面載入完成後初始化
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('頁面載入完成，開始初始化...');
+            initializeApp();
+        });
+
+        /**
+         * 初始化應用程式
+         */
+        async function initializeApp() {
+            try {
+                showLoadingOverlay(true);
                 
-                // 設定今日日期
-                document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
+                // 載入下拉選單資料
+                await loadDropdownData();
+                
+                // 載入所有資料
+                await Promise.all([
+                    loadKPIData(),
+                    loadTasks(),
+                    loadDrivers(),
+                    loadVehicles()
+                ]);
+                
+                // 設定今日日期為預設篩選
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('taskDateFilter').value = today;
+                
+                showNotification('系統初始化完成', 'success');
+                updateLastUpdatedTime();
+                
+            } catch (error) {
+                console.error('初始化失敗:', error);
+                showNotification('系統初始化失敗: ' + error.message, 'error');
+            } finally {
+                showLoadingOverlay(false);
             }
-            
-            // 載入所有資料
-            async loadData() {
-                this.showLoading(true);
-                
-                try {
-                    // 顯示載入動畫
-                    document.getElementById('tasks-loading').classList.add('show');
-                    document.getElementById('vehicles-loading').classList.add('show');
-                    document.getElementById('drivers-loading').classList.add('show');
-                    
-                    const [tasksRes, driversRes, vehiclesRes] = await Promise.all([
-                        this.callGAS('getTasks'),
-                        this.callGAS('getDrivers'),
-                        this.callGAS('getVehicles')
-                    ]);
-                    
-                    if (tasksRes.success) this.tasks = tasksRes.data || [];
-                    if (driversRes.success) this.drivers = driversRes.data || [];
-                    if (vehiclesRes.success) this.vehicles = vehiclesRes.data || [];
-                    
-                    this.renderAll();
-                    this.updateKPI();
-                    this.checkAlerts();
-                    
-                    this.showNotification('資料載入完成', 'success');
-                    
-                } catch (error) {
-                    console.error('載入資料失敗:', error);
-                    this.showNotification('載入資料失敗，請重試', 'error');
-                } finally {
-                    this.showLoading(false);
-                }
-            }
-            
-            // 呼叫 Google Apps Script
-            async callGAS(action, data = {}) {
-                try {
-                    const response = await fetch(GAS_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `action=${action}&data=${encodeURIComponent(JSON.stringify(data))}`
-                    });
-                    
-                    const result = await response.json();
-                    return result;
-                } catch (error) {
-                    console.error('API 呼叫失敗:', error);
-                    return { success: false, error: error.message };
-                }
-            }
-            
-            // 渲染所有內容
-            renderAll() {
-                this.renderTasks();
-                this.renderDrivers();
-                this.renderVehicles();
-            }
-            
-            // 渲染任務列表
-            renderTasks() {
-                const container = document.getElementById('tasks-container');
-                const loading = document.getElementById('tasks-loading');
-                
-                loading.classList.remove('show');
-                container.innerHTML = '';
-                
-                const filteredTasks = this.getFilteredTasks();
-                
-                if (filteredTasks.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無符合條件的任務</div>';
-                    return;
-                }
-                
-                filteredTasks.forEach(task => {
-                    const card = document.createElement('div');
-                    card.className = `task-card priority-${task.level}`;
-                    card.draggable = true;
-                    card.dataset.taskId = task.id;
-                    
-                    // 拖放事件
-                    card.addEventListener('dragstart', this.handleDragStart.bind(this));
-                    card.addEventListener('dragend', this.handleDragEnd.bind(this));
-                    
-                    card.innerHTML = `
-                        <div class="task-header">
-                            <strong>${task['配送單號'] || task.id}</strong>
-                            <span class="priority-badge ${task.level}">${task.level}</span>
-                        </div>
-                        <div class="task-details">
-                            <div><strong>客戶:</strong> ${task['客戶簡稱'] || '未指定'}</div>
-                            <div><strong>配送點:</strong> ${task['配送點簡稱'] || '未指定'}</div>
-                            <div><strong>日期:</strong> ${task['日期'] || '未指定'}</div>
-                            <div><strong>狀態:</strong> ${task['配送狀態'] || '待派'}</div>
-                            ${task['配送備註'] ? `<div><strong>備註:</strong> ${task['配送備註']}</div>` : ''}
-                        </div>
-                        <button onclick="app.generateSuggestions('${task.id}')" class="suggest-btn">
-                            💡 產生建議
-                        </button>
-                    `;
-                    
-                    container.appendChild(card);
-                });
-            }
-            
-            // 渲染司機列表
-            renderDrivers() {
-                const container = document.getElementById('drivers-container');
-                const loading = document.getElementById('drivers-loading');
-                
-                loading.classList.remove('show');
-                container.innerHTML = '';
-                
-                const filteredDrivers = this.getFilteredDrivers();
-                
-                if (filteredDrivers.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用司機</div>';
-                    return;
-                }
-                
-                filteredDrivers.forEach(driver => {
-                    const card = document.createElement('div');
-                    card.className = `driver-card level-${driver.level}`;
-                    card.dataset.driverId = driver.id;
-                    
-                    // 拖放目標事件
-                    card.addEventListener('dragover', this.handleDragOver.bind(this));
-                    card.addEventListener('drop', this.handleDrop.bind(this));
-                    
-                    card.innerHTML = `
-                        <div class="card-header">
-                            <div class="card-title">${driver.name || driver.id}</div>
-                            <span class="status-badge ${driver.status === '可派遣' ? 'available' : 'assigned'}">
-                                ${driver.status || '可派遣'}
-                            </span>
-                        </div>
-                        <div class="card-details">
-                            <div><strong>等級:</strong> ${driver.level}級</div>
-                            <div><strong>員編:</strong> ${driver.employeeId || '未設定'}</div>
-                            <div><strong>類型:</strong> ${driver.type || '自有'}</div>
-                            ${driver.skills ? `<div><strong>技能:</strong> ${driver.skills}</div>` : ''}
-                            ${driver.workHours ? `<div><strong>今日工時:</strong> ${driver.workHours}小時</div>` : ''}
-                        </div>
-                    `;
-                    
-                    container.appendChild(card);
-                });
-            }
-            
-            // 渲染車輛列表
-            renderVehicles() {
-                const container = document.getElementById('vehicles-container');
-                const loading = document.getElementById('vehicles-loading');
-                
-                loading.classList.remove('show');
-                container.innerHTML = '';
-                
-                const filteredVehicles = this.getFilteredVehicles();
-                
-                if (filteredVehicles.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用車輛</div>';
-                    return;
-                }
-                
-                filteredVehicles.forEach(vehicle => {
-                    const card = document.createElement('div');
-                    card.className = `vehicle-card type-${vehicle.type}`;
-                    card.dataset.vehicleId = vehicle.id;
-                    
-                    // 拖放目標事件
-                    card.addEventListener('dragover', this.handleDragOver.bind(this));
-                    card.addEventListener('drop', this.handleDrop.bind(this));
-                    
-                    card.innerHTML = `
-                        <div class="card-header">
-                            <div class="card-title">${vehicle.number || vehicle.id}</div>
-                                                       <span class="status-badge ${vehicle.status === '可用' ? 'available' : 'assigned'}">
-                                ${vehicle.status || '可用'}
-                            </span>
-                        </div>
-                        <div class="card-details">
-                            <div><strong>類型:</strong> ${vehicle.type}類</div>
-                            <div><strong>溫層:</strong> ${vehicle.tempZone || '冷藏'}</div>
-                            <div><strong>容量:</strong> ${vehicle.capacity || '未設定'}</div>
-                            <div><strong>板位:</strong> ${vehicle.palletCount || '未設定'}</div>
-                            ${vehicle.equipment ? `<div><strong>設備:</strong> ${vehicle.equipment}</div>` : ''}
-                            ${vehicle.location ? `<div><strong>位置:</strong> ${vehicle.location}</div>` : ''}
-                        </div>
-                    `;
-                    
-                    container.appendChild(card);
-                });
-            }
-            
-            // 更新 KPI 數據
-            updateKPI() {
-                const totalTasks = this.tasks.length;
-                const pTasks = this.tasks.filter(t => t.level === 'P').length;
-                const qTasks = this.tasks.filter(t => t.level === 'Q').length;
-                const rTasks = this.tasks.filter(t => t.level === 'R').length;
-                const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派' || t['配送狀態'] === '進行中').length;
-                const assignRate = totalTasks > 0 ? Math.round((assignedTasks / totalTasks) * 100) : 0;
-                const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
-                
-                document.getElementById('total-tasks').textContent = totalTasks;
-                document.getElementById('p-tasks').textContent = pTasks;
-                document.getElementById('q-tasks').textContent = qTasks;
-                document.getElementById('r-tasks').textContent = rTasks;
-                document.getElementById('assign-rate').textContent = `${assignRate}%`;
-                document.getElementById('available-vehicles').textContent = availableVehicles;
-            }
-            
-            // 檢查告警
-            checkAlerts() {
-                const alerts = [];
-                const alertSection = document.getElementById('alert-section');
-                const alertContent = document.getElementById('alerts-content');
-                
-                // 檢查容量不足
-                const highPriorityTasks = this.tasks.filter(t => t.level === 'P' && t['配送狀態'] === '待派');
-                const availableADrivers = this.drivers.filter(d => d.level === 'A' && d.status === '可派遣');
-                if (highPriorityTasks.length > availableADrivers.length) {
-                    alerts.push('P級任務數量超過可用A級司機數量');
-                }
-                
-                // 檢查工時超限
-                const overtimeDrivers = this.drivers.filter(d => d.workHours && d.workHours > 10);
-                if (overtimeDrivers.length > 0) {
-                    alerts.push(`${overtimeDrivers.length}位司機工時超過10小時`);
-                }
-                
-                // 檢查車輛維護
-                const maintenanceVehicles = this.vehicles.filter(v => v.status === '保養');
-                if (maintenanceVehicles.length > 0) {
-                    alerts.push(`${maintenanceVehicles.length}台車輛正在保養中`);
-                }
-                
-                if (alerts.length > 0) {
-                    alertContent.innerHTML = alerts.map(alert => 
-                        `<div class="alert-item">${alert}</div>`
-                    ).join('');
-                    alertSection.style.display = 'block';
+        }
+
+        /**
+         * 載入下拉選單資料
+         */
+        async function loadDropdownData() {
+            try {
+                const response = await callGoogleAppsScript('getDropdownData');
+                if (response.success) {
+                    dropdownData = response.data;
+                    populateDropdowns();
                 } else {
-                    alertSection.style.display = 'none';
+                    throw new Error(response.error);
                 }
+            } catch (error) {
+                console.error('載入下拉選單資料失敗:', error);
+                throw error;
             }
-            
-            // 產生配對建議
-            async generateSuggestions(taskId) {
-                try {
-                    this.showNotification('正在產生建議...', 'info');
-                    
-                    const result = await this.callGAS('generateTop3', { taskId });
-                    
-                    if (result.success) {
-                        this.showSuggestions(taskId, result.data);
-                    } else {
-                        this.showNotification('產生建議失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('產生建議失敗:', error);
-                    this.showNotification('產生建議失敗，請重試', 'error');
+        }
+
+        /**
+         * 填充下拉選單
+         */
+        function populateDropdowns() {
+            // 任務狀態
+            const taskStatusFilter = document.getElementById('taskStatusFilter');
+            taskStatusFilter.innerHTML = '<option value="">全部</option>';
+            dropdownData.taskStatuses.forEach(status => {
+                taskStatusFilter.innerHTML += `<option value="${status}">${status}</option>`;
+            });
+
+            // 客戶列表
+            const taskCustomerFilter = document.getElementById('taskCustomerFilter');
+            taskCustomerFilter.innerHTML = '<option value="">全部客戶</option>';
+            dropdownData.customers.forEach(customer => {
+                taskCustomerFilter.innerHTML += `<option value="${customer}">${customer}</option>`;
+            });
+
+            // 司機等級
+            const driverLevelFilter = document.getElementById('driverLevelFilter');
+            driverLevelFilter.innerHTML = '<option value="">全部</option>';
+            dropdownData.driverLevels.forEach(level => {
+                driverLevelFilter.innerHTML += `<option value="${level}">${level}級</option>`;
+            });
+
+            // 司機狀態
+            const driverStatusFilter = document.getElementById('driverStatusFilter');
+            driverStatusFilter.innerHTML = '<option value="">全部</option>';
+            dropdownData.driverStatuses.forEach(status => {
+                driverStatusFilter.innerHTML += `<option value="${status}">${status}</option>`;
+            });
+
+            // 車輛類型
+            const vehicleTypeFilter = document.getElementById('vehicleTypeFilter');
+            vehicleTypeFilter.innerHTML = '<option value="">全部</option>';
+            dropdownData.vehicleTypes.forEach(type => {
+                vehicleTypeFilter.innerHTML += `<option value="${type}">${type}</option>`;
+            });
+
+            // 車輛狀態
+            const vehicleStatusFilter = document.getElementById('vehicleStatusFilter');
+            vehicleStatusFilter.innerHTML = '<option value="">全部</option>';
+            dropdownData.vehicleStatuses.forEach(status => {
+                vehicleStatusFilter.innerHTML += `<option value="${status}">${status}</option>`;
+            });
+        }
+
+        /**
+         * 載入 KPI 資料
+         */
+        async function loadKPIData() {
+            try {
+                const response = await callGoogleAppsScript('getKPIData');
+                if (response.success) {
+                    renderKPIDashboard(response.data);
+                } else {
+                    throw new Error(response.error);
                 }
+            } catch (error) {
+                console.error('載入 KPI 資料失敗:', error);
+                throw error;
             }
+        }
+
+               /**
+         * 渲染 KPI 儀表板
+         */
+        function renderKPIDashboard(kpiData) {
+            const dashboard = document.getElementById('kpiDashboard');
             
-            // 顯示建議面板
-            showSuggestions(taskId, suggestions) {
-                const panel = document.getElementById('suggestions-panel');
-                const content = document.getElementById('suggestions-content');
-                const task = this.tasks.find(t => t.id === taskId);
-                
-                if (!task) {
-                    this.showNotification('找不到指定任務', 'error');
-                    return;
+            const kpiCards = [
+                {
+                    icon: 'fas fa-tasks',
+                    value: kpiData.totalTasks,
+                    label: '總任務數',
+                    change: '+5%',
+                    changeType: 'positive'
+                },
+                {
+                    icon: 'fas fa-exclamation-triangle',
+                    value: kpiData.pTasks,
+                    label: 'P級任務',
+                    change: '+2',
+                    changeType: 'negative'
+                },
+                {
+                    icon: 'fas fa-clock',
+                    value: kpiData.qTasks,
+                    label: 'Q級任務',
+                    change: '+3',
+                    changeType: 'positive'
+                },
+                {
+                    icon: 'fas fa-check-circle',
+                    value: kpiData.rTasks,
+                    label: 'R級任務',
+                    change: '+8',
+                    changeType: 'positive'
+                },
+                {
+                    icon: 'fas fa-clipboard-check',
+                    value: kpiData.assignedTasks,
+                    label: '已指派任務',
+                    change: `${kpiData.assignRate}%`,
+                    changeType: kpiData.assignRate >= 80 ? 'positive' : 'negative'
+                },
+                {
+                    icon: 'fas fa-users',
+                    value: kpiData.availableDrivers,
+                    label: '可用司機',
+                    change: '穩定',
+                    changeType: 'positive'
+                },
+                {
+                    icon: 'fas fa-truck',
+                    value: kpiData.availableVehicles,
+                    label: '可用車輛',
+                    change: '充足',
+                    changeType: 'positive'
+                },
+                {
+                    icon: 'fas fa-chart-line',
+                    value: `${kpiData.efficiency}%`,
+                    label: '調度效率',
+                    change: kpiData.efficiency >= 85 ? '優秀' : '待改善',
+                    changeType: kpiData.efficiency >= 85 ? 'positive' : 'negative'
                 }
-                
-                content.innerHTML = `
-                    <h4>📋 任務: ${task['配送單號'] || task.id} 的配對建議</h4>
-                    <div style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 6px;">
-                        <div><strong>客戶:</strong> ${task['客戶簡稱'] || '未指定'}</div>
-                        <div><strong>等級:</strong> ${task.level}</div>
-                        <div><strong>配送點:</strong> ${task['配送點簡稱'] || '未指定'}</div>
+            ];
+
+            dashboard.innerHTML = kpiCards.map(card => `
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="${card.icon}"></i>
                     </div>
-                    
-                    ${suggestions && suggestions.length > 0 ? suggestions.map((suggestion, index) => `
-                        <div class="assignment-suggestion">
-                            <div class="suggestion-header">
-                                <span class="rank">#${index + 1}</span>
-                                <span class="score-badge">分數: ${suggestion.score ? suggestion.score.toFixed(1) : '0.0'}</span>
-                                <button onclick="app.acceptSuggestion('${taskId}', ${index})" class="accept-btn">
-                                    ✅ 採用此建議
-                                </button>
-                            </div>
-                            <div class="suggestion-details">
-                                <div><strong>👨‍💼 司機:</strong> ${suggestion.driver?.name || '未指定'} (${suggestion.driver?.level || 'N/A'}級)</div>
-                                <div><strong>🚛 車輛:</strong> ${suggestion.vehicle?.number || '未指定'} (${suggestion.vehicle?.type || 'N/A'}類)</div>
-                                
-                                ${suggestion.factors && suggestion.factors.length > 0 ? `
-                                    <div class="reasons">
-                                        <strong>💡 推薦理由:</strong>
-                                        <ul>
-                                            ${suggestion.factors.map(factor => `<li>${factor}</li>`).join('')}
-                                        </ul>
-                                    </div>
-                                ` : ''}
-                                
-                                ${suggestion.risks && suggestion.risks.length > 0 ? `
-                                    <div class="risks">
-                                        <strong>⚠️ 風險提醒:</strong>
-                                        <ul>
-                                            ${suggestion.risks.map(risk => `<li class="risk">${risk}</li>`).join('')}
-                                        </ul>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `).join('') : '<div style="text-align: center; color: #666; padding: 20px;">暫無可用的配對建議</div>'}
+                    <div class="kpi-value">${card.value}</div>
+                    <div class="kpi-label">${card.label}</div>
+                    <div class="kpi-change ${card.changeType}">${card.change}</div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * 載入任務資料
+         */
+        async function loadTasks(filters = {}) {
+            try {
+                const response = await callGoogleAppsScript('getTasks', filters);
+                if (response.success) {
+                    currentTasks = response.data;
+                    renderTasksTable(currentTasks);
+                } else {
+                    throw new Error(response.error);
+                }
+            } catch (error) {
+                console.error('載入任務資料失敗:', error);
+                throw error;
+            }
+        }
+
+        /**
+         * 渲染任務表格
+         */
+        function renderTasksTable(tasks) {
+            const tbody = document.getElementById('tasksTableBody');
+            
+            if (tasks.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #666; padding: 40px;">
+                            <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.3;"></i><br>
+                            暫無任務資料
+                        </td>
+                    </tr>
                 `;
-                
-                panel.style.display = 'block';
+                return;
             }
-            
-            // 接受建議
-            async acceptSuggestion(taskId, suggestionIndex) {
-                try {
-                    const result = await this.callGAS('acceptSuggestion', { 
-                        taskId, 
-                        suggestionIndex 
-                    });
-                    
-                    if (result.success) {
-                        this.showNotification('配對建議已採用', 'success');
-                        this.closeSuggestions();
-                        this.loadData(); // 重新載入資料
-                    } else {
-                        this.showNotification('採用建議失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('採用建議失敗:', error);
-                    this.showNotification('採用建議失敗，請重試', 'error');
+
+            tbody.innerHTML = tasks.map(task => `
+                <tr onclick="selectTask('${task.id}')" style="cursor: pointer;" 
+                    class="${selectedTaskId === task.id ? 'table-active' : ''}">
+                    <td>${task['配送單號'] || task.id}</td>
+                    <td>${task['客戶簡稱'] || ''}</td>
+                    <td>
+                        <span class="status-badge level-${(task.level || 'R').toLowerCase()}">
+                            ${task.level || 'R'}級
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${getStatusClass(task['配送狀態'])}">
+                            ${task['配送狀態'] || '待派'}
+                        </span>
+                    </td>
+                    <td>${formatDateTime(task['日期'])} ${task['配送時間'] || ''}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); generateSuggestions('${task.id}')">
+                                <i class="fas fa-lightbulb"></i> 建議
+                            </button>
+                            ${task['配送狀態'] === '待派' ? `
+                                <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); showAssignModal('${task.id}')">
+                                    <i class="fas fa-user-plus"></i> 指派
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * 載入司機資料
+         */
+        async function loadDrivers(filters = {}) {
+            try {
+                const response = await callGoogleAppsScript('getDrivers', filters);
+                if (response.success) {
+                    currentDrivers = response.data;
+                    renderDriversTable(currentDrivers);
+                } else {
+                    throw new Error(response.error);
                 }
+            } catch (error) {
+                console.error('載入司機資料失敗:', error);
+                throw error;
             }
+        }
+
+        /**
+         * 渲染司機表格
+         */
+        function renderDriversTable(drivers) {
+            const tbody = document.getElementById('driversTableBody');
             
-            // 關閉建議面板
-            closeSuggestions() {
-                document.getElementById('suggestions-panel').style.display = 'none';
+            if (drivers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #666; padding: 40px;">
+                            暫無司機資料
+                        </td>
+                    </tr>
+                `;
+                return;
             }
+
+            tbody.innerHTML = drivers.map(driver => `
+                <tr>
+                    <td>${driver['員工編號'] || driver.id}</td>
+                    <td>${driver['姓名'] || ''}</td>
+                    <td>
+                        <span class="status-badge level-${(driver['等級'] || 'C').toLowerCase()}">
+                            ${driver['等級'] || 'C'}級
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge ${getStatusClass(driver['狀態'])}">
+                            ${driver['狀態'] || '待命'}
+                        </span>
+                    </td>
+                    <td>${driver['今日工時'] || 0} 小時</td>
+                    <td>${Math.round((driver['準點率'] || 0) * 100)}%</td>
+                    <td>
+                        <div class="action-buttons">
+                            ${selectedTaskId ? `
+                                <button class="btn btn-sm btn-success" onclick="assignTaskToDriver('${selectedTaskId}', '${driver.id}')">
+                                    <i class="fas fa-plus"></i> 指派
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-sm btn-secondary" onclick="viewDriverDetails('${driver.id}')">
+                                <i class="fas fa-eye"></i> 詳情
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * 載入車輛資料
+         */
+        async function loadVehicles(filters = {}) {
+            try {
+                const response = await callGoogleAppsScript('getVehicles', filters);
+                if (response.success) {
+                    currentVehicles = response.data;
+                    renderVehiclesTable(currentVehicles);
+                } else {
+                    throw new Error(response.error);
+                }
+            } catch (error) {
+                console.error('載入車輛資料失敗:', error);
+                throw error;
+            }
+        }
+
+        /**
+         * 渲染車輛表格
+         */
+        function renderVehiclesTable(vehicles) {
+            const tbody = document.getElementById('vehiclesTableBody');
             
-            // 一鍵自動配對
-            async autoAssignAll() {
-                if (!confirm('確定要執行一鍵自動配對嗎？這將會重新計算所有待派任務的最佳配對。')) {
+            if (vehicles.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #666; padding: 40px;">
+                            暫無車輛資料
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = vehicles.map(vehicle => `
+                <tr>
+                    <td>${vehicle['車牌號碼'] || vehicle.id}</td>
+                    <td>${vehicle['車輛類型'] || ''}</td>
+                    <td>${vehicle['容量'] || 0} 噸</td>
+                    <td>
+                        <span class="status-badge ${getStatusClass(vehicle['狀態'])}">
+                            ${vehicle['狀態'] || '待命'}
+                        </span>
+                    </td>
+                    <td>${vehicle['今日使用次數'] || 0} 次</td>
+                    <td>
+                        <div class="action-buttons">
+                            ${selectedTaskId ? `
+                                <button class="btn btn-sm btn-success" onclick="assignTaskToVehicle('${selectedTaskId}', '${vehicle.id}')">
+                                    <i class="fas fa-plus"></i> 指派
+                                </button>
+                            ` : ''}
+                            <button class="btn btn-sm btn-secondary" onclick="viewVehicleDetails('${vehicle.id}')">
+                                <i class="fas fa-eye"></i> 詳情
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * 選擇任務
+         */
+        function selectTask(taskId) {
+            selectedTaskId = taskId;
+            const task = currentTasks.find(t => t.id === taskId);
+            
+            if (task) {
+                // 更新選中任務資訊
+                document.getElementById('selectedTaskInfo').style.display = 'block';
+                document.getElementById('selectedTaskId').textContent = task['配送單號'] || task.id;
+                document.getElementById('selectedTaskCustomer').textContent = task['客戶簡稱'] || '';
+                document.getElementById('selectedTaskLevel').textContent = task.level || 'R';
+                document.getElementById('selectedTaskTime').textContent = formatDateTime(task['日期']) + ' ' + (task['配送時間'] || '');
+                
+                // 重新渲染表格以顯示選中狀態
+                renderTasksTable(currentTasks);
+                renderDriversTable(currentDrivers);
+                renderVehiclesTable(currentVehicles);
+                
+                // 自動產生建議
+                generateSuggestions(taskId);
+            }
+        }
+
+        /**
+         * 產生配對建議
+         */
+        async function generateSuggestions(taskId) {
+            try {
+                const suggestionsContainer = document.getElementById('suggestionsContainer');
+                suggestionsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <div class="loading"></div>
+                        <p style="margin-top: 15px;">正在分析最佳配對建議...</p>
+                    </div>
+                `;
+
+                const response = await callGoogleAppsScript('generateTop3', { taskId });
+                
+                if (response.success && response.data.length > 0) {
+                    renderSuggestions(response.data);
+                } else {
+                    suggestionsContainer.innerHTML = `
+                        <div style="text-align: center; color: #666; padding: 40px;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.3;"></i>
+                            <p>暫無可用的配對建議</p>
+                            <p style="font-size: 0.9rem; margin-top: 10px;">${response.error || '請檢查資源可用性'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('產生建議失敗:', error);
+                document.getElementById('suggestionsContainer').innerHTML = `
+                    <div style="text-align: center; color: #dc3545; padding: 40px;">
+                        <i class="fas fa-times-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>產生建議失敗</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * 渲染配對建議
+         */
+        function renderSuggestions(suggestions) {
+            const container = document.getElementById('suggestionsContainer');
+            
+            container.innerHTML = suggestions.map((suggestion, index) => `
+                <div class="suggestion-card">
+                    <div class="suggestion-header">
+                        <h4>
+                            <i class="fas fa-${suggestion.type === 'driver' ? 'user' : 'truck'}"></i>
+                            建議 ${index + 1}: ${suggestion.name}
+                        </h4>
+                        <div class="suggestion-score">${Math.round(suggestion.score * 100)}分</div>
+                    </div>
+                    <div class="suggestion-details">
+                        ${Object.values(suggestion.details).map(detail => `<div>• ${detail}</div>`).join('')}
+                    </div>
+                    <div class="suggestion-actions">
+                        <button class="btn btn-sm btn-success" onclick="acceptSuggestion('${suggestion.id}', '${suggestion.type}')">
+                            <i class="fas fa-check"></i> 接受建議
+                        </button>
+                        <button class="btn btn-sm btn-secondary" onclick="checkConflicts('${suggestion.id}', '${suggestion.type}')">
+                            <i class="fas fa-exclamation-triangle"></i> 檢查衝突
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * 接受建議
+         */
+        async function acceptSuggestion(suggestionId, suggestionType) {
+            try {
+                if (!selectedTaskId) {
+                    showNotification('請先選擇任務', 'warning');
                     return;
                 }
-                
-                try {
-                    this.showNotification('正在執行自動配對...', 'info');
-                    this.showLoading(true);
-                    
-                    const result = await this.callGAS('autoAssign');
-                    
-                    if (result.success) {
-                        const assignedCount = result.data ? result.data.length : 0;
-                        this.showNotification(`自動配對完成！成功配對 ${assignedCount} 個任務`, 'success');
-                        this.loadData(); // 重新載入資料
+
+                const response = await callGoogleAppsScript('acceptSuggestion', {
+                    taskId: selectedTaskId,
+                    suggestionId: suggestionId,
+                    suggestionType: suggestionType
+                });
+
+                if (response.success) {
+                    showNotification('建議已接受並完成指派', 'success');
+                    await refreshData();
+                } else {
+                    showNotification('接受建議失敗: ' + response.error, 'error');
+                }
+            } catch (error) {
+                console.error('接受建議失敗:', error);
+                showNotification('接受建議失敗: ' + error.message, 'error');
+            }
+        }
+
+        /**
+         * 檢查衝突
+         */
+        async function checkConflicts(resourceId, resourceType) {
+            try {
+                const response = await callGoogleAppsScript('conflictCheck', {
+                    taskId: selectedTaskId,
+                    resourceId: resourceId,
+                    resourceType: resourceType
+                });
+
+                if (response.success) {
+                    if (response.data.hasConflicts) {
+                        const conflictMessages = response.data.conflicts.map(c => c.message).join('\n');
+                        alert('發現衝突:\n\n' + conflictMessages);
                     } else {
-                        this.showNotification('自動配對失敗: ' + result.error, 'error');
+                        showNotification('無衝突，可以安全指派', 'success');
                     }
-                } catch (error) {
-                    console.error('自動配對錯誤:', error);
-                    this.showNotification('自動配對執行失敗，請重試', 'error');
-                } finally {
-                    this.showLoading(false);
+                } else {
+                    showNotification('衝突檢查失敗: ' + response.error, 'error');
                 }
+            } catch (error) {
+                console.error('衝突檢查失敗:', error);
+                showNotification('衝突檢查失敗: ' + error.message, 'error');
             }
-            
-            // 產生所有建議
-            async generateAllSuggestions() {
-                const unassignedTasks = this.tasks.filter(t => t['配送狀態'] === '待派');
-                
-                if (unassignedTasks.length === 0) {
-                    this.showNotification('沒有待派任務需要產生建議', 'warning');
-                    return;
+        }
+
+        /**
+         * 直接指派任務給司機
+         */
+        async function assignTaskToDriver(taskId, driverId) {
+            try {
+                const response = await callGoogleAppsScript('assignToDriver', {
+                    taskId: taskId,
+                    driverId: driverId
+                });
+
+                if (response.success) {
+                    showNotification('已成功指派給司機', 'success');
+                    await refreshData();
+                } else {
+                    showNotification('指派失敗: ' + response.error, 'error');
                 }
-                
-                this.showNotification(`正在為 ${unassignedTasks.length} 個任務產生建議...`, 'info');
-                
-                // 這裡可以實作批次產生建議的邏輯
-                // 暫時顯示第一個任務的建議
-                if (unassignedTasks.length > 0) {
-                    this.generateSuggestions(unassignedTasks[0].id);
-                }
+            } catch (error) {
+                console.error('指派失敗:', error);
+                showNotification('指派失敗: ' + error.message, 'error');
             }
-            
-            // 衝突檢查
-            async conflictCheck() {
-                try {
-                    this.showNotification('正在執行衝突檢查...', 'info');
+        }
+
+        /**
+         * 直接指派任務給車輛
+         */
+        async function assignTaskToVehicle(taskId, vehicleId) {
+            try {
+                const response = await callGoogleAppsScript('assignToVehicle', {
+                    taskId: taskId,
+                    vehicleId: vehicleId
+                });
+
+                if (response.success) {
+                    showNotification('已成功指派給車輛', 'success');
+                    await refreshData();
+                } else {
+                    showNotification('指派失敗: ' + response.error, 'error');
+                }
+            } catch (error) {
+                console.error('指派失敗:', error);
+                showNotification('指派失敗: ' + error.message, 'error');
+            }
+        }
+
+        /**
+         * 自動配對全部待派任務
+         */
+        async function autoAssignAll() {
+            if (!confirm('確定要自動配對所有待派任務嗎？')) {
+                return;
+            }
+
+            try {
+                showLoadingOverlay(true);
+                
+                const response = await callGoogleAppsScript('autoAssign');
+                
+                if (response.success) {
+                    const { totalTasks, successCount, results } = response.data;
+                    showNotification(`自動配對完成：${successCount}/${totalTasks} 任務成功指派`, 'success');
                     
-                    const result = await this.callGAS('conflictCheck');
-                    
-                    if (result.success) {
-                        const conflicts = result.data || [];
-                        if (conflicts.length === 0) {
-                            this.showNotification('✅ 未發現衝突', 'success');
-                        } else {
-                            this.showNotification(`⚠️ 發現 ${conflicts.length} 個衝突`, 'warning');
-                            // 可以在這裡顯示衝突詳情
-                        }
-                    } else {
-                        this.showNotification('衝突檢查失敗: ' + result.error, 'error');
+                    // 顯示詳細結果
+                    const failedTasks = results.filter(r => !r.assigned);
+                    if (failedTasks.length > 0) {
+                        console.log('未成功指派的任務:', failedTasks);
                     }
-                } catch (error) {
-                    console.error('衝突檢查錯誤:', error);
-                    this.showNotification('衝突檢查執行失敗，請重試', 'error');
+                    
+                    await refreshData();
+                } else {
+                    showNotification('自動配對失敗: ' + response.error, 'error');
                 }
+            } catch (error) {
+                console.error('自動配對失敗:', error);
+                showNotification('自動配對失敗: ' + error.message, 'error');
+            } finally {
+                showLoadingOverlay(false);
             }
-            
-            // 發佈到司機APP
-            async publishToApp() {
-                const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派');
-                
+        }
+
+        /**
+         * 發佈到APP
+         */
+        async function publishToApp() {
+            try {
+                // 取得已指派但未通知的任務
+                const assignedTasks = currentTasks.filter(task => 
+                    task['配送狀態'] === '已派' && task['指派司機']
+                );
+
                 if (assignedTasks.length === 0) {
-                    this.showNotification('沒有已指派的任務可以發佈', 'warning');
+                    showNotification('沒有需要發佈的任務', 'warning');
                     return;
                 }
-                
-                if (!confirm(`確定要發佈 ${assignedTasks.length} 個已指派任務到司機APP嗎？`)) {
+
+                if (!confirm(`確定要發佈 ${assignedTasks.length} 個任務到APP嗎？`)) {
                     return;
                 }
+
+                showLoadingOverlay(true);
+
+                const assignments = assignedTasks.map(task => ({
+                    taskId: task.id,
+                    driverId: task['指派司機'],
+                    vehicleId: task['指派車輛'],
+                    customerName: task['客戶簡稱'],
+                    deliveryTime: task['配送時間']
+                }));
+
+                const response = await callGoogleAppsScript('publishToApp', { assignments });
+
+                if (response.success) {
+                    const { successCount, totalAssignments } = response.data;
+                    showNotification(`發佈完成：${successCount}/${totalAssignments} 任務成功推播`, 'success');
+                    await refreshData();
+                } else {
+                    showNotification('發佈失敗: ' + response.error, 'error');
+                }
+            } catch (error) {
+                console.error('發佈失敗:', error);
+                showNotification('發佈失敗: ' + error.message, 'error');
+            } finally {
+                showLoadingOverlay(false);
+            }
+        }
+
+        /**
+         * 匯出結果
+         */
+        function exportResults() {
+            try {
+                // 準備匯出資料
+                const exportData = {
+                    tasks: currentTasks,
+                    drivers: currentDrivers,
+                    vehicles: currentVehicles,
+                    exportTime: new Date().toISOString()
+                };
+
+                // 轉換為CSV格式
+                const csvContent = convertToCSV(exportData.tasks);
                 
-                try {
-                    this.showNotification('正在發佈到司機APP...', 'info');
-                    
-                    const result = await this.callGAS('publishToApp', { 
-                        tasks: assignedTasks.map(t => t.id) 
-                    });
-                    
-                    if (result.success) {
-                        this.showNotification('✅ 成功發佈到司機APP', 'success');
-                    } else {
-                        this.showNotification('發佈失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('發佈錯誤:', error);
-                    this.showNotification('發佈執行失敗，請重試', 'error');
+                // 建立下載連結
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `調度結果_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showNotification('匯出完成', 'success');
+            } catch (error) {
+                console.error('匯出失敗:', error);
+                showNotification('匯出失敗: ' + error.message, 'error');
+            }
+        }
+
+        /**
+         * 轉換為CSV格式
+         */
+        function convertToCSV(data) {
+            if (data.length === 0) return '';
+
+            const headers = Object.keys(data[0]);
+            const csvHeaders = headers.join(',');
+            
+            const csvRows = data.map(row => 
+                headers.map(header => {
+                    const value = row[header] || '';
+                    return `"${value.toString().replace(/"/g, '""')}"`;
+                }).join(',')
+            );
+
+            return [csvHeaders, ...csvRows].join('\n');
+        }
+
+        /**
+         * 篩選任務
+         */
+        function filterTasks() {
+            const dateFilter = document.getElementById('taskDateFilter').value;
+            const statusFilter = document.getElementById('taskStatusFilter').value;
+            const levelFilter = document.getElementById('taskLevelFilter').value;
+            const customerFilter = document.getElementById('taskCustomerFilter').value;
+
+            const filters = {};
+            if (dateFilter) filters.date = dateFilter;
+            if (statusFilter) filters.status = statusFilter;
+            if (levelFilter) filters.level = levelFilter;
+            if (customerFilter) filters.customer = customerFilter;
+
+            loadTasks(filters);
+        }
+
+        /**
+         * 篩選司機
+         */
+        function filterDrivers() {
+            const levelFilter = document.getElementById('driverLevelFilter').value;
+            const statusFilter = document.getElementById('driverStatusFilter').value;
+
+            const filters = {};
+            if (levelFilter) filters.level = levelFilter;
+            if (statusFilter) filters.status = statusFilter;
+
+            loadDrivers(filters);
+        }
+
+        /**
+         * 篩選車輛
+         */
+        function filterVehicles() {
+            const typeFilter = document.getElementById('vehicleTypeFilter').value;
+            const statusFilter = document.getElementById('vehicleStatusFilter').value;
+
+            const filters = {};
+            if (typeFilter) filters.type = typeFilter;
+            if (statusFilter) filters.status = statusFilter;
+
+            loadVehicles(filters);
+        }
+
+        /**
+         * 重新整理所有資料
+         */
+        async function refreshData() {
+            try {
+                showLoadingOverlay(true);
+                await Promise.all([
+                    loadKPIData(),
+                    loadTasks(),
+                    loadDrivers(),
+                    loadVehicles()
+                ]);
+                updateLastUpdatedTime();
+                showNotification('資料已更新', 'success');
+            } catch (error) {
+                console.error('重新整理失敗:', error);
+                showNotification('重新整理失敗: ' + error.message, 'error');
+            } finally {
+                showLoadingOverlay(false);
+            }
+        }
+
+        /**
+         * 呼叫 Google Apps Script
+         */
+        async function callGoogleAppsScript(action, data = {}) {
+            const formData = new FormData();
+            formData.append('action', action);
+            formData.append('data', encodeURIComponent(JSON.stringify(data)));
+
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log(`${action} 回應:`, result);
+            
+            return result;
+        }
+
+        /**
+         * 工具函數
+         */
+        function getStatusClass(status) {
+            const statusMap = {
+                '待派': 'status-pending',
+                '已派': 'status-assigned',
+                '進行中': 'status-in-progress',
+                '已完成': 'status-completed',
+                '可派遣': 'status-assigned',
+                '待命': 'status-pending',
+                '休息': 'status-completed',
+                '可用': 'status-assigned',
+                '使用中': 'status-in-progress',
+                '維修': 'status-pending'
+            };
+            return statusMap[status] || 'status-pending';
+        }
+
+        function formatDateTime(dateValue) {
+            if (!dateValue) return '';
+            const date = new Date(dateValue);
+            if (isNaN(date.getTime())) return dateValue;
+            return date.toLocaleDateString('zh-TW');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        function showLoadingOverlay(show) {
+            let overlay = document.getElementById('loadingOverlay');
+            
+            if (show) {
+                if (!overlay) {
+                    overlay = document.createElement('div');
+                    overlay.id = 'loadingOverlay';
+                    overlay.className = 'loading-overlay';
+                    overlay.innerHTML = '<div class="loading-spinner"></div>';
+                    document.body.appendChild(overlay);
+                }
+                overlay.style.display = 'flex';
+            } else {
+                if (overlay) {
+                    overlay.style.display = 'none';
                 }
             }
-            
-            // 應用篩選器
-            applyFilters() {
-                this.filters.date = document.getElementById('date-filter').value;
-                this.filters.level = document.getElementById('level-filter').value;
-                this.filters.vehicleType = document.getElementById('vehicle-type-filter').value;
-                this.filters.driverLevel = document.getElementById('driver-level-filter').value;
-                this.filters.status = document.getElementById('status-filter').value;
-                
-                this.renderAll();
-                this.updateKPI();
-            }
-            
-            // 取得篩選後的任務
-            getFilteredTasks() {
-                return this.tasks.filter(task => {
-                    if (this.filters.date && task['日期'] !== this.filters.date) return false;
-                    if (this.filters.level && task.level !== this.filters.level) return false;
-                    if (this.filters.status && task['配送狀態'] !== this.filters.status) return false;
-                    return true;
-                });
-            }
-            
-            // 取得篩選後的司機
-            getFilteredDrivers() {
-                return this.drivers.filter(driver => {
-                    if (this.filters.driverLevel && driver.level !== this.filters.driverLevel) return false;
-                    return true;
-                });
-            }
-            
-            // 取得篩選後的車輛
-            getFilteredVehicles() {
-                return this.vehicles.filter(vehicle => {
-                    if (this.filters.vehicleType && vehicle.type !== this.filters.vehicleType) return false;
-                    return true;
-                });
-            }
-            
-            // 拖放事件處理
-            handleDragStart(e) {
-                e.dataTransfer.setData('text/plain', e.target.dataset.taskId);
-                e.target.classList.add('dragging');
-            }
-            
-            handleDragEnd(e) {
-                e.target.classList.remove('dragging');
-            }
-            
-            handleDragOver(e) {
-                e.preventDefault();
-                e.currentTarget.classList.add('drag-over');
-            }
-            
-            handleDrop(e) {
-                e.preventDefault();
-                e.currentTarget.classList.remove('drag-over');
-                
-                const taskId = e.dataTransfer.getData('text/plain');
-                const targetElement = e.currentTarget;
-                
-                if (targetElement.dataset.driverId) {
-                    this.assignToDriver(taskId, targetElement.dataset.driverId);
-                } else if (targetElement.dataset.vehicleId) {
-                    this.assignToVehicle(taskId, targetElement.dataset.vehicleId);
-                }
-            }
-            
-            // 指派給司機
-            async assignToDriver(taskId, driverId) {
-                try {
-                    const result = await this.callGAS('assignToDriver', { taskId, driverId });
-                    
-                    if (result.success) {
-                        this.showNotification('任務已指派給司機', 'success');
-                        this.loadData();
-                    } else {
-                        this.showNotification('指派失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('指派錯誤:', error);
-                    this.showNotification('指派失敗，請重試', 'error');
-                }
-            }
-            
-            // 指派給車輛
-            async assignToVehicle(taskId, vehicleId) {
-                try {
-                    const result = await this.callGAS('assignToVehicle', { taskId, vehicleId });
-                    
-                    if (result.success) {
-                        this.showNotification('任務已指派給車輛', 'success');
-                        this.loadData();
-                    } else {
-                        this.showNotification('指派失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('指派錯誤:', error);
-                    this.showNotification('指派失敗，請重試', 'error');
-                }
-            }
-            
-            // 顯示通知
-            showNotification(message, type = 'info') {
-                const notification = document.createElement('div');
-                notification.className = `notification ${type}`;
-                notification.textContent = message;
-                
-                document.body.appendChild(notification);
-                
-                // 顯示動畫
-                setTimeout(() => notification.classList.add('show'), 100);
-                
-                // 自動隱藏
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                    setTimeout(() => document.body.removeChild(notification), 300);
-                }, 3000);
-            }
-            
-            // 顯示/隱藏載入動畫
-            showLoading(show) {
-                const loadings = document.querySelectorAll('.loading');
-                loadings.forEach(loading => {
-                    if (show) {
-                        loading.classList.add('show');
-                    } else {
-                        loading.classList.remove('show');
-                    }
-                });
+        }
+
+        function updateLastUpdatedTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('zh-TW');
+            document.getElementById('lastUpdated').textContent = `最後更新：${timeString}`;
+        }
+
+        // 查看詳情功能（可擴展）
+        function viewDriverDetails(driverId) {
+            const driver = currentDrivers.find(d => d.id === driverId);
+            if (driver) {
+                alert(`司機詳情:\n姓名: ${driver['姓名']}\n等級: ${driver['等級']}\n狀態: ${driver['狀態']}\n今日工時: ${driver['今日工時']}小時\n準點率: ${Math.round((driver['準點率'] || 0) * 100)}%`);
             }
         }
-        
-        // 初始化應用程式
-        const app = new DispatchApp();
-        
-        // 全域函數（供 HTML 按鈕呼叫）
-        function loadData() { 
-            app.loadData(); 
+
+        function viewVehicleDetails(vehicleId) {
+            const vehicle = currentVehicles.find(v => v.id === vehicleId);
+            if (vehicle) {
+                alert(`車輛詳情:\n車牌: ${vehicle['車牌號碼']}\n類型: ${vehicle['車輛類型']}\n容量: ${vehicle['容量']}噸\n狀態: ${vehicle['狀態']}\n今日使用: ${vehicle['今日使用次數']}次`);
+            }
         }
-        
-        function autoAssignAll() { 
-            app.autoAssignAll(); 
-        }
-        
-        function generateAllSuggestions() { 
-            app.generateAllSuggestions(); 
-        }
-        
-        function conflictCheck() { 
-            app.conflictCheck(); 
-        }
-        
-        function publishToApp() { 
-            app.publishToApp(); 
-        }
-        
-        function applyFilters() {
-            app.applyFilters();
-        }
-        
-        function closeSuggestions() {
-            app.closeSuggestions();
-        }
-        
-        // 頁面載入完成後執行
-        window.addEventListener('DOMContentLoaded', function() {
-            // 載入模擬資料（開發用）
-            app.loadMockData();
-            
-            // 實際部署時使用這行
-            // app.loadData();
-        });
-        
-        // 模擬資料（開發測試用）
-        DispatchApp.prototype.loadMockData = function() {
-            // 模擬任務資料
-            this.tasks = [
-                {
-                    id: 'T001',
-                    '配送單號': 'D20241201001',
-                    '客戶簡稱': '統一超商',
-                    '配送點簡稱': '台北101店',
-                    '日期': '2024-12-01',
-                    '配送狀態': '待派',
-                    '配送備註': '需冷藏配送',
-                    level: 'P'
-                },
-                {
-                    id: 'T002',
-                    '配送單號': 'D20241201002',
-                    '客戶簡稱': '全家便利商店',
-                    '配送點簡稱': '信義店',
-                    '日期': '2024-12-01',
-                    '配送狀態': '待派',
-                    level: 'Q'
-                },
-                {
-                    id: 'T003',
-                    '配送單號': 'D20241201003',
-                    '客戶簡稱': '萊爾富',
-                    '配送點簡稱': '松山店',
-                    '日期': '2024-12-01',
-                    '配送狀態': '已派',
-                    level: 'R'
-                }
-            ];
-            
-            // 模擬司機資料
-            this.drivers = [
-                {
-                    id: 'DR001',
-                    name: '張三',
-                    level: 'A',
-                    employeeId: 'E001',
-                    status: '可派遣',
-                    type: '自有',
-                    skills: '冷機操作',
-                    workHours: 6
-                },
-                {
-                    id: 'DR002',
-                    name: '李四',
-                    level: 'B',
-                    employeeId: 'E002',
-                    status: '可派遣',
-                    type: '加盟',
-                    workHours: 8
-                },
-                {
-                    id: 'DR003',
-                    name: '王五',
-                    level: 'A',
-                    employeeId: 'E003',
-                    status: '已指派',
-                    type: '自有',
-                    skills: '危險品運送',
-                    workHours: 4
-                }
-            ];
-            
-            // 模擬車輛資料
-            this.vehicles = [
-                {
-                    id: 'V001',
-                    number: 'ABC-1234',
-                    type: '甲',
-                    status: '可用',
-                    tempZone: '冷凍/冷藏',
-                    capacity: '3噸',
-                    palletCount: '12板',
-                    equipment: '尾門升降'
-                },
-                {
-                    id: 'V002',
-                    number: 'DEF-5678',
-                    type: '乙',
-                    status: '可用',
-                    tempZone: '冷藏',
-                    capacity: '2噸',
-                    palletCount: '8板'
-                },
-                {
-                    id: 'V003',
-                    number: 'GHI-9012',
-                    type: '丙',
-                    status: '已指派',
-                    tempZone: '常溫',
-                    capacity: '1.5噸',
-                    palletCount: '6板'
-                }
-            ];
-            
-            this.renderAll();
-            this.updateKPI();
-            this.checkAlerts();
-            
-            this.showNotification('模擬資料載入完成', 'success');
-        };
-        
-        // 鍵盤快捷鍵
-        document.addEventListener('keydown', function(e) {
-            // Ctrl + R: 重新載入
-            if (e.ctrlKey && e.key === 'r') {
-                e.preventDefault();
-                app.loadData();
+
+        // CSS 樣式補充
+        const additionalStyles = `
+            .table-active {
+                background-color: #e3f2fd !important;
             }
             
-            // Ctrl + A: 自動配對
-            if (e.ctrlKey && e.key === 'a') {
-                e.preventDefault();
-                app.autoAssignAll();
+            .table-active:hover {
+                background-color: #bbdefb !important;
             }
-            
-            // ESC: 關閉建議面板
-            if (e.key === 'Escape') {
-                app.closeSuggestions();
-            }
-        });
-        
-        // 視窗大小變更時重新調整佈局
-        window.addEventListener('resize', function() {
-            // 可以在這裡加入響應式調整邏輯
-        });
-        
+        `;
+
+        // 動態添加樣式
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = additionalStyles;
+        document.head.appendChild(styleSheet);
     </script>
 </body>
 </html>
