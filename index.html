@@ -1137,7 +1137,7 @@
 
     <script>
         // Google Apps Script Web App URL (需要替換為實際的 URL)
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbySwOoPUE74KeW-lwKAuke7iC1_1-4URksgKQcejEsKZpUIN2U6NYLhDXzSoVwRmmLcsw/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwk75NZI7uRXYkgHLaKdx6XKEHf6wBf-OOenrfVLqH9XBBzliMNoMC1ix9D7lrE-AJ3VA/exec';
 
         // 主要應用程式類別
         class DispatchApp {
@@ -1349,50 +1349,47 @@
                 });
             }
             
-            // 渲染車輛列表
-            renderVehicles() {
-                const container = document.getElementById('vehicles-container');
-                const loading = document.getElementById('vehicles-loading');
-                
-                loading.classList.remove('show');
-                container.innerHTML = '';
-                
-                const filteredVehicles = this.getFilteredVehicles();
-                
-                if (filteredVehicles.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用車輛</div>';
-                    return;
-                }
-                
-                filteredVehicles.forEach(vehicle => {
-                    const card = document.createElement('div');
-                    card.className = `vehicle-card type-${vehicle.type}`;
-                    card.dataset.vehicleId = vehicle.id;
-                    
-                    // 拖放目標事件
-                    card.addEventListener('dragover', this.handleDragOver.bind(this));
-                    card.addEventListener('drop', this.handleDrop.bind(this));
-                    
-                    card.innerHTML = `
-                        <div class="card-header">
-                            <div class="card-title">${vehicle.number || vehicle.id}</div>
-                            <span class="status-badge ${vehicle.status === '可用' ? 'available' : 'assigned'}">
-                                ${vehicle.status || '可用'}
-                            </span>
-                        </div>
-                        <div class="card-details">
-                            <div><strong>類型:</strong> ${vehicle.type}類</div>
-                            <div><strong>溫層:</strong> ${vehicle.tempZone || '冷藏'}</div>
-                            <div><strong>容量:</strong> ${vehicle.capacity || '未設定'}</div>
-                            <div><strong>板位:</strong> ${vehicle.palletCount || '未設定'}</div>
-                            ${vehicle.equipment ? `<div><strong>設備:</strong> ${vehicle.equipment}</div>` : ''}
-                            ${vehicle.location ? `<div><strong>位置:</strong> ${vehicle.location}</div>` : ''}
-                        </div>
-                    `;
-                    
-                    container.appendChild(card);
-                });
+                    // 渲染車輛列表
+        renderVehicles() {
+            const container = document.getElementById('vehicles-container');
+            const loading = document.getElementById('vehicles-loading');
+            
+            loading.classList.remove('show');
+            container.innerHTML = '';
+            
+            const filteredVehicles = this.getFilteredVehicles();
+            
+            if (filteredVehicles.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用車輛</div>';
+                return;
             }
+            
+            filteredVehicles.forEach(vehicle => {
+                const card = document.createElement('div');
+                card.className = `vehicle-card type-${vehicle.type}`;
+                card.dataset.vehicleId = vehicle.id;
+                
+                // 拖放目標事件
+                card.addEventListener('dragover', this.handleDragOver.bind(this));
+                card.addEventListener('drop', this.handleDrop.bind(this));
+                
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="card-title">${vehicle.id}</div>
+                        <span class="status-badge available">可用</span>
+                    </div>
+                    <div class="card-details">
+                        <div><strong>廠牌:</strong> ${vehicle.brand || '未設定'}</div>
+                        <div><strong>噸數:</strong> ${vehicle.tonnage || '未設定'}</div>
+                        <div><strong>購買日期:</strong> ${vehicle.purchaseDate || '未設定'}</div>
+                        <div><strong>已用天數:</strong> ${vehicle.mileage || '未設定'}</div>
+                        <div><strong>車子年限:</strong> ${vehicle.age || '未設定'}年</div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
             
             // 新增輔助方法
             getStatusClass(status) {
