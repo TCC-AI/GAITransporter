@@ -5,46 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAI優化運務人員調派建議系統</title>
     <style>
-        /* 司機級別樣式 - 支援 A, B, C 和 A1, A2, A3 */
-.driver-card.level-A,
-.driver-card.level-A1 { 
-    border-left: 4px solid #28a745; /* 綠色 */
-    box-shadow: 0 4px 20px rgba(40, 167, 69, 0.1);
-}
-
-.driver-card.level-B,
-.driver-card.level-A2 { 
-    border-left: 4px solid #dc3545; /* 紅色 */
-    box-shadow: 0 4px 20px rgba(220, 53, 69, 0.1);
-}
-
-.driver-card.level-C,
-.driver-card.level-A3 { 
-    border-left: 4px solid #ffc107; /* 金色 */
-    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.1);
-}
-
-.level-badge.level-a,
-.level-badge.level-a1 {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.level-badge.level-b,
-.level-badge.level-a2 {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    color: white;
-    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.level-badge.level-c,
-.level-badge.level-a3 {
-    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-    color: #212529;
-    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
-}
-
         /* 司機級別顏色 - 根據您的需求調整 */
 .driver-card.level-A1 { 
     border-left: 4px solid #28a745; /* A1 = 綠色 */
@@ -1114,16 +1074,16 @@
                     <option value="丙">丙類</option>
                     <option value="丁">丁類</option>
                 </select>
- <div class="filter-group">
-    <label>司機等級</label>
-    <select id="driver-level-filter" onchange="applyFilters()">
-        <option value="">全部</option>
-        <option value="A">A級</option>
-        <option value="B">B級</option>
-        <option value="C">C級</option>
-    </select>
-</div>
-
+            </div>
+                        <div class="filter-group">
+                <label>司機等級</label>
+                <select id="driver-level-filter" onchange="applyFilters()">
+                    <option value="">全部</option>
+                    <option value="A1">A1級</option>
+                    <option value="A2">A2級</option>
+                    <option value="A3">A3級</option>
+                </select>
+            </div>
 
             <div class="filter-group">
                 <label>配送狀態</label>
@@ -1177,7 +1137,7 @@
 
     <script>
         // Google Apps Script Web App URL (需要替換為實際的 URL)
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbylYoI6EKJSwgreO4w1TZCyLjxOMmcVgLgLyGTJqhH_J54d1DOf-T8jvs1QyWhlz8C7ZA/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbw54SUc-RjHaHqH_asGLaSn-ge4WJGwBv15KQAY0mCxyOZ4FT_ke2-jBFC1nXCuCtjLVg/exec';
 
         // 主要應用程式類別
         class DispatchApp {
@@ -1198,72 +1158,39 @@
                 document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
             }
             
-// 載入所有資料
-async loadData() {
-    this.showLoading(true);
-    
-    try {
-        // 清空現有資料
-        this.tasks = [];
-        this.drivers = [];
-        this.vehicles = [];
-        
-        // 顯示載入動畫
-        document.getElementById('tasks-loading').classList.add('show');
-        document.getElementById('vehicles-loading').classList.add('show');
-        document.getElementById('drivers-loading').classList.add('show');
-        
-        console.log('開始載入資料...'); // 除錯用
-        
-        const [tasksRes, driversRes, vehiclesRes] = await Promise.all([
-            this.callGAS('getTasks'),
-            this.callGAS('getDrivers'),
-            this.callGAS('getVehicles')
-        ]);
-        
-        console.log('任務資料回應:', tasksRes); // 除錯用
-        console.log('司機資料回應:', driversRes); // 除錯用
-        console.log('車輛資料回應:', vehiclesRes); // 除錯用
-        
-        if (tasksRes.success) {
-            this.tasks = tasksRes.data || [];
-            console.log('載入任務資料:', this.tasks.length, '筆');
-        } else {
-            console.error('任務資料載入失敗:', tasksRes.error);
-            this.showNotification('任務資料載入失敗: ' + tasksRes.error, 'error');
-        }
-        
-        if (driversRes.success) {
-            this.drivers = driversRes.data || [];
-            console.log('載入司機資料:', this.drivers.length, '筆');
-            console.log('司機資料內容:', this.drivers);
-        } else {
-            console.error('司機資料載入失敗:', driversRes.error);
-            this.showNotification('司機資料載入失敗: ' + driversRes.error, 'error');
-        }
-        
-        if (vehiclesRes.success) {
-            this.vehicles = vehiclesRes.data || [];
-            console.log('載入車輛資料:', this.vehicles.length, '筆');
-        } else {
-            console.error('車輛資料載入失敗:', vehiclesRes.error);
-            this.showNotification('車輛資料載入失敗: ' + vehiclesRes.error, 'error');
-        }
-        
-        this.renderAll();
-        this.updateKPI();
-        this.checkAlerts();
-        
-        this.showNotification('資料載入完成', 'success');
-        
-    } catch (error) {
-        console.error('載入資料失敗:', error);
-        this.showNotification('載入資料失敗，請重試', 'error');
-    } finally {
-        this.showLoading(false);
-    }
-}
-
+            // 載入所有資料
+            async loadData() {
+                this.showLoading(true);
+                
+                try {
+                    // 顯示載入動畫
+                    document.getElementById('tasks-loading').classList.add('show');
+                    document.getElementById('vehicles-loading').classList.add('show');
+                    document.getElementById('drivers-loading').classList.add('show');
+                    
+                    const [tasksRes, driversRes, vehiclesRes] = await Promise.all([
+                        this.callGAS('getTasks'),
+                        this.callGAS('getDrivers'),
+                        this.callGAS('getVehicles')
+                    ]);
+                    
+                    if (tasksRes.success) this.tasks = tasksRes.data || [];
+                    if (driversRes.success) this.drivers = driversRes.data || [];
+                    if (vehiclesRes.success) this.vehicles = vehiclesRes.data || [];
+                    
+                    this.renderAll();
+                    this.updateKPI();
+                    this.checkAlerts();
+                    
+                    this.showNotification('資料載入完成', 'success');
+                    
+                } catch (error) {
+                    console.error('載入資料失敗:', error);
+                    this.showNotification('載入資料失敗，請重試', 'error');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
             
             // 呼叫 Google Apps Script
             async callGAS(action, data = {}) {
@@ -1335,125 +1262,86 @@ async loadData() {
                 });
             }
             
-            // 修正司機渲染函數
-renderDrivers() {
-    const container = document.getElementById('drivers-container');
-    const loading = document.getElementById('drivers-loading');
-    
-    loading.classList.remove('show');
-    container.innerHTML = '';
-    
-    console.log('渲染司機，總數:', this.drivers.length); // 除錯用
-    console.log('司機資料:', this.drivers); // 除錯用
-    
-    const filteredDrivers = this.getFilteredDrivers();
-    
-    if (filteredDrivers.length === 0) {
-        container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用司機</div>';
-        return;
-    }
-    
-    filteredDrivers.forEach((driver, index) => {
-        console.log(`渲染司機 ${index + 1}:`, driver); // 除錯用
-        
-        const card = document.createElement('div');
-        const driverLevel = driver['級別'] || driver.level || 'A';
-        const driverName = driver['姓名'] || driver.name || '未設定';
-        const employeeId = driver['員工編號'] || driver.employeeId || '未設定';
-        const driverType = driver['類型'] || driver.type || '未設定';
-        
-        console.log('司機級別:', driverLevel, '姓名:', driverName); // 除錯用
-        
-        // 修正：直接使用級別，不加 level- 前綴
-        card.className = `driver-card level-${driverLevel}`;
-        card.dataset.driverId = employeeId;
-        
-        // 拖放目標事件
-        card.addEventListener('dragover', this.handleDragOver.bind(this));
-        card.addEventListener('drop', this.handleDrop.bind(this));
-        
-        // 根據狀態設定樣式
-        const statusClass = this.getStatusClass(driver['狀態'] || driver.status || '可派遣');
-        const levelBadgeColor = this.getLevelBadgeColor(driverLevel);
-        
-        card.innerHTML = `
-            <div class="card-header">
-                <div class="card-title">
-                    <span class="driver-name">${driverName}</span>
-                    <span class="level-badge ${levelBadgeColor}">${driverLevel}級</span>
-                </div>
-                <span class="status-badge ${statusClass}">
-                    ${this.getStatusText(driver['狀態'] || driver.status || '可派遣')}
-                </span>
-            </div>
-            <div class="card-details">
-                <div class="detail-row">
-                    <span class="detail-label">👤 員編:</span>
-                    <span class="detail-value">${employeeId}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">📋 類型:</span>
-                    <span class="detail-value">${driverType}</span>
-                </div>
-                ${driver['技能'] || driver.skills ? `
-                    <div class="detail-row">
-                        <span class="detail-label">🔧 技能:</span>
-                        <span class="detail-value skills-tag">${driver['技能'] || driver.skills}</span>
-                    </div>
-                ` : ''}
-                ${driver['聯絡電話'] || driver.phone ? `
-                    <div class="detail-row">
-                        <span class="detail-label">📞 電話:</span>
-                        <span class="detail-value phone-number">${driver['聯絡電話'] || driver.phone}</span>
-                    </div>
-                ` : ''}
-                ${driver.workHours ? `
-                    <div class="detail-row">
-                        <span class="detail-label">⏰ 工時:</span>
-                        <span class="detail-value">${driver.workHours}小時</span>
-                    </div>
-                ` : ''}
-            </div>
-            <div class="card-actions">
-                <button onclick="app.contactDriver('${employeeId}')" class="contact-btn">
-                    📞 聯絡
-                </button>
-                <button onclick="app.viewDriverDetail('${employeeId}')" class="detail-btn">
-                    📋 詳情
-                </button>
-            </div>
-        `;
-        
-        container.appendChild(card);
-    });
-}
-
-// 修正級別徽章顏色函數
-getLevelBadgeColor(level) {
-    // 處理不同的級別格式
-    const normalizedLevel = String(level).toUpperCase();
-    
-    console.log('處理級別:', level, '標準化後:', normalizedLevel); // 除錯用
-    
-    switch(normalizedLevel) {
-        case 'A':
-            return 'level-a';
-        case 'B':
-            return 'level-b';
-        case 'C':
-            return 'level-c';
-        case 'A1':
-            return 'level-a1';
-        case 'A2':
-            return 'level-a2';
-        case 'A3':
-            return 'level-a3';
-        default:
-            console.warn('未知級別:', level, '使用預設 A');
-            return 'level-a';
-    }
-}
-
+            // 渲染司機列表
+            renderDrivers() {
+                const container = document.getElementById('drivers-container');
+                const loading = document.getElementById('drivers-loading');
+                
+                loading.classList.remove('show');
+                container.innerHTML = '';
+                
+                const filteredDrivers = this.getFilteredDrivers();
+                
+                if (filteredDrivers.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用司機</div>';
+                    return;
+                }
+                
+                filteredDrivers.forEach(driver => {
+                    const card = document.createElement('div');
+                    const driverLevel = driver['級別'] || driver.level || 'A1';
+                    card.className = `driver-card level-${driverLevel}`; // 直接使用 A1, A2, A3
+                    card.dataset.driverId = driver['員工編號'] || driver.id;
+                    
+                    // 拖放目標事件
+                    card.addEventListener('dragover', this.handleDragOver.bind(this));
+                    card.addEventListener('drop', this.handleDrop.bind(this));
+                    
+                    // 根據狀態設定樣式
+                    const statusClass = this.getStatusClass(driver['狀態'] || driver.status);
+                    const levelBadgeColor = this.getLevelBadgeColor(driver['級別'] || driver.level);
+                    
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <div class="card-title">
+                                <span class="driver-name">${driver['姓名'] || driver.name || '未設定'}</span>
+                                <span class="level-badge ${levelBadgeColor}">${driver['級別'] || driver.level || 'C'}級</span>
+                            </div>
+                            <span class="status-badge ${statusClass}">
+                                ${this.getStatusText(driver['狀態'] || driver.status)}
+                            </span>
+                        </div>
+                        <div class="card-details">
+                            <div class="detail-row">
+                                <span class="detail-label">👤 員編:</span>
+                                <span class="detail-value">${driver['員工編號'] || driver.employeeId || '未設定'}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="detail-label">📋 類型:</span>
+                                <span class="detail-value">${driver['類型'] || driver.type || '未設定'}</span>
+                            </div>
+                            ${driver['技能'] || driver.skills ? `
+                                <div class="detail-row">
+                                    <span class="detail-label">🔧 技能:</span>
+                                    <span class="detail-value skills-tag">${driver['技能'] || driver.skills}</span>
+                                </div>
+                            ` : ''}
+                            ${driver['聯絡電話'] || driver.phone ? `
+                                <div class="detail-row">
+                                    <span class="detail-label">📞 電話:</span>
+                                    <span class="detail-value phone-number">${driver['聯絡電話'] || driver.phone}</span>
+                                </div>
+                            ` : ''}
+                            ${driver.workHours ? `
+                                <div class="detail-row">
+                                    <span class="detail-label">⏰ 工時:</span>
+                                    <span class="detail-value">${driver.workHours}小時</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="card-actions">
+                            <button onclick="app.contactDriver('${driver['員工編號'] || driver.id}')" class="contact-btn">
+                                📞 聯絡
+                            </button>
+                            <button onclick="app.viewDriverDetail('${driver['員工編號'] || driver.id}')" class="detail-btn">
+                                📋 詳情
+                            </button>
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+            }
             
             // 渲染車輛列表
             renderVehicles() {
@@ -2226,5 +2114,3 @@ getLevelBadgeColor(level) {
     </script>
 </body>
 </html>
-
-
