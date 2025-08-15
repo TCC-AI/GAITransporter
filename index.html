@@ -72,70 +72,6 @@
     background: linear-gradient(135deg, #ff5252 0%, #e53e3e 100%);
 }
 
-        /* 用戶資訊樣式 */
-.user-info {
-    position: absolute;
-    top: 25px;
-    right: 25px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.user-details {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
-    padding: 8px 15px;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.user-name {
-    color: #2c3e50;
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.user-level {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.permission-btn, .logout-btn {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-    color: #2c3e50;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-}
-
-.permission-btn:hover, .logout-btn:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
-    transform: translateY(-2px);
-}
-
-.logout-btn {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-    color: white;
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
-.logout-btn:hover {
-    background: linear-gradient(135deg, #ff5252 0%, #e53e3e 100%);
-}
-
         /* 司機資料維護頁面樣式 */
 .driver-data-container {
     padding: 25px;
@@ -1470,20 +1406,6 @@
     </style>
 </head>
 <body>
-    <!-- 在 body 標籤開始後立即添加 -->
-<div id="global-user-info" class="global-user-info" style="display: none;">
-    <div class="user-details">
-        <span class="user-name"></span>
-        <span class="user-level"></span>
-        <button onclick="showUserPermissions()" class="permission-btn" title="查看權限說明">
-            🔒 權限
-        </button>
-        <button onclick="logout()" class="logout-btn" title="登出系統">
-            🚪 登出
-        </button>
-    </div>
-</div>
-
     <!-- 登入頁面 -->
 <div id="login-page" class="login-container">
     <div class="login-card">
@@ -1521,6 +1443,20 @@
         </div>
     </div>
 </div>
+    <!-- 在 body 標籤開始後立即添加 -->
+<div id="global-user-info" class="global-user-info" style="display: none;">
+    <div class="user-details">
+        <span class="user-name"></span>
+        <span class="user-level"></span>
+        <button onclick="showUserPermissions()" class="permission-btn" title="查看權限說明">
+            🔒 權限
+        </button>
+        <button onclick="logout()" class="logout-btn" title="登出系統">
+            🚪 登出
+        </button>
+    </div>
+</div>
+
     <!-- 司機資料維護頁面 -->
 <div id="driver-data-page" style="display: none;">
     <header>
