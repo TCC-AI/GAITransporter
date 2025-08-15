@@ -5,6 +5,393 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAI優化運務人員調派系統</title>
     <style>
+        /* ==================== 主控台 R1 Logo 完整動畫樣式 ==================== */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(0, 180, 219, 0.2);
+}
+
+.dashboard-header-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.dashboard-header h2 {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 主控台 R1 Logo 樣式 */
+.dashboard-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: visible;
+    width: 120px;
+    height: 120px;
+}
+
+.dashboard-logo-image {
+    width: 80px;
+    height: auto;
+    max-width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    object-fit: contain;
+    position: relative;
+    z-index: 10;
+    animation: logo-breathing 4s ease-in-out infinite;
+    cursor: pointer;
+}
+
+/* 🌊 第一層波紋 - 緊貼圖片 */
+.dashboard-logo-image::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border: 2px solid #f07400;
+    border-radius: 23px;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    animation: ripple-wave-1 3s infinite ease-out;
+}
+
+/* 🌊 第二層波紋 - 中距離 */
+.dashboard-logo-image::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    right: -6px;
+    bottom: -6px;
+    border: 2px solid #f07400;
+    border-radius: 26px;
+    z-index: -2;
+    pointer-events: none;
+    opacity: 0;
+    animation: ripple-wave-2 3s infinite ease-out 1s;
+}
+
+/* 🌊 第三層波紋 - 遠距離 */
+.dashboard-logo::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100px;
+    height: 100px;
+    border: 2px solid #f07400;
+    border-radius: 20px;
+    transform: translate(-50%, -50%);
+    z-index: -3;
+    pointer-events: none;
+    opacity: 0;
+    animation: ripple-wave-3 3s infinite ease-out 2s;
+}
+
+/* 🌊 第四層波紋 - 最遠距離 */
+.dashboard-logo::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 120px;
+    border: 1px solid #f07400;
+    border-radius: 25px;
+    transform: translate(-50%, -50%);
+    z-index: -4;
+    pointer-events: none;
+    opacity: 0;
+    animation: ripple-wave-4 4s infinite ease-out 0.5s;
+}
+
+/* 🌟 背景光暈效果 */
+.dashboard-logo {
+    position: relative;
+}
+
+.dashboard-logo:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(240, 116, 0, 0.1) 0%, rgba(240, 116, 0, 0.05) 50%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: -5;
+    animation: glow-pulse 4s ease-in-out infinite;
+}
+
+/* ✨ 動畫關鍵幀定義 */
+
+/* Logo 呼吸動畫 */
+@keyframes logo-breathing {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 6px 16px rgba(240, 116, 0, 0.2);
+    }
+}
+
+/* 第一層波紋動畫 */
+@keyframes ripple-wave-1 {
+    0% {
+        transform: scale(1);
+        opacity: 0;
+        border-width: 3px;
+    }
+    10% {
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.4;
+        border-width: 2px;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+        border-width: 1px;
+    }
+}
+
+/* 第二層波紋動畫 */
+@keyframes ripple-wave-2 {
+    0% {
+        transform: scale(1);
+        opacity: 0;
+        border-width: 2px;
+    }
+    10% {
+        opacity: 0.6;
+    }
+    60% {
+        transform: scale(1.4);
+        opacity: 0.3;
+        border-width: 1.5px;
+    }
+    100% {
+        transform: scale(1.8);
+        opacity: 0;
+        border-width: 0.5px;
+    }
+}
+
+/* 第三層波紋動畫 */
+@keyframes ripple-wave-3 {
+    0% {
+        transform: translate(-50%, -50%) scale(0.8);
+        opacity: 0;
+        border-width: 2px;
+    }
+    15% {
+        opacity: 0.5;
+    }
+    70% {
+        transform: translate(-50%, -50%) scale(1.3);
+        opacity: 0.2;
+        border-width: 1px;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.6);
+        opacity: 0;
+        border-width: 0.5px;
+    }
+}
+
+/* 第四層波紋動畫 */
+@keyframes ripple-wave-4 {
+    0% {
+        transform: translate(-50%, -50%) scale(0.7);
+        opacity: 0;
+        border-width: 1px;
+    }
+    20% {
+        opacity: 0.3;
+    }
+    80% {
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0.1;
+        border-width: 0.5px;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.8);
+        opacity: 0;
+        border-width: 0px;
+    }
+}
+
+/* 光暈脈衝動畫 */
+@keyframes glow-pulse {
+    0%, 100% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+    50% {
+        opacity: 0.6;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+
+/* 滑鼠懸停效果 */
+.dashboard-logo-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(240, 116, 0, 0.3);
+    animation: logo-breathing 2s ease-in-out infinite;
+}
+
+.dashboard-logo:hover .dashboard-logo-image::before {
+    animation: ripple-wave-1 2s infinite ease-out;
+}
+
+.dashboard-logo:hover .dashboard-logo-image::after {
+    animation: ripple-wave-2 2s infinite ease-out 0.5s;
+}
+
+.dashboard-logo:hover::before {
+    animation: ripple-wave-3 2s infinite ease-out 1s;
+}
+
+.dashboard-logo:hover::after {
+    animation: ripple-wave-4 2.5s infinite ease-out 0.3s;
+}
+
+/* Logo點擊動畫 */
+.dashboard-logo-image.clicked {
+    animation: logoClick 0.6s ease-out;
+}
+
+@keyframes logoClick {
+    0% { 
+        transform: scale(1); 
+    }
+    25% { 
+        transform: scale(1.1) rotate(5deg); 
+    }
+    50% { 
+        transform: scale(1.15) rotate(-3deg); 
+    }
+    75% { 
+        transform: scale(1.05) rotate(2deg); 
+    }
+    100% { 
+        transform: scale(1) rotate(0deg); 
+    }
+}
+
+/* 🎯 特殊效果：點擊時的爆炸波紋 */
+.dashboard-logo-image.clicked::before,
+.dashboard-logo-image.clicked::after {
+    animation: explosion-ripple 0.8s ease-out !important;
+}
+
+@keyframes explosion-ripple {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+        border-width: 4px;
+        border-color: #ff6b6b;
+    }
+    50% {
+        transform: scale(2);
+        opacity: 0.5;
+        border-width: 2px;
+        border-color: #f07400;
+    }
+    100% {
+        transform: scale(3);
+        opacity: 0;
+        border-width: 0px;
+        border-color: #ffd700;
+    }
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .dashboard-logo {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .dashboard-logo-image {
+        width: 60px;
+    }
+    
+    .dashboard-logo::before {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .dashboard-logo::after {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-logo {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .dashboard-logo-image {
+        width: 50px;
+    }
+    
+    .dashboard-logo::before {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .dashboard-logo::after {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* 硬體加速優化 */
+.dashboard-logo,
+.dashboard-logo-image,
+.dashboard-logo-image::before,
+.dashboard-logo-image::after,
+.dashboard-logo::before,
+.dashboard-logo::after {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform, opacity, border-width;
+}
+
+/* 🎨 額外的視覺效果 */
+.dashboard-logo {
+    filter: drop-shadow(0 0 10px rgba(240, 116, 0, 0.1));
+}
+
+.dashboard-logo:hover {
+    filter: drop-shadow(0 0 20px rgba(240, 116, 0, 0.2));
+}
+
         /* ==================== 主控台標題區域樣式 ==================== */
 .dashboard-header {
     display: flex;
