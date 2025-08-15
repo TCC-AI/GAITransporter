@@ -5,6 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAI優化運務人員調派系統</title>
     <style>
+        /* 用戶資訊樣式 */
+.user-info {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-details {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
+    padding: 8px 15px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-name {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.user-level {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.permission-btn, .logout-btn {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    color: #2c3e50;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.permission-btn:hover, .logout-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.15) 100%);
+    transform: translateY(-2px);
+}
+
+.logout-btn {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.logout-btn:hover {
+    background: linear-gradient(135deg, #ff5252 0%, #e53e3e 100%);
+}
+
         /* 司機資料維護頁面樣式 */
 .driver-data-container {
     padding: 25px;
@@ -2150,31 +2214,35 @@ function backToMainPage() {
             }
         }
         
-        // 在標題列加入用戶資訊
-        addUserInfoToHeader() {
-            const header = document.querySelector('header');
-            if (!header || !loginManager.currentUser) return;
-            
-            // 檢查是否已經加入用戶資訊
-            if (header.querySelector('.user-info')) return;
-            
-            const userInfo = document.createElement('div');
-            userInfo.className = 'user-info';
-            userInfo.innerHTML = `
-                <div class="user-details">
-                    <span class="user-name">👤 ${loginManager.currentUser.username}</span>
-                    <span class="user-level">${loginManager.getUserLevelDescription()}</span>
-                    <button onclick="showUserPermissions()" class="permission-btn" title="查看權限說明">
-                        🔒 權限
-                    </button>
-                    <button onclick="logout()" class="logout-btn" title="登出系統">
-                        🚪 登出
-                    </button>
-                </div>
-            `;
-            
-            header.appendChild(userInfo);
-        }
+// 在標題列加入用戶資訊
+addUserInfoToHeader() {
+    // 只針對主頁面的 header 添加用戶資訊
+    const mainHeader = document.querySelector('#app header');
+    if (!mainHeader || !loginManager.currentUser) return;
+    
+    // 檢查是否已經加入用戶資訊
+    if (mainHeader.querySelector('.user-info')) return;
+    
+    const userInfo = document.createElement('div');
+    userInfo.className = 'user-info';
+    userInfo.innerHTML = `
+        <div class="user-details">
+            <span class="user-name">👤 ${loginManager.currentUser.username}</span>
+            <span class="user-level">${loginManager.getUserLevelDescription()}</span>
+            <button onclick="showUserPermissions()" class="permission-btn" title="查看權限說明">
+                🔒 權限
+            </button>
+            <button onclick="logout()" class="logout-btn" title="登出系統">
+                🚪 登出
+            </button>
+        </div>
+    `;
+    
+    // 將用戶資訊添加到主頁面的 header 中
+    mainHeader.style.position = 'relative'; // 確保 header 有定位上下文
+    mainHeader.appendChild(userInfo);
+}
+
         
         // 檢查權限的輔助方法
         checkPermission(action) {
