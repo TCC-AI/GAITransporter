@@ -5,44 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAI優化運務人員調派系統</title>
     <style>
-/* ==================== 主控台 R1 Logo - 僅方形波紋常態顯示 ==================== */
-.dashboard-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    padding-bottom: 20px;
-    border-bottom: 2px solid rgba(0, 180, 219, 0.2);
-}
+/* =========== R1.png 圖片動畫相關代碼 =========== */
 
-.dashboard-header-container {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.dashboard-header h2 {
-    color: #2c3e50;
-    font-size: 24px;
-    font-weight: 600;
-    margin: 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* 主控台 R1 Logo 容器 */
-.dashboard-logo {
+/* 側邊選單 Logo 區域 - 細邊框震波版本 */
+.sidebar-logo {
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 1rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 0.6rem;
     position: relative;
     overflow: visible;
-    width: 120px;
-    height: 120px;
 }
 
-/* R1 Logo 圖片 */
-.dashboard-logo-image {
-    width: 80px;
+.sidebar-logo-image {
+    width: 100px;
     height: auto;
     max-width: 100%;
     border-radius: 20px;
@@ -52,76 +30,7 @@
     position: relative;
     z-index: 10;
     animation: logo-breathing 4s ease-in-out infinite;
-    cursor: pointer;
 }
-
-/* 🟦 第一層方形波紋 - 緊貼圖片 */
-.dashboard-logo-image::before {
-    content: '';
-    position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
-    border: 2px solid #f07400;
-    border-radius: 25px;
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0;
-    animation: square-ripple-1 3s infinite ease-out;
-}
-
-/* 🟦 第二層方形波紋 - 中距離 */
-.dashboard-logo-image::after {
-    content: '';
-    position: absolute;
-    top: -10px;
-    left: -10px;
-    right: -10px;
-    bottom: -10px;
-    border: 2px solid #f07400;
-    border-radius: 30px;
-    z-index: -2;
-    pointer-events: none;
-    opacity: 0;
-    animation: square-ripple-2 3s infinite ease-out 1s;
-}
-
-/* 🟦 第三層方形波紋 - 遠距離 */
-.dashboard-logo::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100px;
-    height: 100px;
-    border: 2px solid #f07400;
-    border-radius: 25px;
-    transform: translate(-50%, -50%);
-    z-index: -3;
-    pointer-events: none;
-    opacity: 0;
-    animation: square-ripple-3 3s infinite ease-out 2s;
-}
-
-/* 🟦 第四層方形波紋 - 最遠距離 */
-.dashboard-logo::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 120px;
-    height: 120px;
-    border: 1px solid #f07400;
-    border-radius: 30px;
-    transform: translate(-50%, -50%);
-    z-index: -4;
-    pointer-events: none;
-    opacity: 0;
-    animation: square-ripple-4 4s infinite ease-out 0.5s;
-}
-
-/* ✨ 動畫關鍵幀定義 */
 
 /* Logo 呼吸動畫 */
 @keyframes logo-breathing {
@@ -130,125 +39,196 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
     50% {
-        transform: scale(1.02);
-        box-shadow: 0 6px 16px rgba(240, 116, 0, 0.2);
+        transform: scale(1);
+        box-shadow: 0 6px 18px rgba(14, 165, 233, 0.2);
     }
 }
 
-/* 第一層方形波紋動畫 */
-@keyframes square-ripple-1 {
+/* 第一層細邊框震波 */
+.sidebar-logo-image::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 5px solid #f07400;
+    border-radius: 10px;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    animation: thin-ripple-1 2.5s infinite ease-out;
+}
+
+/* 第二層細邊框震波 */
+.sidebar-logo-image::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 4px solid #f07400;
+    border-radius: 10px;
+    z-index: -2;
+    pointer-events: none;
+    opacity: 0;
+    animation: thin-ripple-2 2.5s infinite ease-out 1.25s;
+}
+
+/* 第一層細震波動畫 */
+@keyframes thin-ripple-1 {
     0% {
         transform: scale(1);
-        opacity: 0;
-        border-width: 3px;
-    }
-    10% {
-        opacity: 0.8;
-    }
-    50% {
-        transform: scale(1.2);
-        opacity: 0.5;
-        border-width: 2px;
-    }
-    100% {
-        transform: scale(1.4);
         opacity: 0;
         border-width: 1px;
     }
-}
-
-/* 第二層方形波紋動畫 */
-@keyframes square-ripple-2 {
-    0% {
-        transform: scale(1);
-        opacity: 0;
-        border-width: 2px;
+    5% {
+        opacity: 0.8;
     }
-    10% {
+    25% {
+        transform: scale(1.1);
         opacity: 0.6;
+        border-width: 1px;
     }
-    60% {
-        transform: scale(1.3);
-        opacity: 0.3;
-        border-width: 1.5px;
+    50% {
+        transform: scale(1.25);
+        opacity: 0.4;
+        border-width: 0.8px;
+    }
+    75% {
+        transform: scale(1.4);
+        opacity: 0.2;
+        border-width: 0.5px;
     }
     100% {
         transform: scale(1.6);
-        opacity: 0;
-        border-width: 0.5px;
-    }
-}
-
-/* 第三層方形波紋動畫 */
-@keyframes square-ripple-3 {
-    0% {
-        transform: translate(-50%, -50%) scale(0.8);
-        opacity: 0;
-        border-width: 2px;
-    }
-    15% {
-        opacity: 0.5;
-    }
-    70% {
-        transform: translate(-50%, -50%) scale(1.2);
-        opacity: 0.2;
-        border-width: 1px;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(1.5);
-        opacity: 0;
-        border-width: 0.5px;
-    }
-}
-
-/* 第四層方形波紋動畫 */
-@keyframes square-ripple-4 {
-    0% {
-        transform: translate(-50%, -50%) scale(0.7);
-        opacity: 0;
-        border-width: 1px;
-    }
-    20% {
-        opacity: 0.4;
-    }
-    80% {
-        transform: translate(-50%, -50%) scale(1.3);
-        opacity: 0.1;
-        border-width: 0.5px;
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(1.6);
         opacity: 0;
         border-width: 0px;
     }
 }
 
-/* 滑鼠懸停效果 - 僅增強現有動畫 */
-.dashboard-logo-image:hover {
+/* 第二層細震波動畫 */
+@keyframes thin-ripple-2 {
+    0% {
+        transform: scale(1);
+        opacity: 0;
+        border-width: 1px;
+    }
+    8% {
+        opacity: 0.6;
+    }
+    30% {
+        transform: scale(1.15);
+        opacity: 0.4;
+        border-width: 0.8px;
+    }
+    55% {
+        transform: scale(1.3);
+        opacity: 0.3;
+        border-width: 0.6px;
+    }
+    80% {
+        transform: scale(1.5);
+        opacity: 0.1;
+        border-width: 0.3px;
+    }
+    100% {
+        transform: scale(1.7);
+        opacity: 0;
+        border-width: 0px;
+    }
+}
+
+/* 滑鼠懸停效果 */
+.sidebar-logo-image:hover {
     transform: scale(1.05);
-    box-shadow: 0 8px 25px rgba(240, 116, 0, 0.3);
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.3);
     animation: logo-breathing 2s ease-in-out infinite;
 }
 
-/* 懸停時加速波紋動畫 */
-.dashboard-logo:hover .dashboard-logo-image::before {
-    animation: square-ripple-1 2s infinite ease-out;
+/* 懸停時震波加速 */
+.sidebar-logo-image:hover::before {
+    animation: thin-ripple-1 1.8s infinite ease-out;
 }
 
-.dashboard-logo:hover .dashboard-logo-image::after {
-    animation: square-ripple-2 2s infinite ease-out 0.5s;
+.sidebar-logo-image:hover::after {
+    animation: thin-ripple-2 1.8s infinite ease-out 0.9s;
 }
 
-.dashboard-logo:hover::before {
-    animation: square-ripple-3 2s infinite ease-out 1s;
+/* 第三層震波（更細更遠）*/
+.sidebar-logo::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 120px;
+    border: 2px solid #f07400;
+    border-radius: 8px;
+    transform: translate(-50%, -50%);
+    z-index: -3;
+    pointer-events: none;
+    opacity: 0;
+    animation: ultra-thin-ripple 3s infinite ease-out 2s;
 }
 
-.dashboard-logo:hover::after {
-    animation: square-ripple-4 2.5s infinite ease-out 0.3s;
+/* 超細震波動畫 */
+@keyframes ultra-thin-ripple {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0;
+        border-width: 0.5px;
+    }
+    10% {
+        opacity: 0.4;
+    }
+    40% {
+        transform: translate(-50%, -50%) scale(1.3);
+        opacity: 0.2;
+        border-width: 0.3px;
+    }
+    70% {
+        transform: translate(-50%, -50%) scale(1.6);
+        opacity: 0.1;
+        border-width: 0.2px;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(2);
+        opacity: 0;
+        border-width: 0px;
+    }
+}
+
+/* 背景光暈（更柔和）*/
+.sidebar-logo::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 160px;
+    height: 160px;
+    background: radial-gradient(circle, rgba(14, 165, 233, 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    animation: subtle-glow 4s ease-in-out infinite;
+}
+
+/* 柔和光暈動畫 */
+@keyframes subtle-glow {
+    0%, 100% {
+        opacity: 0.3;
+        transform: translate(-50%, -50%) scale(0.8);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
 }
 
 /* Logo點擊動畫 */
-.dashboard-logo-image.clicked {
+.sidebar-logo-image.clicked {
     animation: logoClick 0.6s ease-out;
 }
 
@@ -256,97 +236,53 @@
     0% { 
         transform: scale(1); 
     }
-    25% { 
+    50% { 
         transform: scale(1.1) rotate(5deg); 
     }
-    50% { 
-        transform: scale(1.15) rotate(-3deg); 
-    }
-    75% { 
-        transform: scale(1.05) rotate(2deg); 
-    }
     100% { 
-        transform: scale(1) rotate(0deg); 
-    }
-}
-
-/* 🎯 特殊效果：點擊時的爆炸波紋 */
-.dashboard-logo-image.clicked::before,
-.dashboard-logo-image.clicked::after {
-    animation: explosion-square-ripple 0.8s ease-out !important;
-}
-
-@keyframes explosion-square-ripple {
-    0% {
-        transform: scale(1);
-        opacity: 1;
-        border-width: 4px;
-        border-color: #ff6b6b;
-    }
-    50% {
-        transform: scale(1.8);
-        opacity: 0.5;
-        border-width: 2px;
-        border-color: #f07400;
-    }
-    100% {
-        transform: scale(2.5);
-        opacity: 0;
-        border-width: 0px;
-        border-color: #ffd700;
+        transform: scale(1); 
     }
 }
 
 /* 響應式調整 */
 @media (max-width: 768px) {
-    .dashboard-logo {
+    .sidebar-logo-image {
         width: 100px;
-        height: 100px;
     }
     
-    .dashboard-logo-image {
-        width: 60px;
+    .sidebar-logo::before {
+        width: 140px;
+        height: 140px;
     }
-    
-    .dashboard-logo::before {
-        width: 80px;
-        height: 80px;
-    }
-    
-    .dashboard-logo::after {
+
+    .sidebar-logo::after {
         width: 100px;
         height: 100px;
     }
 }
 
 @media (max-width: 480px) {
-    .dashboard-logo {
-        width: 80px;
-        height: 80px;
+    .sidebar-logo-image {
+        width: 90px;
     }
     
-    .dashboard-logo-image {
-        width: 50px;
+    .sidebar-logo::before {
+        width: 120px;
+        height: 120px;
     }
-    
-    .dashboard-logo::before {
-        width: 60px;
-        height: 60px;
-    }
-    
-    .dashboard-logo::after {
-        width: 80px;
-        height: 80px;
+
+    .sidebar-logo::after {
+        width: 90px;
+        height: 90px;
     }
 }
 
 /* 硬體加速優化 */
-.dashboard-logo,
-.dashboard-logo-image,
-.dashboard-logo-image::before,
-.dashboard-logo-image::after,
-.dashboard-logo::before,
-.dashboard-logo::after {
+.sidebar-logo-image,
+.sidebar-logo-image::before,
+.sidebar-logo-image::after,
+.sidebar-logo::before,
+.sidebar-logo::after {
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
     -webkit-backface-visibility: hidden;
@@ -354,14 +290,6 @@
     will-change: transform, opacity, border-width;
 }
 
-/* 🎨 額外的視覺效果 */
-.dashboard-logo {
-    filter: drop-shadow(0 0 10px rgba(240, 116, 0, 0.1));
-}
-
-.dashboard-logo:hover {
-    filter: drop-shadow(0 0 20px rgba(240, 116, 0, 0.2));
-}
 
         /* ==================== 主控台標題區域樣式 ==================== */
 .dashboard-header {
