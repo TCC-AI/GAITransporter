@@ -5,6 +5,251 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>昶青物流GAI優化運務人員調派建議系統</title>
     <style>
+        /* 登入頁面樣式 */
+.login-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.login-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    padding: 40px;
+    width: 420px;
+    max-width: 90%;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+}
+
+.login-header {
+    margin-bottom: 30px;
+}
+
+.company-logo {
+    margin-bottom: 20px;
+}
+
+.company-logo img {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 10px;
+}
+
+.company-logo h2 {
+    color: #2c3e50;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 10px 0 5px 0;
+}
+
+.company-logo p {
+    color: #666;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.system-title {
+    padding: 20px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.truck-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+.system-title h3 {
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.login-form {
+    margin: 30px 0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    color: #2c3e50;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid rgba(0, 180, 219, 0.2);
+    border-radius: 12px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.6) 100%);
+    backdrop-filter: blur(10px);
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #00b4db;
+    box-shadow: 0 0 0 3px rgba(0, 180, 219, 0.1);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.form-group input::placeholder {
+    color: #999;
+    font-weight: 400;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(0, 180, 219, 0.3);
+    margin-top: 10px;
+}
+
+.login-btn:hover {
+    background: linear-gradient(135deg, #0083b0 0%, #006a8e 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 180, 219, 0.4);
+}
+
+.login-btn:active {
+    transform: translateY(0);
+}
+
+.login-footer {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #666;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-dot.online {
+    background: #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.3);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+/* 登入錯誤提示 */
+.login-error {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin: 15px 0;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+/* 載入狀態 */
+.login-btn.loading {
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.login-btn.loading::after {
+    content: '';
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid white;
+    border-radius: 50%;
+    display: inline-block;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 響應式設計 */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 30px 20px;
+        width: 95%;
+    }
+    
+    .company-logo h2 {
+        font-size: 20px;
+    }
+    
+    .system-title h3 {
+        font-size: 16px;
+    }
+    
+    .form-group input,
+    .login-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
         /* 司機級別顏色 - 根據您的需求調整 */
 .driver-card.level-A1 { 
     border-left: 4px solid #96faf8; /* A1 = 綠色 */
@@ -1004,6 +1249,46 @@
     </style>
 </head>
 <body>
+    <!-- 登入頁面 -->
+<div id="login-page" class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="company-logo">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMjgiIGZpbGw9IiMwMGI0ZGIiLz4KPHN2ZyB4PSIxNSIgeT0iMTUiIHdpZHRoPSIzMCIgaGVpZ2h0PSIzMCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJ3aGl0ZSI+CjxwYXRoIGQ9Ik0xOSAzSDE1VjJIMTNWM0g1QzMuOSAzIDMgMy45IDMgNVYxOUM0IDIwLjEgNC45IDIxIDYgMjFIMThDMTkuMSAyMSAyMCAyMC4xIDIwIDE5VjVDMjAgMy45IDE5LjEgMyAxOSAzWk0xOCAxOUg2VjVIMThWMTlaIi8+CjxwYXRoIGQ9Ik04IDdWMTdIMTZWN0g4Wk0xNCA5VjE1SDEwVjlIMTRaIi8+Cjwvc3ZnPgo8L3N2Zz4K" alt="昶青低溫物流">
+                <h2>昶青低溫物流</h2>
+                <p>CHANG CHING COLD CHAIN LOGISTICS</p>
+            </div>
+            <div class="system-title">
+                <div class="truck-icon">🚛</div>
+                <h3>派車GAI數據管理系統</h3>
+            </div>
+        </div>
+        
+        <form id="login-form" class="login-form">
+            <div class="form-group">
+                <label for="username">帳號</label>
+                <input type="text" id="username" name="username" placeholder="請輸入帳號" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">密碼</label>
+                <input type="password" id="password" name="password" placeholder="請輸入密碼" required>
+            </div>
+            
+            <button type="submit" class="login-btn">
+                🔐 登入
+            </button>
+        </form>
+        
+        <div class="login-footer">
+            <div class="status-indicator">
+                <span class="status-dot online"></span>
+                <span>今日連線</span>
+            </div>
+        </div>
+    </div>
+</div>
+
     <div id="app">
         <!-- 標題列 -->
         <header>
@@ -1138,7 +1423,288 @@
 
     <script>
         // Google Apps Script Web App URL (需要替換為實際的 URL)
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzchCWms7QgI__MZdJXxFiJWAIWIbx2OddCG-V84LMxS0ftHuI967QznKmBORljVtZSoA/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwvj9GocxWHAWMhm6mJlCDwDwxAHVrlUWcmph6naFSkSnonAVjYTBMN6AAvAMaA4xYGDw/exec';
+
+        // 登入管理類別
+class LoginManager {
+    constructor() {
+        this.isLoggedIn = false;
+        this.currentUser = null;
+        this.init();
+    }
+    
+    init() {
+        // 檢查是否已經登入
+        const savedUser = sessionStorage.getItem('currentUser');
+        if (savedUser) {
+            this.currentUser = JSON.parse(savedUser);
+            this.isLoggedIn = true;
+            this.showMainSystem();
+        } else {
+            this.showLoginPage();
+        }
+        
+        // 綁定登入表單事件
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', this.handleLogin.bind(this));
+        }
+    }
+    
+    showLoginPage() {
+        document.getElementById('login-page').style.display = 'flex';
+        document.getElementById('main-system').style.display = 'none';
+    }
+    
+    showMainSystem() {
+        document.getElementById('login-page').style.display = 'none';
+        document.getElementById('main-system').style.display = 'block';
+        
+        // 初始化主系統
+        if (window.app) {
+            app.loadData();
+        }
+    }
+    
+    async handleLogin(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const loginBtn = document.querySelector('.login-btn');
+        
+        if (!username || !password) {
+            this.showError('請輸入帳號和密碼');
+            return;
+        }
+        
+        // 顯示載入狀態
+        loginBtn.classList.add('loading');
+        loginBtn.textContent = '登入中...';
+        
+        try {
+            // 呼叫後端驗證
+            const result = await this.verifyLogin(username, password);
+            
+            if (result.success) {
+                // 登入成功
+                this.currentUser = result.user;
+                this.isLoggedIn = true;
+                
+                // 儲存到 sessionStorage
+                sessionStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                
+                // 記錄登入時間
+                await this.updateLastLoginTime(username);
+                
+                // 顯示成功訊息
+                this.showSuccess('登入成功！');
+                
+                // 延遲顯示主系統
+                setTimeout(() => {
+                    this.showMainSystem();
+                }, 1000);
+                
+            } else {
+                this.showError(result.error || '帳號或密碼錯誤');
+            }
+            
+        } catch (error) {
+            console.error('登入錯誤:', error);
+            this.showError('登入失敗，請稍後再試');
+        } finally {
+            // 恢復按鈕狀態
+            loginBtn.classList.remove('loading');
+            loginBtn.textContent = '🔐 登入';
+        }
+    }
+    
+    async verifyLogin(username, password) {
+        try {
+            const response = await fetch(GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `action=verifyLogin&data=${encodeURIComponent(JSON.stringify({ username, password }))}`
+            });
+            
+            const result = await response.json();
+            return result;
+        } catch (error) {
+            console.error('驗證登入失敗:', error);
+            return { success: false, error: '網路連線錯誤' };
+        }
+    }
+    
+    async updateLastLoginTime(username) {
+        try {
+            await fetch(GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `action=updateLastLogin&data=${encodeURIComponent(JSON.stringify({ username }))}`
+            });
+        } catch (error) {
+            console.error('更新登入時間失敗:', error);
+        }
+    }
+    
+    showError(message) {
+        // 移除現有的錯誤訊息
+        const existingError = document.querySelector('.login-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // 創建新的錯誤訊息
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'login-error';
+        errorDiv.textContent = message;
+        
+        // 插入到表單前面
+        const form = document.getElementById('login-form');
+        form.parentNode.insertBefore(errorDiv, form);
+        
+        // 3秒後自動移除
+        setTimeout(() => {
+            if (errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+        }, 3000);
+    }
+    
+    showSuccess(message) {
+        // 移除錯誤訊息
+        const existingError = document.querySelector('.login-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // 創建成功訊息
+        const successDiv = document.createElement('div');
+        successDiv.className = 'login-error';
+        successDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+        successDiv.textContent = message;
+        
+        const form = document.getElementById('login-form');
+        form.parentNode.insertBefore(successDiv, form);
+    }
+    
+    logout() {
+        this.isLoggedIn = false;
+        this.currentUser = null;
+        sessionStorage.removeItem('currentUser');
+        
+        // 清空表單
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        
+        this.showLoginPage();
+    }
+    
+    getCurrentUser() {
+        return this.currentUser;
+    }
+    
+    checkPermission(action) {
+        if (!this.isLoggedIn || !this.currentUser) {
+            return false;
+        }
+        
+        const userLevel = this.currentUser.級別 || this.currentUser.level;
+        
+        // 根據用戶級別檢查權限
+        switch (userLevel) {
+            case '管理員':
+                return true; // 管理員有所有權限
+            case '調度員':
+                return ['autoAssign', 'generateSuggestions', 'assignTasks'].includes(action);
+            case '查看者':
+                return ['viewData'].includes(action);
+            default:
+                return false;
+        }
+    }
+}
+
+// 初始化登入管理器
+const loginManager = new LoginManager();
+
+// 修改現有的 DispatchApp 類別，加入權限檢查
+class DispatchApp {
+    constructor() {
+        this.tasks = [];
+        this.drivers = [];
+        this.vehicles = [];
+        this.assignments = [];
+        this.filters = {
+            date: '',
+            level: '',
+            vehicleType: '',
+            driverLevel: '',
+            status: ''
+        };
+        
+        // 設定今日日期
+        const dateFilter = document.getElementById('date-filter');
+        if (dateFilter) {
+            dateFilter.value = new Date().toISOString().split('T')[0];
+        }
+    }
+    
+    // 檢查權限的輔助方法
+    checkPermission(action) {
+        return loginManager.checkPermission(action);
+    }
+    
+    // 修改需要權限檢查的方法
+    async autoAssignAll() {
+        if (!this.checkPermission('autoAssign')) {
+            this.showNotification('您沒有執行自動配對的權限', 'error');
+            return;
+        }
+        
+        // 原有的自動配對邏輯...
+        if (!confirm('確定要執行一鍵自動配對嗎？這將會重新計算所有待派任務的最佳配對。')) {
+            return;
+        }
+        
+        // ... 其餘原有代碼
+    }
+    
+    // 其他方法保持不變...
+}
+
+// 在頁面載入完成後初始化
+window.addEventListener('DOMContentLoaded', function() {
+    // 等待登入完成後再初始化主系統
+    const checkLogin = setInterval(() => {
+        if (loginManager.isLoggedIn) {
+            clearInterval(checkLogin);
+            window.app = new DispatchApp();
+        }
+    }, 100);
+});
+
+// 加入登出功能到工具列
+function addLogoutButton() {
+    const toolbar = document.querySelector('.toolbar');
+    if (toolbar && loginManager.isLoggedIn) {
+        const logoutBtn = document.createElement('button');
+        logoutBtn.textContent = '🚪 登出';
+        logoutBtn.onclick = () => {
+            if (confirm('確定要登出嗎？')) {
+                loginManager.logout();
+            }
+        };
+        toolbar.appendChild(logoutBtn);
+    }
+}
+
+// 在顯示主系統時加入登出按鈕
+const originalShowMainSystem = loginManager.showMainSystem;
+loginManager.showMainSystem = function() {
+    originalShowMainSystem.call(this);
+    setTimeout(addLogoutButton, 100);
+};
 
         // 主要應用程式類別
         class DispatchApp {
