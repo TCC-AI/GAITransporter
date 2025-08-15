@@ -5,73 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GAI優化運務人員調派系統</title>
     <style>
-        /* 全域用戶資訊樣式 */
-.global-user-info {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 9998;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.global-user-info .user-details {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
-    padding: 10px 20px;
-    border-radius: 25px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.global-user-info .user-name {
-    color: #2c3e50;
-    font-weight: 600;
-    font-size: 14px;
-}
-
-.global-user-info .user-level {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.global-user-info .permission-btn, 
-.global-user-info .logout-btn {
-    background: linear-gradient(135deg, rgba(0, 180, 219, 0.1) 0%, rgba(0, 180, 219, 0.05) 100%);
-    color: #2c3e50;
-    border: 1px solid rgba(0, 180, 219, 0.2);
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.global-user-info .permission-btn:hover, 
-.global-user-info .logout-btn:hover {
-    background: linear-gradient(135deg, rgba(0, 180, 219, 0.2) 0%, rgba(0, 180, 219, 0.1) 100%);
-    transform: translateY(-2px);
-}
-
-.global-user-info .logout-btn {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-    color: white;
-    border-color: rgba(255, 255, 255, 0.3);
-}
-
-.global-user-info .logout-btn:hover {
-    background: linear-gradient(135deg, #ff5252 0%, #e53e3e 100%);
-}
-
         /* 司機資料維護頁面樣式 */
 .driver-data-container {
     padding: 25px;
@@ -1406,20 +1339,6 @@
     </style>
 </head>
 <body>
-    <!-- 在 body 標籤開始後立即添加 -->
-<div id="global-user-info" class="global-user-info" style="display: none;">
-    <div class="user-details">
-        <span class="user-name"></span>
-        <span class="user-level"></span>
-        <button onclick="showUserPermissions()" class="permission-btn" title="查看權限說明">
-            🔒 權限
-        </button>
-        <button onclick="logout()" class="logout-btn" title="登出系統">
-            🚪 登出
-        </button>
-    </div>
-</div>
-
     <!-- 登入頁面 -->
 <div id="login-page" class="login-container">
     <div class="login-card">
@@ -2231,35 +2150,31 @@ function backToMainPage() {
             }
         }
         
-// 修改 addUserInfoToHeader 函數
-addUserInfoToHeader() {
-    const globalUserInfo = document.getElementById('global-user-info');
-    if (!globalUserInfo || !loginManager.currentUser) return;
-    
-    // 更新用戶資訊內容
-    const userName = globalUserInfo.querySelector('.user-name');
-    const userLevel = globalUserInfo.querySelector('.user-level');
-    
-    if (userName) userName.textContent = `👤 ${loginManager.currentUser.username}`;
-    if (userLevel) userLevel.textContent = loginManager.getUserLevelDescription();
-    
-    // 顯示用戶資訊
-    globalUserInfo.style.display = 'flex';
-}
-
-// 修改 logout 函數，隱藏用戶資訊
-function logout() {
-    if (confirm('確定要登出嗎？')) {
-        // 隱藏用戶資訊
-        const globalUserInfo = document.getElementById('global-user-info');
-        if (globalUserInfo) {
-            globalUserInfo.style.display = 'none';
+        // 在標題列加入用戶資訊
+        addUserInfoToHeader() {
+            const header = document.querySelector('header');
+            if (!header || !loginManager.currentUser) return;
+            
+            // 檢查是否已經加入用戶資訊
+            if (header.querySelector('.user-info')) return;
+            
+            const userInfo = document.createElement('div');
+            userInfo.className = 'user-info';
+            userInfo.innerHTML = `
+                <div class="user-details">
+                    <span class="user-name">👤 ${loginManager.currentUser.username}</span>
+                    <span class="user-level">${loginManager.getUserLevelDescription()}</span>
+                    <button onclick="showUserPermissions()" class="permission-btn" title="查看權限說明">
+                        🔒 權限
+                    </button>
+                    <button onclick="logout()" class="logout-btn" title="登出系統">
+                        🚪 登出
+                    </button>
+                </div>
+            `;
+            
+            header.appendChild(userInfo);
         }
-        
-        loginManager.logout();
-    }
-}
-
         
         // 檢查權限的輔助方法
         checkPermission(action) {
