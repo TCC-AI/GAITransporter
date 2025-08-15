@@ -1420,503 +1420,614 @@
             <div class="suggestions-content" id="suggestions-content"></div>
         </div>
     </div>
+<script>
+    // Google Apps Script Web App URL (需要替換為實際的 URL)
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyYRyeEnKbsG5zSmC5TjRST_tlabs7HvIoXlqAwUp-nDIKzwAdegT4EDQZ3PMtfAnhs9Q/exec';
 
-    <script>
-        // Google Apps Script Web App URL (需要替換為實際的 URL)
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbwvj9GocxWHAWMhm6mJlCDwDwxAHVrlUWcmph6naFSkSnonAVjYTBMN6AAvAMaA4xYGDw/exec';
-
-        // 登入管理類別
-class LoginManager {
-    constructor() {
-        this.isLoggedIn = false;
-        this.currentUser = null;
-        this.init();
-    }
-    
-    init() {
-        // 檢查是否已經登入
-        const savedUser = sessionStorage.getItem('currentUser');
-        if (savedUser) {
-            this.currentUser = JSON.parse(savedUser);
-            this.isLoggedIn = true;
-            this.showMainSystem();
-        } else {
+    // 登入管理類別
+    class LoginManager {
+        constructor() {
+            this.isLoggedIn = false;
+            this.currentUser = null;
+            this.init();
+        }
+        
+        init() {
+            // 檢查是否已經登入
+            const savedUser = sessionStorage.getItem('currentUser');
+            if (savedUser) {
+                this.currentUser = JSON.parse(savedUser);
+                this.isLoggedIn = true;
+                this.showMainSystem();
+            } else {
+                this.showLoginPage();
+            }
+            
+            // 綁定登入表單事件
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', this.handleLogin.bind(this));
+            }
+        }
+        
+        showLoginPage() {
+            document.getElementById('login-page').style.display = 'flex';
+            document.getElementById('app').style.display = 'none';
+        }
+        
+        showMainSystem() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            
+            // 初始化主系統
+            setTimeout(() => {
+                if (window.app) {
+                    app.initPermissionControl();
+                    app.loadData();
+                }
+            }, 100);
+        }
+        
+        async handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const loginBtn = document.querySelector('.login-btn');
+            
+            if (!username || !password) {
+                this.showError('請輸入帳號和密碼');
+                return;
+            }
+            
+            // 顯示載入狀態
+            loginBtn.classList.add('loading');
+            loginBtn.textContent = '登入中...';
+            
+            try {
+                // 呼叫後端驗證
+                const result = await this.verifyLogin(username, password);
+                
+                if (result.success) {
+                    // 登入成功
+                    this.currentUser = result.user;
+                    this.isLoggedIn = true;
+                    
+                    // 儲存到 sessionStorage
+                    sessionStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                    
+                    // 記錄登入時間
+                    await this.updateLastLoginTime(username);
+                    
+                    // 顯示成功訊息
+                    this.showSuccess('登入成功！');
+                    
+                    // 延遲顯示主系統
+                    setTimeout(() => {
+                        this.showMainSystem();
+                    }, 1000);
+                    
+                } else {
+                    this.showError(result.error || '帳號或密碼錯誤');
+                }
+                
+            } catch (error) {
+                console.error('登入錯誤:', error);
+                this.showError('登入失敗，請稍後再試');
+            } finally {
+                // 恢復按鈕狀態
+                loginBtn.classList.remove('loading');
+                loginBtn.textContent = '🔐 登入';
+            }
+        }
+        
+        async verifyLogin(username, password) {
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `action=verifyLogin&data=${encodeURIComponent(JSON.stringify({ username, password }))}`
+                });
+                
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('驗證登入失敗:', error);
+                return { success: false, error: '網路連線錯誤' };
+            }
+        }
+        
+        async updateLastLoginTime(username) {
+            try {
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `action=updateLastLogin&data=${encodeURIComponent(JSON.stringify({ username }))}`
+                });
+            } catch (error) {
+                console.error('更新登入時間失敗:', error);
+            }
+        }
+        
+        showError(message) {
+            // 移除現有的錯誤訊息
+            const existingError = document.querySelector('.login-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // 創建新的錯誤訊息
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'login-error';
+            errorDiv.textContent = message;
+            
+            // 插入到表單前面
+            const form = document.getElementById('login-form');
+            form.parentNode.insertBefore(errorDiv, form);
+            
+            // 3秒後自動移除
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.remove();
+                }
+            }, 3000);
+        }
+        
+        showSuccess(message) {
+            // 移除錯誤訊息
+            const existingError = document.querySelector('.login-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            // 創建成功訊息
+            const successDiv = document.createElement('div');
+            successDiv.className = 'login-error';
+            successDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            successDiv.textContent = message;
+            
+            const form = document.getElementById('login-form');
+            form.parentNode.insertBefore(successDiv, form);
+        }
+        
+        logout() {
+            this.isLoggedIn = false;
+            this.currentUser = null;
+            sessionStorage.removeItem('currentUser');
+            
+            // 清空表單
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            
             this.showLoginPage();
         }
         
-        // 綁定登入表單事件
-        const loginForm = document.getElementById('login-form');
-        if (loginForm) {
-            loginForm.addEventListener('submit', this.handleLogin.bind(this));
-        }
-    }
-    
-    showLoginPage() {
-        document.getElementById('login-page').style.display = 'flex';
-        document.getElementById('main-system').style.display = 'none';
-    }
-    
-    showMainSystem() {
-        document.getElementById('login-page').style.display = 'none';
-        document.getElementById('main-system').style.display = 'block';
-        
-        // 初始化主系統
-        if (window.app) {
-            app.loadData();
-        }
-    }
-    
-    async handleLogin(e) {
-        e.preventDefault();
-        
-        const username = document.getElementById('username').value.trim();
-        const password = document.getElementById('password').value.trim();
-        const loginBtn = document.querySelector('.login-btn');
-        
-        if (!username || !password) {
-            this.showError('請輸入帳號和密碼');
-            return;
+        getCurrentUser() {
+            return this.currentUser;
         }
         
-        // 顯示載入狀態
-        loginBtn.classList.add('loading');
-        loginBtn.textContent = '登入中...';
-        
-        try {
-            // 呼叫後端驗證
-            const result = await this.verifyLogin(username, password);
-            
-            if (result.success) {
-                // 登入成功
-                this.currentUser = result.user;
-                this.isLoggedIn = true;
-                
-                // 儲存到 sessionStorage
-                sessionStorage.setItem('currentUser', JSON.stringify(this.currentUser));
-                
-                // 記錄登入時間
-                await this.updateLastLoginTime(username);
-                
-                // 顯示成功訊息
-                this.showSuccess('登入成功！');
-                
-                // 延遲顯示主系統
-                setTimeout(() => {
-                    this.showMainSystem();
-                }, 1000);
-                
-            } else {
-                this.showError(result.error || '帳號或密碼錯誤');
-            }
-            
-        } catch (error) {
-            console.error('登入錯誤:', error);
-            this.showError('登入失敗，請稍後再試');
-        } finally {
-            // 恢復按鈕狀態
-            loginBtn.classList.remove('loading');
-            loginBtn.textContent = '🔐 登入';
-        }
-    }
-    
-    async verifyLogin(username, password) {
-        try {
-            const response = await fetch(GAS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `action=verifyLogin&data=${encodeURIComponent(JSON.stringify({ username, password }))}`
-            });
-            
-            const result = await response.json();
-            return result;
-        } catch (error) {
-            console.error('驗證登入失敗:', error);
-            return { success: false, error: '網路連線錯誤' };
-        }
-    }
-    
-    async updateLastLoginTime(username) {
-        try {
-            await fetch(GAS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `action=updateLastLogin&data=${encodeURIComponent(JSON.stringify({ username }))}`
-            });
-        } catch (error) {
-            console.error('更新登入時間失敗:', error);
-        }
-    }
-    
-    showError(message) {
-        // 移除現有的錯誤訊息
-        const existingError = document.querySelector('.login-error');
-        if (existingError) {
-            existingError.remove();
-        }
-        
-        // 創建新的錯誤訊息
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'login-error';
-        errorDiv.textContent = message;
-        
-        // 插入到表單前面
-        const form = document.getElementById('login-form');
-        form.parentNode.insertBefore(errorDiv, form);
-        
-        // 3秒後自動移除
-        setTimeout(() => {
-            if (errorDiv.parentNode) {
-                errorDiv.remove();
-            }
-        }, 3000);
-    }
-    
-    showSuccess(message) {
-        // 移除錯誤訊息
-        const existingError = document.querySelector('.login-error');
-        if (existingError) {
-            existingError.remove();
-        }
-        
-        // 創建成功訊息
-        const successDiv = document.createElement('div');
-        successDiv.className = 'login-error';
-        successDiv.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-        successDiv.textContent = message;
-        
-        const form = document.getElementById('login-form');
-        form.parentNode.insertBefore(successDiv, form);
-    }
-    
-    logout() {
-        this.isLoggedIn = false;
-        this.currentUser = null;
-        sessionStorage.removeItem('currentUser');
-        
-        // 清空表單
-        document.getElementById('username').value = '';
-        document.getElementById('password').value = '';
-        
-        this.showLoginPage();
-    }
-    
-    getCurrentUser() {
-        return this.currentUser;
-    }
-    
-    checkPermission(action) {
-        if (!this.isLoggedIn || !this.currentUser) {
-            return false;
-        }
-        
-        const userLevel = this.currentUser.級別 || this.currentUser.level;
-        
-        // 根據用戶級別檢查權限
-        switch (userLevel) {
-            case '管理員':
-                return true; // 管理員有所有權限
-            case '調度員':
-                return ['autoAssign', 'generateSuggestions', 'assignTasks'].includes(action);
-            case '查看者':
-                return ['viewData'].includes(action);
-            default:
+        checkPermission(action) {
+            if (!this.isLoggedIn || !this.currentUser) {
                 return false;
-        }
-    }
-}
-
-// 初始化登入管理器
-const loginManager = new LoginManager();
-
-// 修改現有的 DispatchApp 類別，加入權限檢查
-class DispatchApp {
-    constructor() {
-        this.tasks = [];
-        this.drivers = [];
-        this.vehicles = [];
-        this.assignments = [];
-        this.filters = {
-            date: '',
-            level: '',
-            vehicleType: '',
-            driverLevel: '',
-            status: ''
-        };
-        
-        // 設定今日日期
-        const dateFilter = document.getElementById('date-filter');
-        if (dateFilter) {
-            dateFilter.value = new Date().toISOString().split('T')[0];
-        }
-    }
-    
-    // 檢查權限的輔助方法
-    checkPermission(action) {
-        return loginManager.checkPermission(action);
-    }
-    
-    // 修改需要權限檢查的方法
-    async autoAssignAll() {
-        if (!this.checkPermission('autoAssign')) {
-            this.showNotification('您沒有執行自動配對的權限', 'error');
-            return;
-        }
-        
-        // 原有的自動配對邏輯...
-        if (!confirm('確定要執行一鍵自動配對嗎？這將會重新計算所有待派任務的最佳配對。')) {
-            return;
-        }
-        
-        // ... 其餘原有代碼
-    }
-    
-    // 其他方法保持不變...
-}
-
-// 在頁面載入完成後初始化
-window.addEventListener('DOMContentLoaded', function() {
-    // 等待登入完成後再初始化主系統
-    const checkLogin = setInterval(() => {
-        if (loginManager.isLoggedIn) {
-            clearInterval(checkLogin);
-            window.app = new DispatchApp();
-        }
-    }, 100);
-});
-
-// 加入登出功能到工具列
-function addLogoutButton() {
-    const toolbar = document.querySelector('.toolbar');
-    if (toolbar && loginManager.isLoggedIn) {
-        const logoutBtn = document.createElement('button');
-        logoutBtn.textContent = '🚪 登出';
-        logoutBtn.onclick = () => {
-            if (confirm('確定要登出嗎？')) {
-                loginManager.logout();
-            }
-        };
-        toolbar.appendChild(logoutBtn);
-    }
-}
-
-// 在顯示主系統時加入登出按鈕
-const originalShowMainSystem = loginManager.showMainSystem;
-loginManager.showMainSystem = function() {
-    originalShowMainSystem.call(this);
-    setTimeout(addLogoutButton, 100);
-};
-
-        // 主要應用程式類別
-        class DispatchApp {
-            constructor() {
-                this.tasks = [];
-                this.drivers = [];
-                this.vehicles = [];
-                this.assignments = [];
-                this.filters = {
-                    date: '',
-                    level: '',
-                    vehicleType: '',
-                    driverLevel: '',
-                    status: ''
-                };
-                
-                // 設定今日日期
-                document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
             }
             
-            // 載入所有資料
-            async loadData() {
-                this.showLoading(true);
-                
-                try {
-                    // 顯示載入動畫
-                    document.getElementById('tasks-loading').classList.add('show');
-                    document.getElementById('vehicles-loading').classList.add('show');
-                    document.getElementById('drivers-loading').classList.add('show');
-                    
-                    const [tasksRes, driversRes, vehiclesRes] = await Promise.all([
-                        this.callGAS('getTasks'),
-                        this.callGAS('getDrivers'),
-                        this.callGAS('getVehicles')
-                    ]);
-                    
-                    if (tasksRes.success) this.tasks = tasksRes.data || [];
-                    if (driversRes.success) this.drivers = driversRes.data || [];
-                    if (vehiclesRes.success) this.vehicles = vehiclesRes.data || [];
-                    
-                    this.renderAll();
-                    this.updateKPI();
-                    this.checkAlerts();
-                    
-                    this.showNotification('資料載入完成', 'success');
-                    
-                } catch (error) {
-                    console.error('載入資料失敗:', error);
-                    this.showNotification('載入資料失敗，請重試', 'error');
-                } finally {
-                    this.showLoading(false);
-                }
-            }
+            const userLevel = this.currentUser.level || this.currentUser.級別;
             
-            // 呼叫 Google Apps Script
-            async callGAS(action, data = {}) {
-                try {
-                    const response = await fetch(GAS_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `action=${action}&data=${encodeURIComponent(JSON.stringify(data))}`
+            // 根據用戶級別檢查權限
+            switch (userLevel) {
+                case 's1':
+                    // s1：只能觀看，不能操作任何操作按鈕
+                    return action === 'view';
+                    
+                case 's2':
+                    // s2：除了【一鍵自動配對】和【發佈到司機APP】外，其餘均可使用
+                    const s2RestrictedActions = ['autoAssign', 'publishToApp'];
+                    return !s2RestrictedActions.includes(action);
+                    
+                case 's3':
+                case 's4':
+                    // s3、s4：所有功能都開放使用
+                    return true;
+                    
+                default:
+                    // 未知級別，預設為只能觀看
+                    return action === 'view';
+            }
+        }
+        
+        // 新增方法：獲取用戶級別描述
+        getUserLevelDescription() {
+            if (!this.currentUser) return '未登入';
+            
+            const level = this.currentUser.level || this.currentUser.級別;
+            switch (level) {
+                case 's1': return '觀看者';
+                case 's2': return '操作員';
+                case 's3': return '高級操作員';
+                case 's4': return '管理員';
+                default: return '未知級別';
+            }
+        }
+        
+        // 新增方法：獲取用戶權限說明
+        getUserPermissions() {
+            if (!this.currentUser) return [];
+            
+            const level = this.currentUser.level || this.currentUser.級別;
+            switch (level) {
+                case 's1':
+                    return ['查看資料', '使用篩選器'];
+                case 's2':
+                    return ['查看資料', '使用篩選器', '重新載入資料', '產生建議', '衝突檢查', '手動配對'];
+                case 's3':
+                case 's4':
+                    return ['所有功能'];
+                default:
+                    return ['無權限'];
+            }
+        }
+    }
+
+    // 主要應用程式類別
+    class DispatchApp {
+        constructor() {
+            this.tasks = [];
+            this.drivers = [];
+            this.vehicles = [];
+            this.assignments = [];
+            this.filters = {
+                date: '',
+                level: '',
+                vehicleType: '',
+                driverLevel: '',
+                status: ''
+            };
+            
+            // 設定今日日期
+            const dateFilter = document.getElementById('date-filter');
+            if (dateFilter) {
+                dateFilter.value = new Date().toISOString().split('T')[0];
+            }
+        }
+        
+        // 初始化權限控制
+        initPermissionControl() {
+            // 等待 DOM 載入完成後設定權限
+            setTimeout(() => {
+                this.updateUIBasedOnPermissions();
+                this.addUserInfoToHeader();
+            }, 500);
+        }
+        
+        // 根據權限更新 UI
+        updateUIBasedOnPermissions() {
+            if (!loginManager.isLoggedIn) return;
+            
+            const userLevel = loginManager.currentUser.level || loginManager.currentUser.級別;
+            
+            // 獲取所有按鈕
+            const buttons = {
+                reload: document.querySelector('button[onclick="loadData()"]'),
+                autoAssign: document.querySelector('button[onclick="autoAssignAll()"]'),
+                generateAll: document.querySelector('button[onclick="generateAllSuggestions()"]'),
+                conflictCheck: document.querySelector('button[onclick="conflictCheck()"]'),
+                publishApp: document.querySelector('button[onclick="publishToApp()"]')
+            };
+            
+            // 獲取所有建議按鈕和操作按鈕
+            const suggestButtons = document.querySelectorAll('.suggest-btn');
+            const contactButtons = document.querySelectorAll('.contact-btn');
+            const detailButtons = document.querySelectorAll('.detail-btn');
+            
+            switch (userLevel) {
+                case 's1':
+                    // s1：禁用所有操作按鈕
+                    Object.values(buttons).forEach(btn => {
+                        if (btn) this.disableButton(btn, '您的權限不足');
                     });
                     
-                    const result = await response.json();
-                    return result;
-                } catch (error) {
-                    console.error('API 呼叫失敗:', error);
-                    return { success: false, error: error.message };
-                }
+                    suggestButtons.forEach(btn => this.disableButton(btn, '您的權限不足'));
+                    contactButtons.forEach(btn => this.disableButton(btn, '您的權限不足'));
+                    // 詳情按鈕保留可用
+                    break;
+                    
+                case 's2':
+                    // s2：禁用【一鍵自動配對】和【發佈到司機APP】
+                    if (buttons.autoAssign) {
+                        this.disableButton(buttons.autoAssign, '您的權限不足，無法使用自動配對功能');
+                    }
+                    if (buttons.publishApp) {
+                        this.disableButton(buttons.publishApp, '您的權限不足，無法發佈到司機APP');
+                    }
+                    break;
+                    
+                case 's3':
+                case 's4':
+                    // s3、s4：所有功能都可用
+                    break;
+                    
+                default:
+                    // 未知級別，禁用所有操作
+                    Object.values(buttons).forEach(btn => {
+                        if (btn) this.disableButton(btn, '未知權限級別');
+                    });
             }
             
-            // 渲染所有內容
-            renderAll() {
-                this.renderTasks();
-                this.renderDrivers();
-                this.renderVehicles();
+            // 更新拖放功能權限
+            this.updateDragDropPermissions();
+        }
+        
+        // 禁用按鈕
+        disableButton(button, reason) {
+            if (!button) return;
+            
+            button.disabled = true;
+            button.style.opacity = '0.5';
+            button.style.cursor = 'not-allowed';
+            button.title = reason;
+            
+            // 移除原有的點擊事件，加入權限提示
+            const originalOnclick = button.getAttribute('onclick');
+            button.removeAttribute('onclick');
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.showNotification(reason, 'warning');
+            });
+        }
+        
+        // 更新拖放功能權限
+        updateDragDropPermissions() {
+            const userLevel = loginManager.currentUser?.level || loginManager.currentUser?.級別;
+            
+            if (userLevel === 's1') {
+                // s1 用戶禁用拖放功能
+                const taskCards = document.querySelectorAll('.task-card');
+                taskCards.forEach(card => {
+                    card.draggable = false;
+                    card.style.cursor = 'default';
+                    card.title = '您的權限不足，無法拖放任務';
+                });
+                
+                const driverCards = document.querySelectorAll('.driver-card');
+                const vehicleCards = document.querySelectorAll('.vehicle-card');
+                
+                [...driverCards, ...vehicleCards].forEach(card => {
+                    // 移除拖放目標事件
+                    card.removeEventListener('dragover', this.handleDragOver);
+                    card.removeEventListener('drop', this.handleDrop);
+                    card.style.cursor = 'default';
+                });
+            }
+        }
+        
+        // 在標題列加入用戶資訊
+        addUserInfoToHeader() {
+            const header = document.querySelector('header');
+            if (!header || !loginManager.currentUser) return;
+            
+            // 檢查是否已經加入用戶資訊
+            if (header.querySelector('.user-info')) return;
+            
+            const userInfo = document.createElement('div');
+            userInfo.className = 'user-info';
+            userInfo.innerHTML = `
+                <div class="user-details">
+                    <span class="user-name">👤 ${loginManager.currentUser.username}</span>
+                    <span class="user-level">${loginManager.getUserLevelDescription()}</span>
+                    <button onclick="showUserPermissions()" class="permission-btn" title="查看權限說明">
+                        🔒 權限
+                    </button>
+                    <button onclick="logout()" class="logout-btn" title="登出系統">
+                        🚪 登出
+                    </button>
+                </div>
+            `;
+            
+            header.appendChild(userInfo);
+        }
+        
+        // 檢查權限的輔助方法
+        checkPermission(action) {
+            return loginManager.checkPermission(action);
+        }
+        
+        // 載入所有資料
+        async loadData() {
+            if (!this.checkPermission('reload')) {
+                this.showNotification('您沒有重新載入資料的權限', 'error');
+                return;
             }
             
-            // 修正 renderTasks() 函數
-            renderTasks() {
-                const container = document.getElementById('tasks-container');
-                const loading = document.getElementById('tasks-loading');
+            this.showLoading(true);
+            
+            try {
+                // 顯示載入動畫
+                document.getElementById('tasks-loading').classList.add('show');
+                document.getElementById('vehicles-loading').classList.add('show');
+                document.getElementById('drivers-loading').classList.add('show');
                 
-                loading.classList.remove('show');
-                container.innerHTML = '';
+                const [tasksRes, driversRes, vehiclesRes] = await Promise.all([
+                    this.callGAS('getTasks'),
+                    this.callGAS('getDrivers'),
+                    this.callGAS('getVehicles')
+                ]);
                 
-                const filteredTasks = this.getFilteredTasks();
+                if (tasksRes.success) this.tasks = tasksRes.data || [];
+                if (driversRes.success) this.drivers = driversRes.data || [];
+                if (vehiclesRes.success) this.vehicles = vehiclesRes.data || [];
                 
-                if (filteredTasks.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無符合條件的任務</div>';
-                    return;
-                }
+                this.renderAll();
+                this.updateKPI();
+                this.checkAlerts();
                 
-                filteredTasks.forEach(task => {
-                    const card = document.createElement('div');
-                    card.className = `task-card priority-${task.level}`;
-                    card.draggable = true;
-                    card.dataset.taskId = task.id;
-                    
-                    // 拖放事件
-                    card.addEventListener('dragstart', this.handleDragStart.bind(this));
-                    card.addEventListener('dragend', this.handleDragEnd.bind(this));
-                    
-                    card.innerHTML = `
-                        <div class="task-header">
-                            <strong>${task['路線名稱'] || task.id}</strong>
-                            <span class="priority-badge ${task.level}">${task.level}</span>
+                this.showNotification('資料載入完成', 'success');
+                
+            } catch (error) {
+                console.error('載入資料失敗:', error);
+                this.showNotification('載入資料失敗，請重試', 'error');
+            } finally {
+                this.showLoading(false);
+            }
+        }
+        
+        // 呼叫 Google Apps Script
+        async callGAS(action, data = {}) {
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `action=${action}&data=${encodeURIComponent(JSON.stringify(data))}`
+                });
+                
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('API 呼叫失敗:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        // 渲染所有內容
+        renderAll() {
+            this.renderTasks();
+            this.renderDrivers();
+            this.renderVehicles();
+        }
+        
+        // 修正 renderTasks() 函數
+        renderTasks() {
+            const container = document.getElementById('tasks-container');
+            const loading = document.getElementById('tasks-loading');
+            
+            loading.classList.remove('show');
+            container.innerHTML = '';
+            
+            const filteredTasks = this.getFilteredTasks();
+            
+            if (filteredTasks.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無符合條件的任務</div>';
+                return;
+            }
+            
+            filteredTasks.forEach(task => {
+                const card = document.createElement('div');
+                card.className = `task-card priority-${task.level}`;
+                card.draggable = true;
+                card.dataset.taskId = task.id;
+                
+                // 拖放事件
+                card.addEventListener('dragstart', this.handleDragStart.bind(this));
+                card.addEventListener('dragend', this.handleDragEnd.bind(this));
+                
+                card.innerHTML = `
+                    <div class="task-header">
+                        <strong>${task['路線名稱'] || task.id}</strong>
+                        <span class="priority-badge ${task.level}">${task.level}</span>
+                    </div>
+                    <div class="task-details">
+                        <div><strong>配送日期:</strong> ${task['配送日期'] || '未指定'}</div>
+                        <div><strong>路線名稱:</strong> ${task['路線名稱'] || '未指定'}</div>
+                        <div><strong>板數總和:</strong> ${task['板數總和'] || '未指定'}</div>
+                        <div><strong>取貨:</strong> ${task['取貨'] || '未指定'}</div>
+                        <div><strong>配送:</strong> ${task['配送'] || '未指定'}</div>
+                        <div><strong>狀態:</strong> ${task['配送狀態'] || '待派'}</div>
+                        ${task['配送備註'] ? `<div><strong>備註:</strong> ${task['配送備註']}</div>` : ''}
+                    </div>
+                    <button onclick="app.generateSuggestions('${task.id}')" class="suggest-btn">
+                        💡 產生建議
+                    </button>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            // 更新 KPI 數據
+            this.updateTaskKPI(filteredTasks);
+        }
+        
+        // 渲染司機列表
+        renderDrivers() {
+            const container = document.getElementById('drivers-container');
+            const loading = document.getElementById('drivers-loading');
+            
+            loading.classList.remove('show');
+            container.innerHTML = '';
+            
+            const filteredDrivers = this.getFilteredDrivers();
+            
+            if (filteredDrivers.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用司機</div>';
+                return;
+            }
+            
+            filteredDrivers.forEach(driver => {
+                const card = document.createElement('div');
+                const driverLevel = driver['級別'] || driver.level || 'A1';
+                card.className = `driver-card level-${driverLevel}`; // 直接使用 A1, A2, A3
+                card.dataset.driverId = driver['員工編號'] || driver.id;
+                
+                // 拖放目標事件
+                card.addEventListener('dragover', this.handleDragOver.bind(this));
+                card.addEventListener('drop', this.handleDrop.bind(this));
+                
+                // 根據狀態設定樣式
+                const statusClass = this.getStatusClass(driver['狀態'] || driver.status);
+                const levelBadgeColor = this.getLevelBadgeColor(driver['級別'] || driver.level);
+                
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span class="driver-name">${driver['姓名'] || driver.name || '未設定'}</span>
+                            <span class="level-badge ${levelBadgeColor}">${driver['級別'] || driver.level || 'C'}級</span>
                         </div>
-                        <div class="task-details">
-                            <div><strong>配送日期:</strong> ${task['配送日期'] || '未指定'}</div>
-                            <div><strong>路線名稱:</strong> ${task['路線名稱'] || '未指定'}</div>
-                            <div><strong>板數總和:</strong> ${task['板數總和'] || '未指定'}</div>
-                            <div><strong>取貨:</strong> ${task['取貨'] || '未指定'}</div>
-                            <div><strong>配送:</strong> ${task['配送'] || '未指定'}</div>
-                            <div><strong>狀態:</strong> ${task['配送狀態'] || '待派'}</div>
-                            ${task['配送備註'] ? `<div><strong>備註:</strong> ${task['配送備註']}</div>` : ''}
+                        <span class="status-badge ${statusClass}">
+                            ${this.getStatusText(driver['狀態'] || driver.status)}
+                        </span>
+                    </div>
+                    <div class="card-details">
+                        <div class="detail-row">
+                            <span class="detail-label">👤 員編:</span>
+                            <span class="detail-value">${driver['員工編號'] || driver.employeeId || '未設定'}</span>
                         </div>
-                        <button onclick="app.generateSuggestions('${task.id}')" class="suggest-btn">
-                            💡 產生建議
+                        <div class="detail-row">
+                            <span class="detail-label">📋 類型:</span>
+                            <span class="detail-value">${driver['類型'] || driver.type || '未設定'}</span>
+                        </div>
+                        ${driver['技能'] || driver.skills ? `
+                            <div class="detail-row">
+                                <span class="detail-label">🔧 技能:</span>
+                                <span class="detail-value skills-tag">${driver['技能'] || driver.skills}</span>
+                            </div>
+                        ` : ''}
+                        ${driver['聯絡電話'] || driver.phone ? `
+                            <div class="detail-row">
+                                <span class="detail-label">📞 電話:</span>
+                                <span class="detail-value phone-number">${driver['聯絡電話'] || driver.phone}</span>
+                            </div>
+                        ` : ''}
+                        ${driver.workHours ? `
+                            <div class="detail-row">
+                                <span class="detail-label">⏰ 工時:</span>
+                                <span class="detail-value">${driver.workHours}小時</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="card-actions">
+                        <button onclick="app.contactDriver('${driver['員工編號'] || driver.id}')" class="contact-btn">
+                            📞 聯絡
                         </button>
-                    `;
-                    
-                    container.appendChild(card);
-                });
+                        <button onclick="app.viewDriverDetail('${driver['員工編號'] || driver.id}')" class="detail-btn">
+                            📋 詳情
+                        </button>
+                    </div>
+                `;
                 
-                // 更新 KPI 數據
-                this.updateTaskKPI(filteredTasks);
-            }
-            
-            // 渲染司機列表
-            renderDrivers() {
-                const container = document.getElementById('drivers-container');
-                const loading = document.getElementById('drivers-loading');
-                
-                loading.classList.remove('show');
-                container.innerHTML = '';
-                
-                const filteredDrivers = this.getFilteredDrivers();
-                
-                if (filteredDrivers.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">暫無可用司機</div>';
-                    return;
-                }
-                
-                filteredDrivers.forEach(driver => {
-                    const card = document.createElement('div');
-                    const driverLevel = driver['級別'] || driver.level || 'A1';
-                    card.className = `driver-card level-${driverLevel}`; // 直接使用 A1, A2, A3
-                    card.dataset.driverId = driver['員工編號'] || driver.id;
-                    
-                    // 拖放目標事件
-                    card.addEventListener('dragover', this.handleDragOver.bind(this));
-                    card.addEventListener('drop', this.handleDrop.bind(this));
-                    
-                    // 根據狀態設定樣式
-                    const statusClass = this.getStatusClass(driver['狀態'] || driver.status);
-                    const levelBadgeColor = this.getLevelBadgeColor(driver['級別'] || driver.level);
-                    
-                    card.innerHTML = `
-                        <div class="card-header">
-                            <div class="card-title">
-                                <span class="driver-name">${driver['姓名'] || driver.name || '未設定'}</span>
-                                <span class="level-badge ${levelBadgeColor}">${driver['級別'] || driver.level || 'C'}級</span>
-                            </div>
-                            <span class="status-badge ${statusClass}">
-                                ${this.getStatusText(driver['狀態'] || driver.status)}
-                            </span>
-                        </div>
-                        <div class="card-details">
-                            <div class="detail-row">
-                                <span class="detail-label">👤 員編:</span>
-                                <span class="detail-value">${driver['員工編號'] || driver.employeeId || '未設定'}</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">📋 類型:</span>
-                                <span class="detail-value">${driver['類型'] || driver.type || '未設定'}</span>
-                            </div>
-                            ${driver['技能'] || driver.skills ? `
-                                <div class="detail-row">
-                                    <span class="detail-label">🔧 技能:</span>
-                                    <span class="detail-value skills-tag">${driver['技能'] || driver.skills}</span>
-                                </div>
-                            ` : ''}
-                            ${driver['聯絡電話'] || driver.phone ? `
-                                <div class="detail-row">
-                                    <span class="detail-label">📞 電話:</span>
-                                    <span class="detail-value phone-number">${driver['聯絡電話'] || driver.phone}</span>
-                                </div>
-                            ` : ''}
-                            ${driver.workHours ? `
-                                <div class="detail-row">
-                                    <span class="detail-label">⏰ 工時:</span>
-                                    <span class="detail-value">${driver.workHours}小時</span>
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div class="card-actions">
-                                                  <button onclick="app.contactDriver('${driver['員工編號'] || driver.id}')" class="contact-btn">
-                                📞 聯絡
-                            </button>
-
-                            <button onclick="app.viewDriverDetail('${driver['員工編號'] || driver.id}')" class="detail-btn">
-                                📋 詳情
-                            </button>
-                        </div>
-                    `;
-                    
-                    container.appendChild(card);
-                });
-            }
-            
-                    // 渲染車輛列表
+                container.appendChild(card);
+            });
+        }
+        
+        // 渲染車輛列表
         renderVehicles() {
             const container = document.getElementById('vehicles-container');
             const loading = document.getElementById('vehicles-loading');
@@ -1957,744 +2068,1262 @@ loginManager.showMainSystem = function() {
                 container.appendChild(card);
             });
         }
-            
-            // 新增輔助方法
-            getStatusClass(status) {
-                switch(status) {
-                    case '可派遣':
-                    case '可用':
-                    case 'available':
-                        return 'available';
-                    case '已指派':
-                    case 'assigned':
-                        return 'assigned';
-                    case '休息中':
-                    case '忙碌':
-                    case 'busy':
-                        return 'busy';
-                    case '離線':
-                    case 'offline':
-                        return 'offline';
-                    default:
-                        return 'available';
-                }
+        
+        // 新增輔助方法
+        getStatusClass(status) {
+            switch(status) {
+                case '可派遣':
+                case '可用':
+                case 'available':
+                    return 'available';
+                case '已指派':
+                case 'assigned':
+                    return 'assigned';
+                case '休息中':
+                case '忙碌':
+                case 'busy':
+                    return 'busy';
+                case '離線':
+                case 'offline':
+                    return 'offline';
+                default:
+                    return 'available';
             }
+        }
 
-            getStatusText(status) {
-                switch(status) {
-                    case '可派遣':
-                    case '可用':
-                    case 'available':
-                        return '可派遣';
-                    case '已指派':
-                    case 'assigned':
-                        return '已指派';
-                    case '休息中':
-                    case '忙碌':
-                    case 'busy':
-                        return '忙碌';
-                    case '離線':
-                    case 'offline':
-                        return '離線';
-                    default:
-                        return status || '可派遣';
-                }
-            }
-            
-            // 修改 getLevelBadgeColor 函數
-            getLevelBadgeColor(level) {
-                switch(level) {
-                    case 'A1':
-                        return 'level-a1';
-                    case 'A2':
-                        return 'level-a2';
-                    case 'A3':
-                        return 'level-a3';
-                    default:
-                        return 'level-a1'; // 預設為 A1
-                }
-            }
-
-            // 新增司機相關功能
-            async contactDriver(driverId) {
-                const driver = this.drivers.find(d => (d['員工編號'] || d.id) === driverId);
-                if (!driver) {
-                    this.showNotification('找不到司機資料', 'error');
-                    return;
-                }
-                
-                const phone = driver['聯絡電話'] || driver.phone;
-                if (phone) {
-                    if (confirm(`確定要撥打電話給 ${driver['姓名'] || driver.name}？\n電話：${phone}`)) {
-                        window.open(`tel:${phone}`);
-                    }
-                } else {
-                    this.showNotification('該司機未設定聯絡電話', 'warning');
-                }
-            }
-
-            async viewDriverDetail(driverId) {
-                const driver = this.drivers.find(d => (d['員工編號'] || d.id) === driverId);
-                if (!driver) {
-                    this.showNotification('找不到司機資料', 'error');
-                    return;
-                }
-                
-                // 顯示司機詳細資訊彈窗
-                this.showDriverDetailModal(driver);
-            }
-
-            showDriverDetailModal(driver) {
-                const modal = document.createElement('div');
-                modal.className = 'driver-detail-modal';
-                modal.innerHTML = `
-                    <div class="modal-overlay" onclick="this.parentElement.remove()"></div>
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h3>👨‍💼 司機詳細資訊</h3>
-                            <button onclick="this.closest('.driver-detail-modal').remove()" class="close-btn">×</button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="driver-info-grid">
-                                <div class="info-item">
-                                    <label>姓名</label>
-                                    <span>${driver['姓名'] || driver.name || '未設定'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>員工編號</label>
-                                    <span>${driver['員工編號'] || driver.employeeId || '未設定'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>級別</label>
-                                    <span class="level-badge ${this.getLevelBadgeColor(driver['級別'] || driver.level)}">${driver['級別'] || driver.level || 'C'}級</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>類型</label>
-                                    <span>${driver['類型'] || driver.type || '未設定'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>技能</label>
-                                    <span>${driver['技能'] || driver.skills || '無特殊技能'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>聯絡電話</label>
-                                    <span>${driver['聯絡電話'] || driver.phone || '未設定'}</span>
-                                </div>
-                                <div class="info-item">
-                                    <label>狀態</label>
-                                    <span class="status-badge ${this.getStatusClass(driver['狀態'] || driver.status)}">
-                                        ${this.getStatusText(driver['狀態'] || driver.status)}
-                                    </span>
-                                </div>
-                                ${driver.workHours ? `
-                                    <div class="info-item">
-                                        <label>今日工時</label>
-                                        <span>${driver.workHours}小時</span>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button onclick="app.contactDriver('${driver['員工編號'] || driver.id}')" class="btn-primary">
-                                📞 撥打電話
-                            </button>
-                            <button onclick="this.closest('.driver-detail-modal').remove()" class="btn-secondary">
-                                關閉
-                            </button>
-                                            </div>
-                `;
-                
-                document.body.appendChild(modal);
-            }
-            
-            updateTaskKPI(tasks) {
-              const totalTasks = tasks.length;
-              const pTasks = tasks.filter(t => t.level === 'B3').length;
-              const qTasks = tasks.filter(t => t.level === 'B2').length;
-              const rTasks = tasks.filter(t => t.level === 'B1').length;
-              
-              document.getElementById('total-tasks').textContent = totalTasks;
-              document.getElementById('p-tasks').textContent = pTasks;
-              document.getElementById('q-tasks').textContent = qTasks || 0;
-              document.getElementById('r-tasks').textContent = rTasks || 0;
-              
-              // 如果頁面上沒有Q級和R級的顯示區域，可以動態加入
-              // 或者更新現有的KPI顯示
-            }
-            // 更新 KPI 數據
-                updateKPI() {
-                    const totalTasks = this.tasks.length;
-                    const pTasks = this.tasks.filter(t => t.level === 'P').length;
-                    const qTasks = this.tasks.filter(t => t.level === 'Q').length;
-                    const rTasks = this.tasks.filter(t => t.level === 'R').length;
-                    const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派' || t['配送狀態'] === '進行中').length;
-                    const assignRate = totalTasks > 0 ? Math.round((assignedTasks / totalTasks) * 100) : 0;
-                    const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
-                    
-                    document.getElementById('total-tasks').textContent = totalTasks;
-                    document.getElementById('p-tasks').textContent = pTasks;
-                    document.getElementById('q-tasks').textContent = qTasks;
-                    document.getElementById('r-tasks').textContent = rTasks;
-                    document.getElementById('assign-rate').textContent = `${assignRate}%`;
-                    document.getElementById('available-vehicles').textContent = availableVehicles;
-                }
-            
-            // 檢查告警
-            checkAlerts() {
-                const alerts = [];
-                const alertSection = document.getElementById('alert-section');
-                const alertContent = document.getElementById('alerts-content');
-                
-                // 檢查容量不足
-                const highPriorityTasks = this.tasks.filter(t => t.level === 'P' && t['配送狀態'] === '待派');
-                const availableADrivers = this.drivers.filter(d => (d['級別'] || d.level) === 'A' && (d['狀態'] || d.status) === '可派遣');
-                if (highPriorityTasks.length > availableADrivers.length) {
-                    alerts.push('B3級任務數量超過可用A3級司機數量');
-                }
-                
-                // 檢查工時超限
-                const overtimeDrivers = this.drivers.filter(d => d.workHours && d.workHours > 10);
-                if (overtimeDrivers.length > 0) {
-                    alerts.push(`${overtimeDrivers.length}位司機工時超過10小時`);
-                }
-                
-                // 檢查車輛維護
-                const maintenanceVehicles = this.vehicles.filter(v => v.status === '保養');
-                if (maintenanceVehicles.length > 0) {
-                    alerts.push(`${maintenanceVehicles.length}台車輛正在保養中`);
-                }
-                
-                if (alerts.length > 0) {
-                    alertContent.innerHTML = alerts.map(alert => 
-                        `<div class="alert-item">${alert}</div>`
-                    ).join('');
-                    alertSection.style.display = 'block';
-                } else {
-                    alertSection.style.display = 'none';
-                }
-            }
-            
-            // 產生配對建議
-            async generateSuggestions(taskId) {
-                try {
-                    this.showNotification('正在產生建議...', 'info');
-                    
-                    const result = await this.callGAS('generateTop3', { taskId });
-                    
-                    if (result.success) {
-                        this.showSuggestions(taskId, result.data);
-                    } else {
-                        this.showNotification('產生建議失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('產生建議失敗:', error);
-                    this.showNotification('產生建議失敗，請重試', 'error');
-                }
-            }
-            
-            // 顯示建議面板
-            showSuggestions(taskId, suggestions) {
-                const panel = document.getElementById('suggestions-panel');
-                const content = document.getElementById('suggestions-content');
-                const task = this.tasks.find(t => t.id === taskId);
-                
-                if (!task) {
-                    this.showNotification('找不到指定任務', 'error');
-                    return;
-                }
-                
-                content.innerHTML = `
-                    <h4>📋 任務: ${task['配送單號'] || task.id} 的配對建議</h4>
-                    <div style="margin-bottom: 15px; padding: 10px; background: rgba(248, 249, 250, 0.8); border-radius: 8px;">
-                        <div><strong>客戶:</strong> ${task['客戶簡稱'] || '未指定'}</div>
-                        <div><strong>等級:</strong> ${task.level}</div>
-                        <div><strong>配送點:</strong> ${task['配送點簡稱'] || '未指定'}</div>
-                    </div>
-                    
-                    ${suggestions && suggestions.length > 0 ? suggestions.map((suggestion, index) => `
-                        <div class="assignment-suggestion">
-                            <div class="suggestion-header">
-                                <span class="rank">#${index + 1}</span>
-                                <span class="score-badge">分數: ${suggestion.score ? suggestion.score.toFixed(1) : '0.0'}</span>
-                                <button onclick="app.acceptSuggestion('${taskId}', ${index})" class="accept-btn">
-                                    ✅ 採用此建議
-                                </button>
-                            </div>
-                            <div class="suggestion-details">
-                                <div><strong>👨‍💼 司機:</strong> ${suggestion.driver?.name || '未指定'} (${suggestion.driver?.level || 'N/A'}級)</div>
-                                <div><strong>🚛 車輛:</strong> ${suggestion.vehicle?.number || '未指定'} (${suggestion.vehicle?.type || 'N/A'}類)</div>
-                                
-                                ${suggestion.factors && suggestion.factors.length > 0 ? `
-                                    <div class="reasons">
-                                        <strong>💡 推薦理由:</strong>
-                                        <ul>
-                                            ${suggestion.factors.map(factor => `<li>${factor}</li>`).join('')}
-                                        </ul>
-                                    </div>
-                                ` : ''}
-                                
-                                ${suggestion.risks && suggestion.risks.length > 0 ? `
-                                    <div class="risks">
-                                        <strong>⚠️ 風險提醒:</strong>
-                                        <ul>
-                                            ${suggestion.risks.map(risk => `<li class="risk">${risk}</li>`).join('')}
-                                        </ul>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    `).join('') : '<div style="text-align: center; color: #666; padding: 20px;">暫無可用的配對建議</div>'}
-                `;
-                
-                panel.style.display = 'block';
-            }
-            
-            // 接受建議
-            async acceptSuggestion(taskId, suggestionIndex) {
-                try {
-                    const result = await this.callGAS('acceptSuggestion', { 
-                        taskId, 
-                        suggestionIndex 
-                    });
-                    
-                    if (result.success) {
-                        this.showNotification('配對建議已採用', 'success');
-                        this.closeSuggestions();
-                        this.loadData(); // 重新載入資料
-                    } else {
-                        this.showNotification('採用建議失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('採用建議失敗:', error);
-                    this.showNotification('採用建議失敗，請重試', 'error');
-                }
-            }
-            
-            // 關閉建議面板
-            closeSuggestions() {
-                document.getElementById('suggestions-panel').style.display = 'none';
-            }
-            
-            // 一鍵自動配對
-            async autoAssignAll() {
-                if (!confirm('確定要執行一鍵自動配對嗎？這將會重新計算所有待派任務的最佳配對。')) {
-                    return;
-                }
-                
-                try {
-                    this.showNotification('正在執行自動配對...', 'info');
-                    this.showLoading(true);
-                    
-                    const result = await this.callGAS('autoAssign');
-                    
-                    if (result.success) {
-                        const assignedCount = result.data ? result.data.length : 0;
-                        this.showNotification(`自動配對完成！成功配對 ${assignedCount} 個任務`, 'success');
-                        this.loadData(); // 重新載入資料
-                    } else {
-                        this.showNotification('自動配對失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('自動配對錯誤:', error);
-                    this.showNotification('自動配對執行失敗，請重試', 'error');
-                } finally {
-                    this.showLoading(false);
-                }
-            }
-            
-            // 產生所有建議
-            async generateAllSuggestions() {
-                const unassignedTasks = this.tasks.filter(t => t['配送狀態'] === '待派');
-                
-                if (unassignedTasks.length === 0) {
-                    this.showNotification('沒有待派任務需要產生建議', 'warning');
-                    return;
-                }
-                
-                this.showNotification(`正在為 ${unassignedTasks.length} 個任務產生建議...`, 'info');
-                
-                // 這裡可以實作批次產生建議的邏輯
-                // 暫時顯示第一個任務的建議
-                if (unassignedTasks.length > 0) {
-                    this.generateSuggestions(unassignedTasks[0].id);
-                }
-            }
-            
-            // 衝突檢查
-            async conflictCheck() {
-                try {
-                    this.showNotification('正在執行衝突檢查...', 'info');
-                    
-                    const result = await this.callGAS('conflictCheck');
-                    
-                    if (result.success) {
-                        const conflicts = result.data || [];
-                        if (conflicts.length === 0) {
-                            this.showNotification('✅ 未發現衝突', 'success');
-                        } else {
-                            this.showNotification(`⚠️ 發現 ${conflicts.length} 個衝突`, 'warning');
-                            // 可以在這裡顯示衝突詳情
-                        }
-                    } else {
-                        this.showNotification('衝突檢查失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('衝突檢查錯誤:', error);
-                    this.showNotification('衝突檢查執行失敗，請重試', 'error');
-                }
-            }
-            
-            // 發佈到司機APP
-            async publishToApp() {
-                const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派');
-                
-                if (assignedTasks.length === 0) {
-                    this.showNotification('沒有已指派的任務可以發佈', 'warning');
-                    return;
-                }
-                
-                if (!confirm(`確定要發佈 ${assignedTasks.length} 個已指派任務到司機APP嗎？`)) {
-                    return;
-                }
-                
-                try {
-                    this.showNotification('正在發佈到司機APP...', 'info');
-                    
-                    const result = await this.callGAS('publishToApp', { 
-                        tasks: assignedTasks.map(t => t.id) 
-                    });
-                    
-                    if (result.success) {
-                        this.showNotification('✅ 成功發佈到司機APP', 'success');
-                    } else {
-                        this.showNotification('發佈失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('發佈錯誤:', error);
-                    this.showNotification('發佈執行失敗，請重試', 'error');
-                }
-            }
-            
-            // 應用篩選器
-            applyFilters() {
-                this.filters.date = document.getElementById('date-filter').value;
-                this.filters.level = document.getElementById('level-filter').value;
-                this.filters.vehicleType = document.getElementById('vehicle-type-filter').value;
-                this.filters.driverLevel = document.getElementById('driver-level-filter').value;
-                this.filters.status = document.getElementById('status-filter').value;
-                
-                this.renderAll();
-                this.updateKPI();
-            }
-            
-            // 取得篩選後的任務
-            getFilteredTasks() {
-                return this.tasks.filter(task => {
-                    if (this.filters.date && task['日期'] !== this.filters.date) return false;
-                    if (this.filters.level && task.level !== this.filters.level) return false;
-                    if (this.filters.status && task['配送狀態'] !== this.filters.status) return false;
-                    return true;
-                });
-            }
-            
-            // 取得篩選後的司機
-            getFilteredDrivers() {
-                return this.drivers.filter(driver => {
-                    if (this.filters.driverLevel && (driver['級別'] || driver.level) !== this.filters.driverLevel) return false;
-                    return true;
-                });
-            }
-            
-            // 取得篩選後的車輛
-            getFilteredVehicles() {
-                return this.vehicles.filter(vehicle => {
-                    if (this.filters.vehicleType && vehicle.type !== this.filters.vehicleType) return false;
-                    return true;
-                });
-            }
-            
-            // 拖放事件處理
-            handleDragStart(e) {
-                e.dataTransfer.setData('text/plain', e.target.dataset.taskId);
-                e.target.classList.add('dragging');
-            }
-            
-            handleDragEnd(e) {
-                e.target.classList.remove('dragging');
-            }
-            
-            handleDragOver(e) {
-                e.preventDefault();
-                e.currentTarget.classList.add('drag-over');
-            }
-            
-            handleDrop(e) {
-                e.preventDefault();
-                e.currentTarget.classList.remove('drag-over');
-                
-                const taskId = e.dataTransfer.getData('text/plain');
-                const targetElement = e.currentTarget;
-                
-                if (targetElement.dataset.driverId) {
-                    this.assignToDriver(taskId, targetElement.dataset.driverId);
-                } else if (targetElement.dataset.vehicleId) {
-                    this.assignToVehicle(taskId, targetElement.dataset.vehicleId);
-                }
-            }
-            
-            // 指派給司機
-            async assignToDriver(taskId, driverId) {
-                try {
-                    const result = await this.callGAS('assignToDriver', { taskId, driverId });
-                    
-                    if (result.success) {
-                        this.showNotification('任務已指派給司機', 'success');
-                        this.loadData();
-                    } else {
-                        this.showNotification('指派失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('指派錯誤:', error);
-                    this.showNotification('指派失敗，請重試', 'error');
-                }
-            }
-            
-            // 指派給車輛
-            async assignToVehicle(taskId, vehicleId) {
-                try {
-                    const result = await this.callGAS('assignToVehicle', { taskId, vehicleId });
-                    
-                    if (result.success) {
-                        this.showNotification('任務已指派給車輛', 'success');
-                        this.loadData();
-                    } else {
-                        this.showNotification('指派失敗: ' + result.error, 'error');
-                    }
-                } catch (error) {
-                    console.error('指派錯誤:', error);
-                    this.showNotification('指派失敗，請重試', 'error');
-                }
-            }
-            
-            // 顯示通知
-            showNotification(message, type = 'info') {
-                const notification = document.createElement('div');
-                notification.className = `notification ${type}`;
-                notification.textContent = message;
-                
-                document.body.appendChild(notification);
-                
-                // 顯示動畫
-                setTimeout(() => notification.classList.add('show'), 100);
-                
-                // 自動隱藏
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                    setTimeout(() => document.body.removeChild(notification), 300);
-                }, 3000);
-            }
-            
-            // 顯示/隱藏載入動畫
-            showLoading(show) {
-                const loadings = document.querySelectorAll('.loading');
-                loadings.forEach(loading => {
-                    if (show) {
-                        loading.classList.add('show');
-                    } else {
-                        loading.classList.remove('show');
-                    }
-                });
+        getStatusText(status) {
+            switch(status) {
+                case '可派遣':
+                case '可用':
+                case 'available':
+                    return '可派遣';
+                case '已指派':
+                case 'assigned':
+                    return '已指派';
+                case '休息中':
+                case '忙碌':
+                case 'busy':
+                    return '忙碌';
+                case '離線':
+                case 'offline':
+                    return '離線';
+                default:
+                    return status || '可派遣';
             }
         }
         
-        // 初始化應用程式
-        const app = new DispatchApp();
+        // 修改 getLevelBadgeColor 函數
+        getLevelBadgeColor(level) {
+            switch(level) {
+                case 'A1':
+                    return 'level-a1';
+                case 'A2':
+                    return 'level-a2';
+                case 'A3':
+                    return 'level-a3';
+                default:
+                    return 'level-a1'; // 預設為 A1
+            }
+        }
+
+        // 新增司機相關功能
+        async contactDriver(driverId) {
+            if (!this.checkPermission('contactDriver')) {
+                this.showNotification('您沒有聯絡司機的權限', 'error');
+                return;
+            }
+            
+            const driver = this.drivers.find(d => (d['員工編號'] || d.id) === driverId);
+            if (!driver) {
+                this.showNotification('找不到司機資料', 'error');
+                return;
+            }
+            
+            const phone = driver['聯絡電話'] || driver.phone;
+            if (phone) {
+                if (confirm(`確定要撥打電話給 ${driver['姓名'] || driver.name}？\n電話：${phone}`)) {
+                    window.open(`tel:${phone}`);
+                }
+            } else {
+                this.showNotification('該司機未設定聯絡電話', 'warning');
+            }
+        }
+
+        async viewDriverDetail(driverId) {
+            const driver = this.drivers.find(d => (d['員工編號'] || d.id) === driverId);
+            if (!driver) {
+                this.showNotification('找不到司機資料', 'error');
+                return;
+            }
+            
+            // 顯示司機詳細資訊彈窗
+            this.showDriverDetailModal(driver);
+        }
+
+        showDriverDetailModal(driver) {
+            const modal = document.createElement('div');
+            modal.className = 'driver-detail-modal';
+            modal.innerHTML = `
+                <div class="modal-overlay" onclick="this.parentElement.remove()"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>👨‍💼 司機詳細資訊</h3>
+                        <button onclick="this.closest('.driver-detail-modal').remove()" class="close-btn">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="driver-info-grid">
+                                                       <div class="info-item">
+                                <label>姓名</label>
+                                <span>${driver['姓名'] || driver.name || '未設定'}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>員工編號</label>
+                                <span>${driver['員工編號'] || driver.employeeId || '未設定'}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>級別</label>
+                                <span class="level-badge ${this.getLevelBadgeColor(driver['級別'] || driver.level)}">${driver['級別'] || driver.level || 'C'}級</span>
+                            </div>
+                            <div class="info-item">
+                                <label>類型</label>
+                                <span>${driver['類型'] || driver.type || '未設定'}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>技能</label>
+                                <span>${driver['技能'] || driver.skills || '無特殊技能'}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>聯絡電話</label>
+                                <span>${driver['聯絡電話'] || driver.phone || '未設定'}</span>
+                            </div>
+                            <div class="info-item">
+                                <label>狀態</label>
+                                <span class="status-badge ${this.getStatusClass(driver['狀態'] || driver.status)}">
+                                    ${this.getStatusText(driver['狀態'] || driver.status)}
+                                </span>
+                            </div>
+                            ${driver.workHours ? `
+                                <div class="info-item">
+                                    <label>今日工時</label>
+                                    <span>${driver.workHours}小時</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button onclick="app.contactDriver('${driver['員工編號'] || driver.id}')" class="btn-primary">
+                            📞 撥打電話
+                        </button>
+                        <button onclick="this.closest('.driver-detail-modal').remove()" class="btn-secondary">
+                            關閉
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
         
-        // 全域函數（供 HTML 按鈕呼叫）
-        function loadData() { 
+        updateTaskKPI(tasks) {
+            const totalTasks = tasks.length;
+            const pTasks = tasks.filter(t => t.level === 'B3').length;
+            const qTasks = tasks.filter(t => t.level === 'B2').length;
+            const rTasks = tasks.filter(t => t.level === 'B1').length;
+            
+            document.getElementById('total-tasks').textContent = totalTasks;
+            document.getElementById('p-tasks').textContent = pTasks;
+            document.getElementById('q-tasks').textContent = qTasks || 0;
+            document.getElementById('r-tasks').textContent = rTasks || 0;
+        }
+        
+        // 更新 KPI 數據
+        updateKPI() {
+            const totalTasks = this.tasks.length;
+            const pTasks = this.tasks.filter(t => t.level === 'P').length;
+            const qTasks = this.tasks.filter(t => t.level === 'Q').length;
+            const rTasks = this.tasks.filter(t => t.level === 'R').length;
+            const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派' || t['配送狀態'] === '進行中').length;
+            const assignRate = totalTasks > 0 ? Math.round((assignedTasks / totalTasks) * 100) : 0;
+            const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
+            
+            document.getElementById('total-tasks').textContent = totalTasks;
+            document.getElementById('p-tasks').textContent = pTasks;
+            document.getElementById('q-tasks').textContent = qTasks;
+            document.getElementById('r-tasks').textContent = rTasks;
+            document.getElementById('assign-rate').textContent = `${assignRate}%`;
+            document.getElementById('available-vehicles').textContent = availableVehicles;
+        }
+        
+        // 檢查告警
+        checkAlerts() {
+            const alerts = [];
+            const alertSection = document.getElementById('alert-section');
+            const alertContent = document.getElementById('alerts-content');
+            
+            // 檢查容量不足
+            const highPriorityTasks = this.tasks.filter(t => t.level === 'P' && t['配送狀態'] === '待派');
+            const availableADrivers = this.drivers.filter(d => (d['級別'] || d.level) === 'A' && (d['狀態'] || d.status) === '可派遣');
+            if (highPriorityTasks.length > availableADrivers.length) {
+                alerts.push('B3級任務數量超過可用A3級司機數量');
+            }
+            
+            // 檢查工時超限
+            const overtimeDrivers = this.drivers.filter(d => d.workHours && d.workHours > 10);
+            if (overtimeDrivers.length > 0) {
+                alerts.push(`${overtimeDrivers.length}位司機工時超過10小時`);
+            }
+            
+            // 檢查車輛維護
+            const maintenanceVehicles = this.vehicles.filter(v => v.status === '保養');
+            if (maintenanceVehicles.length > 0) {
+                alerts.push(`${maintenanceVehicles.length}台車輛正在保養中`);
+            }
+            
+            if (alerts.length > 0) {
+                alertContent.innerHTML = alerts.map(alert => 
+                    `<div class="alert-item">${alert}</div>`
+                ).join('');
+                alertSection.style.display = 'block';
+            } else {
+                alertSection.style.display = 'none';
+            }
+        }
+        
+        // 產生配對建議
+        async generateSuggestions(taskId) {
+            if (!this.checkPermission('generateSuggestions')) {
+                this.showNotification('您沒有產生建議的權限', 'error');
+                return;
+            }
+            
+            try {
+                this.showNotification('正在產生建議...', 'info');
+                
+                const result = await this.callGAS('generateTop3', { taskId });
+                
+                if (result.success) {
+                    this.showSuggestions(taskId, result.data);
+                } else {
+                    this.showNotification('產生建議失敗: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('產生建議失敗:', error);
+                this.showNotification('產生建議失敗，請重試', 'error');
+            }
+        }
+        
+        // 顯示建議面板
+        showSuggestions(taskId, suggestions) {
+            const panel = document.getElementById('suggestions-panel');
+            const content = document.getElementById('suggestions-content');
+            const task = this.tasks.find(t => t.id === taskId);
+            
+            if (!task) {
+                this.showNotification('找不到指定任務', 'error');
+                return;
+            }
+            
+            content.innerHTML = `
+                <h4>📋 任務: ${task['配送單號'] || task.id} 的配對建議</h4>
+                <div style="margin-bottom: 15px; padding: 10px; background: rgba(248, 249, 250, 0.8); border-radius: 8px;">
+                    <div><strong>客戶:</strong> ${task['客戶簡稱'] || '未指定'}</div>
+                    <div><strong>等級:</strong> ${task.level}</div>
+                    <div><strong>配送點:</strong> ${task['配送點簡稱'] || '未指定'}</div>
+                </div>
+                
+                ${suggestions && suggestions.length > 0 ? suggestions.map((suggestion, index) => `
+                    <div class="assignment-suggestion">
+                        <div class="suggestion-header">
+                            <span class="rank">#${index + 1}</span>
+                            <span class="score-badge">分數: ${suggestion.score ? suggestion.score.toFixed(1) : '0.0'}</span>
+                            <button onclick="app.acceptSuggestion('${taskId}', ${index})" class="accept-btn">
+                                ✅ 採用此建議
+                            </button>
+                        </div>
+                        <div class="suggestion-details">
+                            <div><strong>👨‍💼 司機:</strong> ${suggestion.driver?.name || '未指定'} (${suggestion.driver?.level || 'N/A'}級)</div>
+                            <div><strong>🚛 車輛:</strong> ${suggestion.vehicle?.number || '未指定'} (${suggestion.vehicle?.type || 'N/A'}類)</div>
+                            
+                            ${suggestion.factors && suggestion.factors.length > 0 ? `
+                                <div class="reasons">
+                                    <strong>💡 推薦理由:</strong>
+                                    <ul>
+                                        ${suggestion.factors.map(factor => `<li>${factor}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            
+                            ${suggestion.risks && suggestion.risks.length > 0 ? `
+                                <div class="risks">
+                                    <strong>⚠️ 風險提醒:</strong>
+                                    <ul>
+                                        ${suggestion.risks.map(risk => `<li class="risk">${risk}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `).join('') : '<div style="text-align: center; color: #666; padding: 20px;">暫無可用的配對建議</div>'}
+            `;
+            
+            panel.style.display = 'block';
+        }
+        
+        // 接受建議
+        async acceptSuggestion(taskId, suggestionIndex) {
+            if (!this.checkPermission('acceptSuggestion')) {
+                this.showNotification('您沒有採用建議的權限', 'error');
+                return;
+            }
+            
+            try {
+                const result = await this.callGAS('acceptSuggestion', { 
+                    taskId, 
+                    suggestionIndex 
+                });
+                
+                if (result.success) {
+                    this.showNotification('配對建議已採用', 'success');
+                    this.closeSuggestions();
+                    this.loadData(); // 重新載入資料
+                } else {
+                    this.showNotification('採用建議失敗: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('採用建議失敗:', error);
+                this.showNotification('採用建議失敗，請重試', 'error');
+            }
+        }
+        
+        // 關閉建議面板
+        closeSuggestions() {
+            document.getElementById('suggestions-panel').style.display = 'none';
+        }
+        
+        // 一鍵自動配對
+        async autoAssignAll() {
+            if (!this.checkPermission('autoAssign')) {
+                this.showNotification('您沒有執行自動配對的權限', 'error');
+                return;
+            }
+            
+            if (!confirm('確定要執行一鍵自動配對嗎？這將會重新計算所有待派任務的最佳配對。')) {
+                return;
+            }
+            
+            try {
+                this.showNotification('正在執行自動配對...', 'info');
+                this.showLoading(true);
+                
+                const result = await this.callGAS('autoAssign');
+                
+                if (result.success) {
+                    const assignedCount = result.data ? result.data.length : 0;
+                    this.showNotification(`自動配對完成！成功配對 ${assignedCount} 個任務`, 'success');
+                    this.loadData(); // 重新載入資料
+                } else {
+                    this.showNotification('自動配對失敗: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('自動配對錯誤:', error);
+                this.showNotification('自動配對執行失敗，請重試', 'error');
+            } finally {
+                this.showLoading(false);
+            }
+        }
+        
+        // 產生所有建議
+        async generateAllSuggestions() {
+            if (!this.checkPermission('generateSuggestions')) {
+                this.showNotification('您沒有產生建議的權限', 'error');
+                return;
+            }
+            
+            const unassignedTasks = this.tasks.filter(t => t['配送狀態'] === '待派');
+            
+            if (unassignedTasks.length === 0) {
+                this.showNotification('沒有待派任務需要產生建議', 'warning');
+                return;
+            }
+            
+            this.showNotification(`正在為 ${unassignedTasks.length} 個任務產生建議...`, 'info');
+            
+            // 這裡可以實作批次產生建議的邏輯
+            // 暫時顯示第一個任務的建議
+            if (unassignedTasks.length > 0) {
+                this.generateSuggestions(unassignedTasks[0].id);
+            }
+        }
+        
+        // 衝突檢查
+        async conflictCheck() {
+            if (!this.checkPermission('conflictCheck')) {
+                this.showNotification('您沒有執行衝突檢查的權限', 'error');
+                return;
+            }
+            
+            try {
+                this.showNotification('正在執行衝突檢查...', 'info');
+                
+                const result = await this.callGAS('conflictCheck');
+                
+                if (result.success) {
+                    const conflicts = result.data || [];
+                    if (conflicts.length === 0) {
+                        this.showNotification('✅ 未發現衝突', 'success');
+                    } else {
+                        this.showNotification(`⚠️ 發現 ${conflicts.length} 個衝突`, 'warning');
+                        // 可以在這裡顯示衝突詳情
+                    }
+                } else {
+                    this.showNotification('衝突檢查失敗: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('衝突檢查錯誤:', error);
+                this.showNotification('衝突檢查執行失敗，請重試', 'error');
+            }
+        }
+        
+        // 發佈到司機APP
+        async publishToApp() {
+            if (!this.checkPermission('publishToApp')) {
+                this.showNotification('您沒有發佈到司機APP的權限', 'error');
+                return;
+            }
+            
+            const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派');
+            
+            if (assignedTasks.length === 0) {
+                this.showNotification('沒有已指派的任務可以發佈', 'warning');
+                return;
+            }
+            
+            if (!confirm(`確定要發佈 ${assignedTasks.length} 個已指派任務到司機APP嗎？`)) {
+                return;
+            }
+            
+            try {
+                this.showNotification('正在發佈到司機APP...', 'info');
+                
+                const result = await this.callGAS('publishToApp', { 
+                    tasks: assignedTasks.map(t => t.id) 
+                });
+                
+                if (result.success) {
+                    this.showNotification('✅ 成功發佈到司機APP', 'success');
+                } else {
+                    this.showNotification('發佈失敗: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('發佈錯誤:', error);
+                this.showNotification('發佈執行失敗，請重試', 'error');
+            }
+        }
+        
+        // 應用篩選器
+        applyFilters() {
+            this.filters.date = document.getElementById('date-filter').value;
+            this.filters.level = document.getElementById('level-filter').value;
+            this.filters.vehicleType = document.getElementById('vehicle-type-filter').value;
+            this.filters.driverLevel = document.getElementById('driver-level-filter').value;
+            this.filters.status = document.getElementById('status-filter').value;
+            
+            this.renderAll();
+            this.updateKPI();
+        }
+        
+        // 取得篩選後的任務
+        getFilteredTasks() {
+            return this.tasks.filter(task => {
+                if (this.filters.date && task['日期'] !== this.filters.date) return false;
+                if (this.filters.level && task.level !== this.filters.level) return false;
+                if (this.filters.status && task['配送狀態'] !== this.filters.status) return false;
+                return true;
+            });
+        }
+        
+        // 取得篩選後的司機
+        getFilteredDrivers() {
+            return this.drivers.filter(driver => {
+                if (this.filters.driverLevel && (driver['級別'] || driver.level) !== this.filters.driverLevel) return false;
+                return true;
+            });
+        }
+        
+        // 取得篩選後的車輛
+        getFilteredVehicles() {
+            return this.vehicles.filter(vehicle => {
+                if (this.filters.vehicleType && vehicle.type !== this.filters.vehicleType) return false;
+                return true;
+            });
+        }
+        
+        // 拖放事件處理
+        handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.dataset.taskId);
+            e.target.classList.add('dragging');
+        }
+        
+        handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+        
+        handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+        
+        handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            const taskId = e.dataTransfer.getData('text/plain');
+            const targetElement = e.currentTarget;
+            
+            if (targetElement.dataset.driverId) {
+                this.assignToDriver(taskId, targetElement.dataset.driverId);
+            } else if (targetElement.dataset.vehicleId) {
+                this.assignToVehicle(taskId, targetElement.dataset.vehicleId);
+            }
+        }
+        
+        // 指派給司機
+        async assignToDriver(taskId, driverId) {
+            if (!this.checkPermission('assignToDriver')) {
+                this.showNotification('您沒有手動指派的權限', 'error');
+                return;
+            }
+            
+            try {
+                const result = await this.callGAS('assignToDriver', { taskId, driverId });
+                
+                if (result.success) {
+                    this.showNotification('任務已指派給司機', 'success');
+                    this.loadData();
+                } else {
+                    this.showNotification('指派失敗: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('指派錯誤:', error);
+                this.showNotification('指派失敗，請重試', 'error');
+            }
+        }
+        
+        // 指派給車輛
+        async assignToVehicle(taskId, vehicleId) {
+            if (!this.checkPermission('assignToVehicle')) {
+                this.showNotification('您沒有手動指派的權限', 'error');
+                return;
+            }
+            
+            try {
+                const result = await this.callGAS('assignToVehicle', { taskId, vehicleId });
+                
+                if (result.success) {
+                    this.showNotification('任務已指派給車輛', 'success');
+                    this.loadData();
+                } else {
+                    this.showNotification('指派失敗: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('指派錯誤:', error);
+                this.showNotification('指派失敗，請重試', 'error');
+            }
+        }
+        
+        // 顯示通知
+        showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // 顯示動畫
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // 自動隱藏
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // 顯示/隱藏載入動畫
+        showLoading(show) {
+            const loadings = document.querySelectorAll('.loading');
+            loadings.forEach(loading => {
+                if (show) {
+                    loading.classList.add('show');
+                } else {
+                    loading.classList.remove('show');
+                }
+            });
+        }
+    }
+
+    // 初始化登入管理器
+    const loginManager = new LoginManager();
+
+    // 初始化應用程式
+    const app = new DispatchApp();
+
+    // 全域函數 - 顯示用戶權限說明
+    function showUserPermissions() {
+        const permissions = loginManager.getUserPermissions();
+        const level = loginManager.getUserLevelDescription();
+        
+        const modal = document.createElement('div');
+        modal.className = 'driver-detail-modal';
+        modal.innerHTML = `
+            <div class="modal-overlay" onclick="this.parentElement.remove()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🔒 權限說明</h3>
+                    <button onclick="this.closest('.driver-detail-modal').remove()" class="close-btn">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="driver-info-grid">
+                        <div class="info-item">
+                            <label>當前用戶</label>
+                            <span>${loginManager.currentUser.username}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>權限級別</label>
+                            <span>${level}</span>
+                        </div>
+                        <div class="info-item" style="grid-column: 1 / -1;">
+                            <label>可用功能</label>
+                            <div style="margin-top: 10px;">
+                                ${permissions.map(permission => 
+                                    `<span style="display: inline-block; background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 12px; margin: 2px; font-size: 12px;">✓ ${permission}</span>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="this.closest('.driver-detail-modal').remove()" class="btn-secondary">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+    }
+
+    // 全域函數 - 登出
+    function logout() {
+        if (confirm('確定要登出嗎？')) {
+            loginManager.logout();
+        }
+    }
+
+    // 全域函數（供 HTML 按鈕呼叫）
+    function loadData() { 
+        if (window.app) {
             app.loadData(); 
         }
-        
-        function autoAssignAll() { 
+    }
+
+    function autoAssignAll() { 
+        if (window.app) {
             app.autoAssignAll(); 
         }
-        
-        function generateAllSuggestions() { 
+    }
+
+    function generateAllSuggestions() { 
+        if (window.app) {
             app.generateAllSuggestions(); 
         }
-        
-        function conflictCheck() { 
+    }
+
+    function conflictCheck() { 
+        if (window.app) {
             app.conflictCheck(); 
         }
-        
-        function publishToApp() { 
+    }
+
+    function publishToApp() { 
+        if (window.app) {
             app.publishToApp(); 
         }
-        
-        function applyFilters() {
+    }
+
+    function applyFilters() {
+        if (window.app) {
             app.applyFilters();
         }
-        
-        function closeSuggestions() {
+    }
+
+    function closeSuggestions() {
+        if (window.app) {
             app.closeSuggestions();
         }
-        
-        function contactDriver(driverId) {
+    }
+
+    function contactDriver(driverId) {
+        if (window.app) {
             app.contactDriver(driverId);
         }
+    }
 
-        function viewDriverDetail(driverId) {
+    function viewDriverDetail(driverId) {
+        if (window.app) {
             app.viewDriverDetail(driverId);
         }
-        
-        // 頁面載入完成後執行
-        window.addEventListener('DOMContentLoaded', function() {
-            // 載入真實資料
-            app.loadData();
-        });
-        
-        // 鍵盤快捷鍵
-        document.addEventListener('keydown', function(e) {
-            // Ctrl + R: 重新載入
-            if (e.ctrlKey && e.key === 'r') {
-                e.preventDefault();
+    }
+
+    // 頁面載入完成後執行
+    window.addEventListener('DOMContentLoaded', function() {
+        // 等待登入完成後再初始化主系統
+        const checkLogin = setInterval(() => {
+            if (loginManager.isLoggedIn && window.app) {
+                clearInterval(checkLogin);
+                app.initPermissionControl();
                 app.loadData();
             }
-            
-            // Ctrl + A: 自動配對
-            if (e.ctrlKey && e.key === 'a') {
-                e.preventDefault();
-                app.autoAssignAll();
-            }
-            
-            // ESC: 關閉建議面板
-            if (e.key === 'Escape') {
-                app.closeSuggestions();
-            }
-            
-            // Ctrl + G: 產生所有建議
-            if (e.ctrlKey && e.key === 'g') {
-                e.preventDefault();
-                app.generateAllSuggestions();
-            }
-            
-            // Ctrl + C: 衝突檢查
-            if (e.ctrlKey && e.key === 'c') {
-                e.preventDefault();
-                app.conflictCheck();
-            }
-        });
-        
-        // 視窗大小變更時重新調整佈局
-        window.addEventListener('resize', function() {
-            // 響應式調整建議面板位置
-            const panel = document.getElementById('suggestions-panel');
-            if (panel.style.display === 'block') {
-                if (window.innerWidth <= 1200) {
-                    panel.style.width = '100%';
-                    panel.style.height = '100%';
-                    panel.style.top = '0';
-                    panel.style.right = '0';
-                    panel.style.transform = 'none';
-                    panel.style.borderRadius = '0';
-                } else {
-                    panel.style.width = '420px';
-                    panel.style.height = 'auto';
-                    panel.style.maxHeight = '80vh';
-                    panel.style.top = '50%';
-                    panel.style.right = '25px';
-                    panel.style.transform = 'translateY(-50%)';
-                    panel.style.borderRadius = '20px';
-                }
-            }
-        });
-        
-        // 添加頁面載入動畫
-        window.addEventListener('load', function() {
-            document.body.style.opacity = '0';
-            document.body.style.transition = 'opacity 0.5s ease-in-out';
-            
-            setTimeout(() => {
-                document.body.style.opacity = '1';
-            }, 100);
-        });
-        
-        // 添加平滑滾動效果
-        document.addEventListener('DOMContentLoaded', function() {
-            const style = document.createElement('style');
-            style.textContent = `
-                html {
-                    scroll-behavior: smooth;
-                }
-            `;
-            document.head.appendChild(style);
-        });
-        
-        // 添加觸控支援（移動裝置）
-        let touchStartY = 0;
-        let touchEndY = 0;
-        
-        document.addEventListener('touchstart', function(e) {
-            touchStartY = e.changedTouches[0].screenY;
-        });
-        
-        document.addEventListener('touchend', function(e) {
-            touchEndY = e.changedTouches[0].screenY;
-            handleSwipe();
-        });
-        
-        function handleSwipe() {
-            const swipeThreshold = 50;
-            const diff = touchStartY - touchEndY;
-            
-            if (Math.abs(diff) > swipeThreshold) {
-                if (diff > 0) {
-                    // 向上滑動
-                    console.log('向上滑動');
-                } else {
-                    // 向下滑動
-                    console.log('向下滑動');
-                }
-            }
+        }, 100);
+    });
+
+    // 鍵盤快捷鍵
+    document.addEventListener('keydown', function(e) {
+        // Ctrl + R: 重新載入
+        if (e.ctrlKey && e.key === 'r') {
+            e.preventDefault();
+            if (window.app) app.loadData();
         }
         
-        // 添加自動保存功能
+        // Ctrl + A: 自動配對
+        if (e.ctrlKey && e.key === 'a') {
+            e.preventDefault();
+            if (window.app) app.autoAssignAll();
+        }
+        
+        // ESC: 關閉建議面板
+        if (e.key === 'Escape') {
+            if (window.app) app.closeSuggestions();
+        }
+        
+        // Ctrl + G: 產生所有建議
+        if (e.ctrlKey && e.key === 'g') {
+            e.preventDefault();
+            if (window.app) app.generateAllSuggestions();
+        }
+        
+        // Ctrl + C: 衝突檢查
+        if (e.ctrlKey && e.key === 'c') {
+            e.preventDefault();
+            if (window.app) app.conflictCheck();
+        }
+    });
+
+    // 視窗大小變更時重新調整佈局
+    window.addEventListener('resize', function() {
+        // 響應式調整建議面板位置
+        const panel = document.getElementById('suggestions-panel');
+        if (panel && panel.style.display === 'block') {
+            if (window.innerWidth <= 1200) {
+                panel.style.width = '100%';
+                panel.style.height = '100%';
+                panel.style.top = '0';
+                panel.style.right = '0';
+                panel.style.transform = 'none';
+                panel.style.borderRadius = '0';
+            } else {
+                panel.style.width = '420px';
+                panel.style.height = 'auto';
+                panel.style.maxHeight = '80vh';
+                panel.style.top = '50%';
+                panel.style.right = '25px';
+                panel.style.transform = 'translateY(-50%)';
+                panel.style.borderRadius = '20px';
+            }
+        }
+    });
+
+    // 添加頁面載入動畫
+    window.addEventListener('load', function() {
+        document.body.style.opacity = '0';
+        document.body.style.transition = 'opacity 0.5s ease-in-out';
+        
+        setTimeout(() => {
+            document.body.style.opacity = '1';
+        }, 100);
+    });
+
+    // 添加平滑滾動效果
+    document.addEventListener('DOMContentLoaded', function() {
+        const style = document.createElement('style');
+        style.textContent = `
+            html {
+                scroll-behavior: smooth;
+            }
+        `;
+        document.head.appendChild(style);
+    });
+
+    // 添加觸控支援（移動裝置）
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    document.addEventListener('touchstart', function(e) {
+        touchStartY = e.changedTouches[0].screenY;
+    });
+
+    document.addEventListener('touchend', function(e) {
+        touchEndY = e.changedTouches[0].screenY;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchStartY - touchEndY;
+        
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0) {
+                // 向上滑動
+                console.log('向上滑動');
+            } else {
+                // 向下滑動
+                console.log('向下滑動');
+            }
+        }
+    }
+
+    // 添加自動保存功能
+    setInterval(function() {
+        // 每5分鐘自動檢查資料更新
+        if (document.visibilityState === 'visible' && loginManager.isLoggedIn) {
+            // 只在頁面可見且已登入時執行
+            console.log('自動檢查資料更新...');
+                        // 這裡可以添加自動檢查資料更新的邏輯
+            // 例如檢查是否有新任務或狀態變更
+        }
+    }, 300000); // 5分鐘
+
+    // 添加網路狀態檢測
+    window.addEventListener('online', function() {
+        app.showNotification('網路連線已恢復', 'success');
+        if (loginManager.isLoggedIn && window.app) {
+            app.loadData(); // 重新載入資料
+        }
+    });
+
+    window.addEventListener('offline', function() {
+        app.showNotification('網路連線中斷，部分功能可能無法使用', 'warning');
+    });
+
+    // 添加頁面可見性變更處理
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible' && loginManager.isLoggedIn) {
+            // 頁面重新可見時，檢查是否需要更新資料
+            const lastUpdate = sessionStorage.getItem('lastDataUpdate');
+            const now = new Date().getTime();
+            
+            if (!lastUpdate || (now - parseInt(lastUpdate)) > 600000) { // 10分鐘
+                if (window.app) {
+                    app.loadData();
+                }
+                sessionStorage.setItem('lastDataUpdate', now.toString());
+            }
+        }
+    });
+
+    // 添加錯誤處理
+    window.addEventListener('error', function(e) {
+        console.error('全域錯誤:', e.error);
+        if (window.app) {
+            app.showNotification('系統發生錯誤，請重新整理頁面', 'error');
+        }
+    });
+
+    // 添加未處理的 Promise 拒絕處理
+    window.addEventListener('unhandledrejection', function(e) {
+        console.error('未處理的 Promise 拒絕:', e.reason);
+        if (window.app) {
+            app.showNotification('網路請求失敗，請檢查網路連線', 'error');
+        }
+        e.preventDefault();
+    });
+
+    // 暴露必要的全域變數和函數
+    window.app = app;
+    window.loginManager = loginManager;
+    window.showUserPermissions = showUserPermissions;
+    window.logout = logout;
+    window.loadData = loadData;
+    window.autoAssignAll = autoAssignAll;
+    window.generateAllSuggestions = generateAllSuggestions;
+    window.conflictCheck = conflictCheck;
+    window.publishToApp = publishToApp;
+    window.applyFilters = applyFilters;
+    window.closeSuggestions = closeSuggestions;
+    window.contactDriver = contactDriver;
+    window.viewDriverDetail = viewDriverDetail;
+
+    // 添加開發者工具檢測（可選）
+    let devtools = {
+        open: false,
+        orientation: null
+    };
+
+    const threshold = 160;
+
+    setInterval(function() {
+        if (window.outerHeight - window.innerHeight > threshold || 
+            window.outerWidth - window.innerWidth > threshold) {
+            if (!devtools.open) {
+                devtools.open = true;
+                console.log('開發者工具已開啟');
+            }
+        } else {
+            if (devtools.open) {
+                devtools.open = false;
+                console.log('開發者工具已關閉');
+            }
+        }
+    }, 500);
+
+    // 添加性能監控
+    if ('performance' in window) {
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const perfData = performance.getEntriesByType('navigation')[0];
+                if (perfData) {
+                    console.log('頁面載入性能:', {
+                        'DNS 查詢': perfData.domainLookupEnd - perfData.domainLookupStart,
+                        'TCP 連接': perfData.connectEnd - perfData.connectStart,
+                        '請求響應': perfData.responseEnd - perfData.requestStart,
+                        'DOM 解析': perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart,
+                        '總載入時間': perfData.loadEventEnd - perfData.navigationStart
+                    });
+                }
+            }, 0);
+        });
+    }
+
+    // 添加記憶體使用監控（如果支援）
+    if ('memory' in performance) {
         setInterval(function() {
-            // 每5分鐘自動檢查資料更新
-            if (document.visibilityState === 'visible') {
-                // 只在頁面可見時執行
-                console.log('自動檢查資料更新...');
-                // 這裡可以加入自動更新邏輯
+            const memory = performance.memory;
+            if (memory.usedJSHeapSize > memory.jsHeapSizeLimit * 0.9) {
+                console.warn('記憶體使用量過高:', {
+                    '已使用': Math.round(memory.usedJSHeapSize / 1048576) + 'MB',
+                    '總限制': Math.round(memory.jsHeapSizeLimit / 1048576) + 'MB'
+                });
             }
-        }, 5 * 60 * 1000); // 5分鐘
+        }, 30000); // 每30秒檢查一次
+    }
+
+    // 添加資料持久化功能
+    function saveToLocalStorage(key, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch (e) {
+            console.warn('無法保存到本地存儲:', e);
+        }
+    }
+
+    function loadFromLocalStorage(key) {
+        try {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.warn('無法從本地存儲載入:', e);
+            return null;
+        }
+    }
+
+    // 添加主題切換功能（可選）
+    function toggleTheme() {
+        const body = document.body;
+        const isDark = body.classList.contains('dark-theme');
         
-        // 添加離線檢測
-        window.addEventListener('online', function() {
-            app.showNotification('網路連線已恢復', 'success');
-        });
+        if (isDark) {
+            body.classList.remove('dark-theme');
+            localStorage.setItem('theme', 'light');
+        } else {
+            body.classList.add('dark-theme');
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+
+    // 載入保存的主題設定
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+    });
+
+    // 添加列印功能
+    function printReport() {
+        const printWindow = window.open('', '_blank');
+        const printContent = generatePrintContent();
         
-        window.addEventListener('offline', function() {
-            app.showNotification('網路連線中斷，部分功能可能無法使用', 'warning');
-        });
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>派車系統報表</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; }
+                    .header { text-align: center; margin-bottom: 30px; }
+                    .section { margin-bottom: 20px; }
+                    .section h3 { border-bottom: 2px solid #333; padding-bottom: 5px; }
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                    @media print {
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>派車系統報表</h1>
+                    <p>產生時間: ${new Date().toLocaleString('zh-TW')}</p>
+                </div>
+                ${printContent}
+                <button class="no-print" onclick="window.print()">列印</button>
+                <button class="no-print" onclick="window.close()">關閉</button>
+            </body>
+            </html>
+        `);
         
-        // 添加頁面可見性檢測
-        document.addEventListener('visibilitychange', function() {
-            if (document.visibilityState === 'visible') {
-                // 頁面重新可見時，檢查是否需要更新資料
-                console.log('頁面重新可見，檢查資料更新...');
-            }
-        });
+        printWindow.document.close();
+    }
+
+    function generatePrintContent() {
+        const tasks = app.getFilteredTasks();
+        const drivers = app.getFilteredDrivers();
+        const vehicles = app.getFilteredVehicles();
         
-        // 防止意外關閉頁面
-        window.addEventListener('beforeunload', function(e) {
-            const unassignedTasks = app.tasks.filter(t => t['配送狀態'] === '待派');
-            if (unassignedTasks.length > 0) {
+        return `
+            <div class="section">
+                <h3>任務統計</h3>
+                <table>
+                    <tr><th>項目</th><th>數量</th></tr>
+                    <tr><td>總任務數</td><td>${tasks.length}</td></tr>
+                    <tr><td>B3級任務</td><td>${tasks.filter(t => t.level === 'B3').length}</td></tr>
+                    <tr><td>B2級任務</td><td>${tasks.filter(t => t.level === 'B2').length}</td></tr>
+                    <tr><td>B1級任務</td><td>${tasks.filter(t => t.level === 'B1').length}</td></tr>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h3>司機統計</h3>
+                <table>
+                    <tr><th>項目</th><th>數量</th></tr>
+                    <tr><td>總司機數</td><td>${drivers.length}</td></tr>
+                    <tr><td>A3級司機</td><td>${drivers.filter(d => (d['級別'] || d.level) === 'A3').length}</td></tr>
+                    <tr><td>A2級司機</td><td>${drivers.filter(d => (d['級別'] || d.level) === 'A2').length}</td></tr>
+                    <tr><td>A1級司機</td><td>${drivers.filter(d => (d['級別'] || d.level) === 'A1').length}</td></tr>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h3>車輛統計</h3>
+                <table>
+                    <tr><th>項目</th><th>數量</th></tr>
+                    <tr><td>總車輛數</td><td>${vehicles.length}</td></tr>
+                    <tr><td>可用車輛</td><td>${vehicles.filter(v => v.status === '可用').length}</td></tr>
+                </table>
+            </div>
+        `;
+    }
+
+    // 添加匯出功能
+    function exportToCSV() {
+        const tasks = app.getFilteredTasks();
+        const csvContent = generateCSVContent(tasks);
+        downloadCSV(csvContent, `派車資料_${new Date().toISOString().split('T')[0]}.csv`);
+    }
+
+    function generateCSVContent(tasks) {
+        const headers = ['任務ID', '配送日期', '路線名稱', '等級', '狀態', '板數總和', '取貨', '配送', '備註'];
+        const rows = tasks.map(task => [
+            task.id || '',
+            task['配送日期'] || '',
+            task['路線名稱'] || '',
+            task.level || '',
+            task['配送狀態'] || '',
+            task['板數總和'] || '',
+            task['取貨'] || '',
+            task['配送'] || '',
+            task['配送備註'] || ''
+        ]);
+        
+        const csvArray = [headers, ...rows];
+        return csvArray.map(row => 
+            row.map(field => `"${field.toString().replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
+    }
+
+    function downloadCSV(content, filename) {
+        const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+
+    // 添加全域函數到 window 物件
+    window.toggleTheme = toggleTheme;
+    window.printReport = printReport;
+    window.exportToCSV = exportToCSV;
+
+    // 添加快速搜尋功能
+    function initQuickSearch() {
+        const searchInput = document.createElement('input');
+        searchInput.type = 'text';
+        searchInput.placeholder = '快速搜尋任務、司機或車輛...';
+        searchInput.className = 'quick-search';
+        searchInput.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        `;
+        
+        document.body.appendChild(searchInput);
+        
+        // Ctrl + F 開啟搜尋
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'f') {
                 e.preventDefault();
-                e.returnValue = '還有未指派的任務，確定要離開嗎？';
-                return e.returnValue;
+                searchInput.style.display = 'block';
+                searchInput.focus();
+            }
+            
+            if (e.key === 'Escape') {
+                searchInput.style.display = 'none';
+                searchInput.value = '';
+                clearSearchHighlights();
             }
         });
         
-    </script>
+        searchInput.addEventListener('input', function(e) {
+            const query = e.target.value.toLowerCase();
+            if (query.length > 2) {
+                highlightSearchResults(query);
+            } else {
+                clearSearchHighlights();
+            }
+        });
+    }
+
+    function highlightSearchResults(query) {
+        clearSearchHighlights();
+        
+        const elements = document.querySelectorAll('.task-card, .driver-card, .vehicle-card');
+        elements.forEach(element => {
+            const text = element.textContent.toLowerCase();
+            if (text.includes(query)) {
+                element.style.border = '3px solid #ff6b6b';
+                element.style.boxShadow = '0 0 15px rgba(255, 107, 107, 0.5)';
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    }
+
+    function clearSearchHighlights() {
+        const elements = document.querySelectorAll('.task-card, .driver-card, .vehicle-card');
+        elements.forEach(element => {
+            element.style.border = '';
+            element.style.boxShadow = '';
+        });
+    }
+
+    // 初始化快速搜尋
+    document.addEventListener('DOMContentLoaded', initQuickSearch);
+
+    // 添加統計圖表功能（使用 Chart.js，如果有載入的話）
+    function showStatistics() {
+        if (typeof Chart === 'undefined') {
+            app.showNotification('圖表功能需要 Chart.js 函式庫', 'warning');
+            return;
+        }
+        
+        const modal = document.createElement('div');
+        modal.className = 'driver-detail-modal';
+        modal.innerHTML = `
+            <div class="modal-overlay" onclick="this.parentElement.remove()"></div>
+            <div class="modal-content" style="width: 80%; max-width: 800px;">
+                <div class="modal-header">
+                    <h3>📊 統計圖表</h3>
+                    <button onclick="this.closest('.driver-detail-modal').remove()" class="close-btn">×</button>
+                </div>
+                <div class="modal-body">
+                    <canvas id="statisticsChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // 產生圖表
+        setTimeout(() => {
+            const ctx = document.getElementById('statisticsChart').getContext('2d');
+            const tasks = app.getFilteredTasks();
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['B3級', 'B2級', 'B1級'],
+                    datasets: [{
+                        data: [
+                            tasks.filter(t => t.level === 'B3').length,
+                            tasks.filter(t => t.level === 'B2').length,
+                            tasks.filter(t => t.level === 'B1').length
+                        ],
+                        backgroundColor: ['#ff6b6b', '#4ecdc4', '#45b7d1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '任務等級分佈'
+                        }
+                    }
+                }
+            });
+        }, 100);
+    }
+
+    window.showStatistics = showStatistics;
+
+    console.log('🚀 派車管理系統已載入完成');
+    console.log('📋 可用快捷鍵:');
+    console.log('   Ctrl + R: 重新載入資料');
+    console.log('   Ctrl + A: 一鍵自動配對');
+    console.log('   Ctrl + G: 產生所有建議');
+    console.log('   Ctrl + C: 衝突檢查');
+    console.log('   Ctrl + F: 快速搜尋');
+    console.log('   ESC: 關閉面板');
+
+</script>
+
 </body>
 </html>
