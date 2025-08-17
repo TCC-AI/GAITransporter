@@ -2154,8 +2154,8 @@
     </div>
 <script>
     // Google Apps Script Web App URL (需要替換為實際的 URL)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwc30rR6RgQ8PLxPbBrh1jNAlpmMDvWCl3d7GY187bNM2wZxzElY5kxVWOQmtXpFeD0rg/exec';
-    // 司機資料維護相關功能
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwnLTtAaW5UVcVXh3ps28R0KeEW6lUaXvuAvmNRUgtPbxDG2ZQnyocJPcklS_Uksodv6w/exec';
+// 司機資料維護相關功能
 class DriverDataManager {
     constructor() {
         this.originalData = [];
@@ -2256,7 +2256,121 @@ class DriverDataManager {
         
         container.innerHTML = tableHTML;
     }
-    // 車輛資料維護相關功能
+    
+    // 處理儲存格變更
+    onCellChange(rowIndex, colIndex, newValue) {
+        const actualRowIndex = rowIndex + 1; // 因為第0列是標題
+        
+        if (this.currentData[actualRowIndex][colIndex] !== newValue) {
+            this.currentData[actualRowIndex][colIndex] = newValue;
+            this.changedCells.add(`${rowIndex}_${colIndex}`);
+            
+            const cellElement = document.getElementById(`cell_${rowIndex}_${colIndex}`);
+            if (cellElement) {
+                cellElement.classList.add('changed-cell');
+            }
+        }
+    }
+    
+    // 處理儲存格失焦
+    onCellBlur(cellId) {
+        const cellElement = document.getElementById(cellId);
+        if (cellElement && !this.changedCells.has(cellId.replace('cell_', ''))) {
+            cellElement.classList.remove('changed-cell');
+        }
+    }
+    
+    // 儲存變更
+    async saveDriverChanges() {
+        if (this.changedCells.size === 0) {
+            app.showNotification('沒有需要儲存的變更', 'info');
+            return;
+        }
+        
+        if (!confirm(`確定要儲存 ${this.changedCells.size} 個變更嗎？`)) {
+            return;
+        }
+        
+        try {
+            app.showNotification('正在儲存變更...', 'info');
+            
+            const result = await app.callGAS('updateDriverSheetData', {
+                data: this.currentData
+            });
+            
+            if (result.success) {
+                this.originalData = JSON.parse(JSON.stringify(this.currentData));
+                this.changedCells.clear();
+                
+                // 移除變更標記
+                document.querySelectorAll('.changed-cell').forEach(cell => {
+                    cell.classList.remove('changed-cell');
+                });
+                
+                app.showNotification('司機資料儲存成功', 'success');
+            } else {
+                app.showNotification('儲存失敗: ' + result.error, 'error');
+            }
+        } catch (error) {
+            console.error('儲存司機資料失敗:', error);
+            app.showNotification('儲存失敗，請重試', 'error');
+        }
+    }
+    
+    // 新增司機行
+    addNewDriverRow() {
+        const headers = this.currentData[0];
+        const newRow = new Array(headers.length).fill('');
+        
+        this.currentData.push(newRow);
+        this.renderDriverDataTable();
+        
+        app.showNotification('已新增空白司機資料行，請填入資料後儲存', 'info');
+    }
+    
+    // 刪除司機行
+    deleteRow(rowIndex) {
+        const actualRowIndex = rowIndex + 1; // 因為第0列是標題
+        const driverName = this.currentData[actualRowIndex][0] || '未命名司機';
+        
+        if (!confirm(`確定要刪除司機「${driverName}」的資料嗎？`)) {
+            return;
+        }
+        
+        this.currentData.splice(actualRowIndex, 1);
+        this.renderDriverDataTable();
+        
+        app.showNotification(`已刪除司機「${driverName}」的資料`, 'success');
+    }
+    
+    // 重新載入司機資料
+    async refreshDriverData() {
+        if (this.changedCells.size > 0) {
+            if (!confirm('有未儲存的變更，確定要重新載入嗎？未儲存的變更將會遺失。')) {
+                return;
+            }
+        }
+        
+        this.changedCells.clear();
+        await this.loadDriverData();
+    }
+    
+    // 返回主頁面
+    backToMainPage() {
+        if (this.changedCells.size > 0) {
+            if (!confirm('有未儲存的變更，確定要離開嗎？未儲存的變更將會遺失。')) {
+                return;
+            }
+        }
+        
+        document.getElementById('driver-data-page').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        
+        this.changedCells.clear();
+    }
+}
+
+// 車輛資料維護相關功能 - 注意：這裡是獨立的類別，不在 DriverDataManager 內部
 class VehicleDataManager {
     constructor() {
         this.originalData = [];
@@ -2472,141 +2586,11 @@ class VehicleDataManager {
     }
 }
 
-// 建立車輛資料管理器實例
-const vehicleDataManager = new VehicleDataManager();
-
-// 全域函數
-function showVehicleDataPage() {
-    vehicleDataManager.showVehicleDataPage();
-}
-
-function saveVehicleChanges() {
-    vehicleDataManager.saveVehicleChanges();
-}
-
-function addNewVehicleRow() {
-    vehicleDataManager.addNewVehicleRow();
-}
-
-function refreshVehicleData() {
-    vehicleDataManager.refreshVehicleData();
-}
-
-    // 處理儲存格變更
-    onCellChange(rowIndex, colIndex, newValue) {
-        const actualRowIndex = rowIndex + 1; // 因為第0列是標題
-        
-        if (this.currentData[actualRowIndex][colIndex] !== newValue) {
-            this.currentData[actualRowIndex][colIndex] = newValue;
-            this.changedCells.add(`${rowIndex}_${colIndex}`);
-            
-            const cellElement = document.getElementById(`cell_${rowIndex}_${colIndex}`);
-            if (cellElement) {
-                cellElement.classList.add('changed-cell');
-            }
-        }
-    }
-    
-    // 處理儲存格失焦
-    onCellBlur(cellId) {
-        const cellElement = document.getElementById(cellId);
-        if (cellElement && !this.changedCells.has(cellId.replace('cell_', ''))) {
-            cellElement.classList.remove('changed-cell');
-        }
-    }
-    
-    // 儲存變更
-    async saveDriverChanges() {
-        if (this.changedCells.size === 0) {
-            app.showNotification('沒有需要儲存的變更', 'info');
-            return;
-        }
-        
-        if (!confirm(`確定要儲存 ${this.changedCells.size} 個變更嗎？`)) {
-            return;
-        }
-        
-        try {
-            app.showNotification('正在儲存變更...', 'info');
-            
-            const result = await app.callGAS('updateDriverSheetData', {
-                data: this.currentData
-            });
-            
-            if (result.success) {
-                this.originalData = JSON.parse(JSON.stringify(this.currentData));
-                this.changedCells.clear();
-                
-                // 移除變更標記
-                document.querySelectorAll('.changed-cell').forEach(cell => {
-                    cell.classList.remove('changed-cell');
-                });
-                
-                app.showNotification('司機資料儲存成功', 'success');
-            } else {
-                app.showNotification('儲存失敗: ' + result.error, 'error');
-            }
-        } catch (error) {
-            console.error('儲存司機資料失敗:', error);
-            app.showNotification('儲存失敗，請重試', 'error');
-        }
-    }
-    
-    // 新增司機行
-    addNewDriverRow() {
-        const headers = this.currentData[0];
-        const newRow = new Array(headers.length).fill('');
-        
-        this.currentData.push(newRow);
-        this.renderDriverDataTable();
-        
-        app.showNotification('已新增空白司機資料行，請填入資料後儲存', 'info');
-    }
-    
-    // 刪除司機行
-    deleteRow(rowIndex) {
-        const actualRowIndex = rowIndex + 1; // 因為第0列是標題
-        const driverName = this.currentData[actualRowIndex][0] || '未命名司機';
-        
-        if (!confirm(`確定要刪除司機「${driverName}」的資料嗎？`)) {
-            return;
-        }
-        
-        this.currentData.splice(actualRowIndex, 1);
-        this.renderDriverDataTable();
-        
-        app.showNotification(`已刪除司機「${driverName}」的資料`, 'success');
-    }
-    
-    // 重新載入司機資料
-    async refreshDriverData() {
-        if (this.changedCells.size > 0) {
-            if (!confirm('有未儲存的變更，確定要重新載入嗎？未儲存的變更將會遺失。')) {
-                return;
-            }
-        }
-        
-        this.changedCells.clear();
-        await this.loadDriverData();
-    }
-    
-    // 返回主頁面
-    backToMainPage() {
-        if (this.changedCells.size > 0) {
-            if (!confirm('有未儲存的變更，確定要離開嗎？未儲存的變更將會遺失。')) {
-                return;
-            }
-        }
-        
-        document.getElementById('driver-data-page').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        
-        this.changedCells.clear();
-    }
-}
-
 // 建立司機資料管理器實例
 const driverDataManager = new DriverDataManager();
+
+// 建立車輛資料管理器實例
+const vehicleDataManager = new VehicleDataManager();
 
 // 全域函數
 function showDriverDataPage() {
@@ -2625,6 +2609,22 @@ function refreshDriverData() {
     driverDataManager.refreshDriverData();
 }
 
+function showVehicleDataPage() {
+    vehicleDataManager.showVehicleDataPage();
+}
+
+function saveVehicleChanges() {
+    vehicleDataManager.saveVehicleChanges();
+}
+
+function addNewVehicleRow() {
+    vehicleDataManager.addNewVehicleRow();
+}
+
+function refreshVehicleData() {
+    vehicleDataManager.refreshVehicleData();
+}
+
 // 修改原本的 backToMainPage 函數
 function backToMainPage() {
     // 隱藏所有資料維護頁面
@@ -2640,6 +2640,7 @@ function backToMainPage() {
         vehicleDataManager.changedCells.clear();
     }
 }
+
 
 
 
