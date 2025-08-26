@@ -3466,20 +3466,20 @@ addUserInfoToHeader() {
                 // 調用新的統計API
                 const statsResult = await this.callGAS('getTaskStats');
                 
-                if (statsResult.success) {
+                if (statsResult && statsResult.success) {
                     const stats = statsResult.data;
                     
-                    document.getElementById('total-tasks').textContent = stats.totalTasks;
-                    document.getElementById('p-tasks').textContent = stats.b3Tasks;
-                    document.getElementById('q-tasks').textContent = stats.b2Tasks;
-                    document.getElementById('r-tasks').textContent = stats.b1Tasks;
-                    document.getElementById('assign-rate').textContent = `${stats.assignRate}%`;
+                    document.getElementById('total-tasks').textContent = stats.totalTasks || 0;
+                    document.getElementById('p-tasks').textContent = stats.b3Tasks || 0;
+                    document.getElementById('q-tasks').textContent = stats.b2Tasks || 0;
+                    document.getElementById('r-tasks').textContent = stats.b1Tasks || 0;
+                    document.getElementById('assign-rate').textContent = `${stats.assignRate || 0}%`;
                     
                     // 可用車輛數量仍然從車輛資料中獲取
                     const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
                     document.getElementById('available-vehicles').textContent = availableVehicles;
                 } else {
-                    console.error('獲取統計資料失敗:', statsResult.error);
+                    console.error('獲取統計資料失敗:', statsResult?.error || 'API 回應異常');
                     // 如果API失敗，使用原有的計算方式作為備用
                     this.updateKPIFallback();
                 }
@@ -3493,17 +3493,17 @@ addUserInfoToHeader() {
         // 備用的KPI更新方法
         updateKPIFallback() {
             const totalTasks = this.tasks.length;
-            const pTasks = this.tasks.filter(t => t.level === 'P').length;
-            const qTasks = this.tasks.filter(t => t.level === 'Q').length;
-            const rTasks = this.tasks.filter(t => t.level === 'R').length;
+            const b3Tasks = this.tasks.filter(t => t.level === 'B3' || t.level === 'P').length;
+            const b2Tasks = this.tasks.filter(t => t.level === 'B2' || t.level === 'Q').length;
+            const b1Tasks = this.tasks.filter(t => t.level === 'B1' || t.level === 'R').length;
             const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派' || t['配送狀態'] === '進行中').length;
             const assignRate = totalTasks > 0 ? Math.round((assignedTasks / totalTasks) * 100) : 0;
             const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
             
             document.getElementById('total-tasks').textContent = totalTasks;
-            document.getElementById('p-tasks').textContent = pTasks;
-            document.getElementById('q-tasks').textContent = qTasks;
-            document.getElementById('r-tasks').textContent = rTasks;
+            document.getElementById('p-tasks').textContent = b3Tasks;
+            document.getElementById('q-tasks').textContent = b2Tasks;
+            document.getElementById('r-tasks').textContent = b1Tasks;
             document.getElementById('assign-rate').textContent = `${assignRate}%`;
             document.getElementById('available-vehicles').textContent = availableVehicles;
         }
