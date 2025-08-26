@@ -4731,6 +4731,241 @@ window.refreshVehicleData = refreshVehicleData;
     console.log('   Ctrl + C: 衝突檢查');
     console.log('   Ctrl + F: 快速搜尋');
     console.log('   ESC: 關閉面板');
+// 🆕 加入這些缺少的 API 函數到您的 Apps Script
+
+// 取得任務統計資料
+function getTaskStats() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const 待配送任務Sheet = spreadsheet.getSheetByName('待配送任務');
+    
+    if (!待配送任務Sheet) {
+      return {
+        success: false,
+        error: '找不到待配送任務工作表'
+      };
+    }
+    
+    const data = 待配送任務Sheet.getDataRange().getValues();
+    const tasks = data.slice(1); // 跳過標題行
+    
+    const totalTasks = tasks.length;
+    const b3Tasks = tasks.filter(row => row[5] === 'B3').length; // F欄位（任務屬性）
+    const b2Tasks = tasks.filter(row => row[5] === 'B2').length;
+    const b1Tasks = tasks.filter(row => row[5] === 'B1').length;
+    
+    // 計算已指派率（有車輛配對的任務）
+    const assignedTasks = tasks.filter(row => row[6] && row[6].toString().trim() !== '').length; // G欄位（配對車輛）
+    const assignRate = totalTasks > 0 ? Math.round((assignedTasks / totalTasks) * 100) : 0;
+    
+    return {
+      success: true,
+      data: {
+        totalTasks: totalTasks,
+        b3Tasks: b3Tasks,
+        b2Tasks: b2Tasks,
+        b1Tasks: b1Tasks,
+        assignRate: assignRate
+      }
+    };
+    
+  } catch (error) {
+    console.error('getTaskStats 錯誤:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+// 取得任務資料
+function getTasks() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const 待配送任務Sheet = spreadsheet.getSheetByName('待配送任務');
+    
+    if (!待配送任務Sheet) {
+      return {
+        success: false,
+        error: '找不到待配送任務工作表'
+      };
+    }
+    
+    const data = 待配送任務Sheet.getDataRange().getValues();
+    const headers = data[0];
+    const tasks = data.slice(1).map((row, index) => ({
+      id: `task_${index + 1}`,
+      配送日期: row[0],
+      路線名稱: row[1],
+      板數總和: row[2],
+      取貨: row[3],
+      配送: row[4],
+      任務屬性: row[5],
+      配對車輛: row[6],
+      配對運務士: row[7],
+      level: row[5] // 使用任務屬性作為等級
+    }));
+    
+    return {
+      success: true,
+      data: tasks
+    };
+    
+  } catch (error) {
+    console.error('getTasks 錯誤:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+// 取得司機資料
+function getDrivers() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const 可派司機Sheet = spreadsheet.getSheetByName('可派司機');
+    
+    if (!可派司機Sheet) {
+      return {
+        success: false,
+        error: '找不到可派司機工作表'
+      };
+    }
+    
+    const data = 可派司機Sheet.getDataRange().getValues();
+    const drivers = data.slice(1).map((row, index) => ({
+      id: `driver_${index + 1}`,
+      姓名: row[0],
+      員工編號: row[1],
+      級別: row[2],
+      類型: row[3],
+      技能: row[4],
+      聯絡電話: row[5],
+      狀態: row[6]
+    }));
+    
+    return {
+      success: true,
+      data: drivers
+    };
+    
+  } catch (error) {
+    console.error('getDrivers 錯誤:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+// 取得車輛資料
+function getVehicles() {
+  try {
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const 車輛資料Sheet = spreadsheet.getSheetByName('車輛資料');
+    
+    if (!車輛資料Sheet) {
+      return {
+        success: false,
+        error: '找不到車輛資料工作表'
+      };
+    }
+    
+    const data = 車輛資料Sheet.getDataRange().getValues();
+    const vehicles = data.slice(1).map((row, index) => ({
+      id: row[0], // A欄位（車輛資訊）
+      type: row[1], // B欄位（車輛類型）
+      brand: row[2],
+      tonnage: row[3],
+      purchaseDate: row[4],
+      mileage: row[5],
+      status: row[6] // G欄位（狀態）
+    }));
+    
+    return {
+      success: true,
+      data: vehicles
+    };
+    
+  } catch (error) {
+    console.error('getVehicles 錯誤:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+// 登入驗證（模擬）
+function verifyLogin(data) {
+  try {
+    const { username, password } = data;
+    
+    // 這裡您可以根據實際需求修改登入邏輯
+    // 目前是模擬登入
+    const validUsers = {
+      'admin': { password: '123456', level: 's4', username: 'admin' },
+      'manager': { password: '123456', level: 's3', username: 'manager' },
+      'operator': { password: '123456', level: 's2', username: 'operator' },
+      'viewer': { password: '123456', level: 's1', username: 'viewer' }
+    };
+    
+    if (validUsers[username] && validUsers[username].password === password) {
+      return {
+        success: true,
+        user: validUsers[username]
+      };
+    } else {
+      return {
+        success: false,
+        error: '帳號或密碼錯誤'
+      };
+    }
+    
+  } catch (error) {
+    console.error('verifyLogin 錯誤:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+// 更新最後登入時間
+function updateLastLogin(data) {
+  try {
+    const { username } = data;
+    console.log(`用戶 ${username} 於 ${new Date().toISOString()} 登入`);
+    
+    return {
+      success: true
+    };
+    
+  } catch (error) {
+    console.error('updateLastLogin 錯誤:', error);
+    return {
+      success: false,
+      error: error.toString()
+    };
+  }
+}
+
+// 🔄 更新 doPost 函數以處理所有請求
+function doPost(e) {
+    try {
+        const output = ContentService.createTextOutput();
+        output.setMimeType(ContentService.MimeType.JSON);
+        
+        // 解析請求資料
+        let requestData;
+        if (e.postData && e.postData.contents) {
+            requestData = JSON.parse(e.postData.contents);
+        } else if (e.parameter && e.parameter.action) {
+            // 處理表單格式的請求
+            requestData = {
+                action: e.parameter.action,
+                data: e.parameter.data ?
 
 </script>
 
