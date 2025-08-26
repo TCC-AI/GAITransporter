@@ -2388,7 +2388,7 @@
     </div>
 <script>
     // Google Apps Script Web App URL (需要替換為實際的 URL)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzu8JLV_JOPvn6GO24kmDKpPorqOvXose2YzECtqW8ZFZ2aQghI3MsZwuHp4q1J-1ySlQ/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyJRitxuCSHmjUK5XOYWGOV1mnR4LoolfuIt2EdvDLwTrW8uPODFH5EO2x2hcVCvn0OGQ/exec';
 // 司機資料維護相關功能
 class DriverDataManager {
     constructor() {
@@ -2607,53 +2607,55 @@ class DriverDataManager {
         this.changedCells.clear();
     }
 }
-    // 執行自動配對的主函數
+// 執行自動配對的主函數
 async function executeAutoAssign() {
     try {
         // 顯示載入中狀態
         showLoading('正在執行自動配對...');
         
-        // 1. 呼叫外部APPS SCRIPT執行自動配對
-        const response = await fetch('https://script.google.com/macros/s/AKfycbzQgc8fIOxN8fYtRnU7vEQreLEQFpsJF2-x7u8Y0G02jcDP32tLeKv4y8rArsotWiq9qg/exec', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: '自動配對車輛'
-            })
-        });
+        // 🔄 修改：使用內部 API 而不是外部 URL
+        const result = await app.callGAS('autoAssign', {});
         
-        if (response.ok) {
-            // 2. 配對完成後，顯示結果視窗
-            await showAssignmentResults();
+        if (result.success) {
+            // 配對完成後，重新載入資料並顯示結果
+            await app.loadData();
+            app.showNotification(`自動配對完成！成功配對 ${result.data?.length || 0} 個任務`, 'success');
+            
+            // 可選：顯示詳細結果
+            if (result.data && result.data.length > 0) {
+                showAssignmentResults();
+            }
         } else {
-            throw new Error('自動配對執行失敗');
+            throw new Error(result.error || '自動配對執行失敗');
         }
         
     } catch (error) {
         console.error('自動配對錯誤:', error);
-        alert('自動配對執行失敗: ' + error.message);
+        app.showNotification('自動配對執行失敗: ' + error.message, 'error');
     } finally {
         hideLoading();
     }
 }
+
     // 顯示配對結果的大視窗
+// 顯示配對結果的大視窗
 async function showAssignmentResults() {
     try {
-        // 獲取待配送任務資料
-        const tasksData = await callGoogleScript('getTasksFromSheet', {
-            sheetName: '待配送任務'
-        });
+        // 🔄 修改：使用內部 API 獲取任務資料
+        const tasksResult = await app.callGAS('getTasks', {});
         
-        // 創建大視窗
-        createAssignmentModal(tasksData);
+        if (tasksResult.success) {
+            createAssignmentModal(tasksResult.data);
+        } else {
+            throw new Error(tasksResult.error || '無法載入任務資料');
+        }
         
     } catch (error) {
         console.error('獲取任務資料失敗:', error);
-        alert('無法載入配對結果');
+        app.showNotification('無法載入配對結果: ' + error.message, 'error');
     }
 }
+
 
 // 創建配對結果模態視窗
 function createAssignmentModal(data) {
