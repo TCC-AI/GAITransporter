@@ -2607,37 +2607,16 @@ class DriverDataManager {
         this.changedCells.clear();
     }
 }
-    // 執行自動配對的主函數
 async function executeAutoAssign() {
     try {
-        // 顯示載入中狀態
         showLoading('正在執行自動配對...');
         
-        // 1. 呼叫外部APPS SCRIPT執行自動配對
-         const response = await fetch('https://script.google.com/macros/s/AKfycbxNkv48s7VcrdXdm6qsG7u0MHXxgUtjhTnWRjuJu3uyjzxCdT_lZoCJGpBATJ4FZTQ2CQ/exec', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: '自動配對車輛'
-            }),
-            mode: 'cors' // 明確指定 CORS 模式
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('外部 Script 回應:', result);
+        // 直接調用內部函數
+        const result = await app.callGAS('自動配對車輛', {});
         
         if (result.success) {
-            // 配對完成後，重新載入資料並顯示結果
             await app.loadData();
-            app.showNotification('自動配對執行完成！', 'success');
-            
-            // 顯示配對結果視窗
+            app.showNotification('自動配對完成！', 'success');
             await showAssignmentResults();
         } else {
             throw new Error(result.error || '自動配對執行失敗');
@@ -2645,18 +2624,7 @@ async function executeAutoAssign() {
         
     } catch (error) {
         console.error('自動配對錯誤:', error);
-        
-        // 提供更詳細的錯誤信息
-        let errorMessage = '自動配對執行失敗: ';
-        if (error.message.includes('CORS')) {
-            errorMessage += '跨域請求被阻擋，請檢查外部 Script 設定';
-        } else if (error.message.includes('Failed to fetch')) {
-            errorMessage += '網路請求失敗，請檢查網路連線或 Script URL';
-        } else {
-            errorMessage += error.message;
-        }
-        
-        app.showNotification(errorMessage, 'error');
+        app.showNotification('自動配對執行失敗: ' + error.message, 'error');
     } finally {
         hideLoading();
     }
