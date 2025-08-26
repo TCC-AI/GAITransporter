@@ -4,7 +4,240 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>運務GAI數據管理系統</title>
+    <!-- 引入XLSX函式庫（用於Excel匯出功能） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* 配對結果模態視窗樣式 */
+.assignment-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 95%;
+    max-width: 1400px;
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.modal-header {
+    padding: 20px 30px;
+    border-bottom: 2px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.export-btn, .close-btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.export-btn {
+    background: #28a745;
+    color: white;
+}
+
+.export-btn:hover {
+    background: #218838;
+    transform: translateY(-2px);
+}
+
+.close-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.close-btn:hover {
+    background: #c82333;
+    transform: translateY(-2px);
+}
+
+.modal-body {
+    flex: 1;
+    padding: 20px;
+    overflow: auto;
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.results-table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 8px;
+    text-align: center;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.results-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+.results-table tbody tr:hover {
+    background: #f8f9ff;
+}
+
+.results-table tbody tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 16px;
+}
+
+/* 載入動畫 */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 通知樣式 */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    z-index: 10001;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.notification.success {
+    background: #28a745;
+}
+
+.notification.error {
+    background: #dc3545;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 98%;
+        height: 95%;
+    }
+    
+    .modal-header {
+        padding: 15px 20px;
+    }
+    
+    .modal-header h2 {
+        font-size: 20px;
+    }
+    
+    .results-table {
+        font-size: 12px;
+    }
+    
+    .results-table th,
+    .results-table td {
+        padding: 8px 4px;
+    }
+}
+
 /* =========== R1.png 圖片動畫相關代碼 =========== */
 
 /* 側邊選單 Logo 區域 - 細邊框震波版本 */
@@ -2007,7 +2240,8 @@
             <h1>🚛 運務GAI數據管理系統</h1>
             <div class="toolbar">
                 <button onclick="loadData()">🔄 重新載入資料</button>
-                <button onclick="autoAssignAll()" class="primary">🤖 一鍵自動配對</button>
+                <!-- 修改原有的一鍵自動配對按鈕 -->
+                <button onclick="executeAutoAssign()" class="primary">🤖 一鍵自動配對</button>
                 <button onclick="generateAllSuggestions()">💡 產生所有建議</button>
                 <button onclick="conflictCheck()">⚠️ 衝突檢查</button>
                 <button onclick="publishToApp()">📱 發佈到司機APP</button>
@@ -2198,6 +2432,240 @@ class DriverDataManager {
             document.getElementById('driver-data-loading').classList.remove('show');
         }
     }
+// 執行自動配對的主函數
+async function executeAutoAssign() {
+    try {
+        // 顯示載入中狀態
+        showLoading('正在執行自動配對...');
+        
+        // 1. 呼叫外部APPS SCRIPT執行自動配對
+        const response = await fetch('https://script.google.com/macros/s/AKfycbwRCwKogSciMwOejCWFvcKVv13BZgR_55cKK54DGXhpPiNi5l4hi17_052HeMI6zTSOsQ/exec', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: '自動配對車輛'
+            })
+        });
+        
+        if (response.ok) {
+            // 2. 配對完成後，顯示結果視窗
+            await showAssignmentResults();
+        } else {
+            throw new Error('自動配對執行失敗');
+        }
+        
+    } catch (error) {
+        console.error('自動配對錯誤:', error);
+        alert('自動配對執行失敗: ' + error.message);
+    } finally {
+        hideLoading();
+    }
+}
+
+// 顯示配對結果的大視窗
+async function showAssignmentResults() {
+    try {
+        // 獲取待配送任務資料
+        const tasksData = await callGoogleScript('getTasksFromSheet', {
+            sheetName: '待配送任務'
+        });
+        
+        // 創建大視窗
+        createAssignmentModal(tasksData);
+        
+    } catch (error) {
+        console.error('獲取任務資料失敗:', error);
+        alert('無法載入配對結果');
+    }
+}
+
+// 創建配對結果模態視窗
+function createAssignmentModal(data) {
+    // 創建模態視窗HTML
+    const modalHTML = `
+        <div id="assignmentModal" class="assignment-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🚛 自動配對結果</h2>
+                    <div class="modal-buttons">
+                        <button id="exportBtn" class="export-btn">📊 輸出</button>
+                        <button id="closeBtn" class="close-btn">❌ 關閉</button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div id="tasksTable"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 插入到頁面中
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // 生成表格內容
+    generateTasksTable(data);
+    
+    // 綁定事件
+    bindModalEvents(data);
+    
+    // 顯示模態視窗
+    document.getElementById('assignmentModal').style.display = 'flex';
+}
+
+// 生成任務表格
+function generateTasksTable(data) {
+    const tableContainer = document.getElementById('tasksTable');
+    
+    if (!data || !data.length) {
+        tableContainer.innerHTML = '<p class="no-data">暫無配對資料</p>';
+        return;
+    }
+    
+    // 表格標題
+    const headers = [
+        '配送日期', '路線名稱', '板數總和', '取貨', 
+        '配送', '任務屬性', '配對車輛(廠牌-車號)', '配對運務士'
+    ];
+    
+    let tableHTML = `
+        <table class="results-table">
+            <thead>
+                <tr>
+                    ${headers.map(header => `<th>${header}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    // 表格內容（跳過第一列標題）
+    data.slice(1).forEach(row => {
+        tableHTML += `
+            <tr>
+                ${row.map(cell => `<td>${cell || ''}</td>`).join('')}
+            </tr>
+        `;
+    });
+    
+    tableHTML += `
+            </tbody>
+        </table>
+    `;
+    
+    tableContainer.innerHTML = tableHTML;
+}
+
+// 綁定模態視窗事件
+function bindModalEvents(data) {
+    // 關閉按鈕
+    document.getElementById('closeBtn').addEventListener('click', () => {
+        closeAssignmentModal();
+    });
+    
+    // 輸出按鈕
+    document.getElementById('exportBtn').addEventListener('click', () => {
+        exportToExcel(data);
+    });
+    
+    // 點擊背景關閉
+    document.getElementById('assignmentModal').addEventListener('click', (e) => {
+        if (e.target.id === 'assignmentModal') {
+            closeAssignmentModal();
+        }
+    });
+    
+    // ESC鍵關閉
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeAssignmentModal();
+        }
+    });
+}
+
+// 關閉模態視窗
+function closeAssignmentModal() {
+    const modal = document.getElementById('assignmentModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// 匯出Excel功能
+function exportToExcel(data) {
+    try {
+        // 創建工作簿
+        const wb = XLSX.utils.book_new();
+        
+        // 創建工作表
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        
+        // 設定列寬
+        const colWidths = [
+            { wch: 12 }, // 配送日期
+            { wch: 20 }, // 路線名稱
+            { wch: 10 }, // 板數總和
+            { wch: 30 }, // 取貨
+            { wch: 30 }, // 配送
+            { wch: 12 }, // 任務屬性
+            { wch: 20 }, // 配對車輛
+            { wch: 15 }  // 配對運務士
+        ];
+        ws['!cols'] = colWidths;
+        
+        // 添加工作表到工作簿
+        XLSX.utils.book_append_sheet(wb, ws, '配對結果');
+        
+        // 生成檔案名稱
+        const fileName = `配對結果_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        
+        // 下載檔案
+        XLSX.writeFile(wb, fileName);
+        
+        // 顯示成功訊息
+        showNotification('Excel檔案已成功下載！', 'success');
+        
+    } catch (error) {
+        console.error('匯出Excel失敗:', error);
+        alert('匯出失敗: ' + error.message);
+    }
+}
+
+// 顯示載入狀態
+function showLoading(message = '載入中...') {
+    const loadingHTML = `
+        <div id="loadingOverlay" class="loading-overlay">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p>${message}</p>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', loadingHTML);
+}
+
+// 隱藏載入狀態
+function hideLoading() {
+    const loading = document.getElementById('loadingOverlay');
+    if (loading) {
+        loading.remove();
+    }
+}
+
+// 顯示通知
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // 3秒後自動移除
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
     
     // 渲染司機資料表格
     renderDriverDataTable() {
