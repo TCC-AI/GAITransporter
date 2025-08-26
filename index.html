@@ -2432,7 +2432,182 @@ class DriverDataManager {
             document.getElementById('driver-data-loading').classList.remove('show');
         }
     }
-// 執行自動配對的主函數
+
+
+
+
+    
+    // 渲染司機資料表格
+    renderDriverDataTable() {
+        const container = document.getElementById('driver-data-table-container');
+        
+        if (!this.currentData || this.currentData.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">暫無司機資料</div>';
+            return;
+        }
+        
+        const headers = this.currentData[0];
+        const rows = this.currentData.slice(1);
+        
+        let tableHTML = `
+            <div class="table-container">
+                <table class="driver-data-table">
+                    <thead>
+                        <tr>
+                            ${headers.map(header => `<th>${header}</th>`).join('')}
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        rows.forEach((row, rowIndex) => {
+            tableHTML += '<tr>';
+            row.forEach((cell, colIndex) => {
+                const cellId = `cell_${rowIndex}_${colIndex}`;
+                tableHTML += `
+                    <td>
+                        <input type="text" 
+                               class="editable-cell" 
+                               id="${cellId}"
+                               value="${cell || ''}"
+                               onchange="driverDataManager.onCellChange(${rowIndex}, ${colIndex}, this.value)"
+                               onblur="driverDataManager.onCellBlur('${cellId}')">
+                    </td>
+                `;
+            });
+            
+            tableHTML += `
+                <td>
+                    <button class="delete-btn" onclick="driverDataManager.deleteRow(${rowIndex})">
+                        🗑️ 刪除
+                    </button>
+                </td>
+            </tr>`;
+        });
+        
+        tableHTML += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+        
+        container.innerHTML = tableHTML;
+    }
+    
+    // 處理儲存格變更
+    onCellChange(rowIndex, colIndex, newValue) {
+        const actualRowIndex = rowIndex + 1; // 因為第0列是標題
+        
+        if (this.currentData[actualRowIndex][colIndex] !== newValue) {
+            this.currentData[actualRowIndex][colIndex] = newValue;
+            this.changedCells.add(`${rowIndex}_${colIndex}`);
+            
+            const cellElement = document.getElementById(`cell_${rowIndex}_${colIndex}`);
+            if (cellElement) {
+                cellElement.classList.add('changed-cell');
+            }
+        }
+    }
+    
+    // 處理儲存格失焦
+    onCellBlur(cellId) {
+        const cellElement = document.getElementById(cellId);
+        if (cellElement && !this.changedCells.has(cellId.replace('cell_', ''))) {
+            cellElement.classList.remove('changed-cell');
+        }
+    }
+    
+    // 儲存變更
+    async saveDriverChanges() {
+        if (this.changedCells.size === 0) {
+            app.showNotification('沒有需要儲存的變更', 'info');
+            return;
+        }
+        
+        if (!confirm(`確定要儲存 ${this.changedCells.size} 個變更嗎？`)) {
+            return;
+        }
+        
+        try {
+            app.showNotification('正在儲存變更...', 'info');
+            
+            const result = await app.callGAS('updateDriverSheetData', {
+                data: this.currentData
+            });
+            
+            if (result.success) {
+                this.originalData = JSON.parse(JSON.stringify(this.currentData));
+                this.changedCells.clear();
+                
+                // 移除變更標記
+                document.querySelectorAll('.changed-cell').forEach(cell => {
+                    cell.classList.remove('changed-cell');
+                });
+                
+                app.showNotification('司機資料儲存成功', 'success');
+            } else {
+                app.showNotification('儲存失敗: ' + result.error, 'error');
+            }
+        } catch (error) {
+            console.error('儲存司機資料失敗:', error);
+            app.showNotification('儲存失敗，請重試', 'error');
+        }
+    }
+    
+    // 新增司機行
+    addNewDriverRow() {
+        const headers = this.currentData[0];
+        const newRow = new Array(headers.length).fill('');
+        
+        this.currentData.push(newRow);
+        this.renderDriverDataTable();
+        
+        app.showNotification('已新增空白司機資料行，請填入資料後儲存', 'info');
+    }
+    
+    // 刪除司機行
+    deleteRow(rowIndex) {
+        const actualRowIndex = rowIndex + 1; // 因為第0列是標題
+        const driverName = this.currentData[actualRowIndex][0] || '未命名司機';
+        
+        if (!confirm(`確定要刪除司機「${driverName}」的資料嗎？`)) {
+            return;
+        }
+        
+        this.currentData.splice(actualRowIndex, 1);
+        this.renderDriverDataTable();
+        
+        app.showNotification(`已刪除司機「${driverName}」的資料`, 'success');
+    }
+    
+    // 重新載入司機資料
+    async refreshDriverData() {
+        if (this.changedCells.size > 0) {
+            if (!confirm('有未儲存的變更，確定要重新載入嗎？未儲存的變更將會遺失。')) {
+                return;
+            }
+        }
+        
+        this.changedCells.clear();
+        await this.loadDriverData();
+    }
+    
+    // 返回主頁面
+    backToMainPage() {
+        if (this.changedCells.size > 0) {
+            if (!confirm('有未儲存的變更，確定要離開嗎？未儲存的變更將會遺失。')) {
+                return;
+            }
+        }
+        
+        document.getElementById('driver-data-page').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        
+        this.changedCells.clear();
+    }
+}
+    // 執行自動配對的主函數
 async function executeAutoAssign() {
     try {
         // 顯示載入中狀態
@@ -2463,8 +2638,7 @@ async function executeAutoAssign() {
         hideLoading();
     }
 }
-
-// 顯示配對結果的大視窗
+    // 顯示配對結果的大視窗
 async function showAssignmentResults() {
     try {
         // 獲取待配送任務資料
@@ -2664,178 +2838,6 @@ function showNotification(message, type = 'info') {
     setTimeout(() => {
         notification.remove();
     }, 3000);
-}
-
-    
-    // 渲染司機資料表格
-    renderDriverDataTable() {
-        const container = document.getElementById('driver-data-table-container');
-        
-        if (!this.currentData || this.currentData.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">暫無司機資料</div>';
-            return;
-        }
-        
-        const headers = this.currentData[0];
-        const rows = this.currentData.slice(1);
-        
-        let tableHTML = `
-            <div class="table-container">
-                <table class="driver-data-table">
-                    <thead>
-                        <tr>
-                            ${headers.map(header => `<th>${header}</th>`).join('')}
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-        
-        rows.forEach((row, rowIndex) => {
-            tableHTML += '<tr>';
-            row.forEach((cell, colIndex) => {
-                const cellId = `cell_${rowIndex}_${colIndex}`;
-                tableHTML += `
-                    <td>
-                        <input type="text" 
-                               class="editable-cell" 
-                               id="${cellId}"
-                               value="${cell || ''}"
-                               onchange="driverDataManager.onCellChange(${rowIndex}, ${colIndex}, this.value)"
-                               onblur="driverDataManager.onCellBlur('${cellId}')">
-                    </td>
-                `;
-            });
-            
-            tableHTML += `
-                <td>
-                    <button class="delete-btn" onclick="driverDataManager.deleteRow(${rowIndex})">
-                        🗑️ 刪除
-                    </button>
-                </td>
-            </tr>`;
-        });
-        
-        tableHTML += `
-                    </tbody>
-                </table>
-            </div>
-        `;
-        
-        container.innerHTML = tableHTML;
-    }
-    
-    // 處理儲存格變更
-    onCellChange(rowIndex, colIndex, newValue) {
-        const actualRowIndex = rowIndex + 1; // 因為第0列是標題
-        
-        if (this.currentData[actualRowIndex][colIndex] !== newValue) {
-            this.currentData[actualRowIndex][colIndex] = newValue;
-            this.changedCells.add(`${rowIndex}_${colIndex}`);
-            
-            const cellElement = document.getElementById(`cell_${rowIndex}_${colIndex}`);
-            if (cellElement) {
-                cellElement.classList.add('changed-cell');
-            }
-        }
-    }
-    
-    // 處理儲存格失焦
-    onCellBlur(cellId) {
-        const cellElement = document.getElementById(cellId);
-        if (cellElement && !this.changedCells.has(cellId.replace('cell_', ''))) {
-            cellElement.classList.remove('changed-cell');
-        }
-    }
-    
-    // 儲存變更
-    async saveDriverChanges() {
-        if (this.changedCells.size === 0) {
-            app.showNotification('沒有需要儲存的變更', 'info');
-            return;
-        }
-        
-        if (!confirm(`確定要儲存 ${this.changedCells.size} 個變更嗎？`)) {
-            return;
-        }
-        
-        try {
-            app.showNotification('正在儲存變更...', 'info');
-            
-            const result = await app.callGAS('updateDriverSheetData', {
-                data: this.currentData
-            });
-            
-            if (result.success) {
-                this.originalData = JSON.parse(JSON.stringify(this.currentData));
-                this.changedCells.clear();
-                
-                // 移除變更標記
-                document.querySelectorAll('.changed-cell').forEach(cell => {
-                    cell.classList.remove('changed-cell');
-                });
-                
-                app.showNotification('司機資料儲存成功', 'success');
-            } else {
-                app.showNotification('儲存失敗: ' + result.error, 'error');
-            }
-        } catch (error) {
-            console.error('儲存司機資料失敗:', error);
-            app.showNotification('儲存失敗，請重試', 'error');
-        }
-    }
-    
-    // 新增司機行
-    addNewDriverRow() {
-        const headers = this.currentData[0];
-        const newRow = new Array(headers.length).fill('');
-        
-        this.currentData.push(newRow);
-        this.renderDriverDataTable();
-        
-        app.showNotification('已新增空白司機資料行，請填入資料後儲存', 'info');
-    }
-    
-    // 刪除司機行
-    deleteRow(rowIndex) {
-        const actualRowIndex = rowIndex + 1; // 因為第0列是標題
-        const driverName = this.currentData[actualRowIndex][0] || '未命名司機';
-        
-        if (!confirm(`確定要刪除司機「${driverName}」的資料嗎？`)) {
-            return;
-        }
-        
-        this.currentData.splice(actualRowIndex, 1);
-        this.renderDriverDataTable();
-        
-        app.showNotification(`已刪除司機「${driverName}」的資料`, 'success');
-    }
-    
-    // 重新載入司機資料
-    async refreshDriverData() {
-        if (this.changedCells.size > 0) {
-            if (!confirm('有未儲存的變更，確定要重新載入嗎？未儲存的變更將會遺失。')) {
-                return;
-            }
-        }
-        
-        this.changedCells.clear();
-        await this.loadDriverData();
-    }
-    
-    // 返回主頁面
-    backToMainPage() {
-        if (this.changedCells.size > 0) {
-            if (!confirm('有未儲存的變更，確定要離開嗎？未儲存的變更將會遺失。')) {
-                return;
-            }
-        }
-        
-        document.getElementById('driver-data-page').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        
-        this.changedCells.clear();
-    }
 }
 
 // 車輛資料維護相關功能 - 注意：這裡是獨立的類別，不在 DriverDataManager 內部
