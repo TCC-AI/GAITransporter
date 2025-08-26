@@ -3461,7 +3461,37 @@ addUserInfoToHeader() {
         }
         
         // 更新 KPI 數據
-        updateKPI() {
+        async updateKPI() {
+            try {
+                // 調用新的統計API
+                const statsResult = await this.callGAS('getTaskStats');
+                
+                if (statsResult.success) {
+                    const stats = statsResult.data;
+                    
+                    document.getElementById('total-tasks').textContent = stats.totalTasks;
+                    document.getElementById('p-tasks').textContent = stats.b3Tasks;
+                    document.getElementById('q-tasks').textContent = stats.b2Tasks;
+                    document.getElementById('r-tasks').textContent = stats.b1Tasks;
+                    document.getElementById('assign-rate').textContent = `${stats.assignRate}%`;
+                    
+                    // 可用車輛數量仍然從車輛資料中獲取
+                    const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
+                    document.getElementById('available-vehicles').textContent = availableVehicles;
+                } else {
+                    console.error('獲取統計資料失敗:', statsResult.error);
+                    // 如果API失敗，使用原有的計算方式作為備用
+                    this.updateKPIFallback();
+                }
+            } catch (error) {
+                console.error('更新KPI錯誤:', error);
+                // 如果API失敗，使用原有的計算方式作為備用
+                this.updateKPIFallback();
+            }
+        }
+        
+        // 備用的KPI更新方法
+        updateKPIFallback() {
             const totalTasks = this.tasks.length;
             const pTasks = this.tasks.filter(t => t.level === 'P').length;
             const qTasks = this.tasks.filter(t => t.level === 'Q').length;
