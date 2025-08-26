@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>連接測試</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .test-button {
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 180, 219, 0.3);
+        }
+        .result {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+        .loading { border-left: 4px solid #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔗 Google Apps Script 連接測試</h1>
+        <p>測試與後端 GAS 的連接狀態</p>
+        
+        <div>
+            <button class="test-button" onclick="testConnection()">🔄 測試基本連接</button>
+            <button class="test-button" onclick="testGetTasks()">📋 測試獲取任務</button>
+            <button class="test-button" onclick="testGetTaskStats()">📊 測試任務統計</button>
+            <button class="test-button" onclick="testGetDrivers()">👨‍💼 測試獲取司機</button>
+            <button class="test-button" onclick="testGetVehicles()">🚛 測試獲取車輛</button>
+            <button class="test-button" onclick="testLogin()">🔐 測試登入</button>
+        </div>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxYpY98cHBGmSTZAE5_iGbYKEznY3vMOhPo6sJ6UIw8KeKjwdABXnBsK0-btBcAigUgMA/exec';
+        
+        function showResult(message, type = 'info') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+        }
+        
+        async function callGAS(action, data = {}) {
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `action=${action}&data=${encodeURIComponent(JSON.stringify(data))}`
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                return result;
+            } catch (error) {
+                console.error('API 調用失敗:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function testConnection() {
+            showResult('🔄 正在測試連接...', 'loading');
+            
+            try {
+                const result = await callGAS('ping');
+                if (result.success) {
+                    showResult(`✅ 連接成功！\n\n回應: ${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ 連接失敗\n\n錯誤: ${result.error || '未知錯誤'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 連接異常\n\n錯誤: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGetTasks() {
+            showResult('🔄 正在獲取任務資料...', 'loading');
+            
+            try {
+                const result = await callGAS('getTasks');
+                if (result.success) {
+                    const taskCount = result.data ? result.data.length : 0;
+                    showResult(`✅ 成功獲取任務資料！\n\n任務數量: ${taskCount}\n\n資料預覽: ${JSON.stringify(result.data ? result.data.slice(0, 3) : [], null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ 獲取任務失敗\n\n錯誤: ${result.error || '未知錯誤'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 獲取任務異常\n\n錯誤: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGetTaskStats() {
+            showResult('🔄 正在獲取任務統計資料...', 'loading');
+            
+            try {
+                const result = await callGAS('getTaskStats');
+                if (result.success) {
+                    const stats = result.data;
+                    showResult(`✅ 成功獲取任務統計資料！\n\n📊 統計結果:\n- 總任務數: ${stats.totalTasks}\n- B3級任務: ${stats.b3Tasks}\n- B2級任務: ${stats.b2Tasks}\n- B1級任務: ${stats.b1Tasks}\n- 已指派率: ${stats.assignRate}%\n- 已指派任務: ${stats.assignedTasks}\n\n完整資料: ${JSON.stringify(result.data, null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ 獲取任務統計失敗\n\n錯誤: ${result.error || '未知錯誤'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 獲取任務統計異常\n\n錯誤: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGetDrivers() {
+            showResult('🔄 正在獲取司機資料...', 'loading');
+            
+            try {
+                const result = await callGAS('getDrivers');
+                if (result.success) {
+                    const driverCount = result.data ? result.data.length : 0;
+                    showResult(`✅ 成功獲取司機資料！\n\n司機數量: ${driverCount}\n\n資料預覽: ${JSON.stringify(result.data ? result.data.slice(0, 3) : [], null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ 獲取司機失敗\n\n錯誤: ${result.error || '未知錯誤'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 獲取司機異常\n\n錯誤: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testGetVehicles() {
+            showResult('🔄 正在獲取車輛資料...', 'loading');
+            
+            try {
+                const result = await callGAS('getVehicles');
+                if (result.success) {
+                    const vehicleCount = result.data ? result.data.length : 0;
+                    showResult(`✅ 成功獲取車輛資料！\n\n車輛數量: ${vehicleCount}\n\n資料預覽: ${JSON.stringify(result.data ? result.data.slice(0, 3) : [], null, 2)}`, 'success');
+                } else {
+                    showResult(`❌ 獲取車輛失敗\n\n錯誤: ${result.error || '未知錯誤'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 獲取車輛異常\n\n錯誤: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testLogin() {
+            showResult('🔄 正在測試登入功能...', 'loading');
+            
+            try {
+                const result = await callGAS('verifyLogin', {
+                    username: 'test',
+                    password: 'test'
+                });
+                
+                if (result.success) {
+                    showResult(`✅ 登入功能正常！\n\n回應: ${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    showResult(`⚠️ 登入測試完成（預期失敗）\n\n回應: ${JSON.stringify(result, null, 2)}`, 'success');
+                }
+            } catch (error) {
+                showResult(`❌ 登入測試異常\n\n錯誤: ${error.message}`, 'error');
+            }
+        }
+        
+        // 頁面載入時自動測試連接
+        window.addEventListener('load', function() {
+            setTimeout(testConnection, 1000);
+        });
+    </script>
+</body>
+</html>
