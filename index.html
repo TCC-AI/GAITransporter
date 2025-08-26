@@ -3665,119 +3665,26 @@ addUserInfoToHeader() {
                 return;
             }
             
-           // 🌐 第3步：從這裡開始替換成新的代碼
-        try {
-            // 顯示載入中提示
-            this.showNotification('正在執行自動配對...', 'info');
-            
-            // 呼叫外部 Apps Script
-            const response = await fetch('https://script.google.com/macros/s/AKfycbzAi4LCbTUp7MU_PRdRF8llYFteLBcJmGqCwULdgq8x_f3GNWyUaDD288wj7G8PNqO83Q/exec', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'autoAssignVehicles',
-                    timestamp: new Date().toISOString()
-                })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                // 成功後顯示結果視窗
-                this.showAssignmentResultWindow(result.data);
-            } else {
-                this.showNotification('自動配對失敗：' + result.error, 'error');
+            try {
+                this.showNotification('正在執行自動配對...', 'info');
+                this.showLoading(true);
+                
+                const result = await this.callGAS('autoAssign');
+                
+                if (result.success) {
+                    const assignedCount = result.data ? result.data.length : 0;
+                    this.showNotification(`自動配對完成！成功配對 ${assignedCount} 個任務`, 'success');
+                    this.loadData(); // 重新載入資料
+                } else {
+                    this.showNotification('自動配對失敗: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('自動配對錯誤:', error);
+                this.showNotification('自動配對執行失敗，請重試', 'error');
+            } finally {
+                this.showLoading(false);
             }
-        } catch (error) {
-            this.showNotification('連線失敗，請檢查網路狀態', 'error');
         }
-    }
-         // 🆕 在這裡加入新方法
-    showAssignmentResultWindow(assignmentData) {
-        // 創建大視窗
-        const modal = document.createElement('div');
-        modal.className = 'assignment-result-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>🚛 自動配對結果</h2>
-                    <div class="modal-buttons">
-                        <button id="exportBtn" class="btn btn-success">
-                            📊 輸出 Excel
-                        </button>
-                        <button id="closeBtn" class="btn btn-secondary">
-                            ❌ 關閉
-                        </button>
-                    </div>
-                </div>
-                <div class="modal-body">
-                    <div class="table-container">
-                        <table id="assignmentTable" class="assignment-table">
-                            <thead>
-                                <tr>
-                                    <th>配送日期</th>
-                                    <th>路線名稱</th>
-                                    <th>板數總和</th>
-                                    <th>取貨</th>
-                                    <th>配送</th>
-                                    <th>任務屬性</th>
-                                    <th>配對車輛(廠牌-車號)</th>
-                                    <th>配對運務士</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${this.generateTableRows(assignmentData)}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // 綁定事件
-        document.getElementById('exportBtn').onclick = () => this.exportToExcel();
-        document.getElementById('closeBtn').onclick = () => this.closeModal(modal);
-    }
-    
-    // 🆕 同時也要加入這些輔助方法
-    generateTableRows(data) {
-        return data.map(row => `
-            <tr>
-                <td>${row.配送日期 || ''}</td>
-                <td>${row.路線名稱 || ''}</td>
-                <td>${row.板數總和 || ''}</td>
-                <td>${row.取貨 || ''}</td>
-                <td>${row.配送 || ''}</td>
-                <td>${row.任務屬性 || ''}</td>
-                <td>${row.配對車輛 || ''}</td>
-                <td>${row.配對運務士 || ''}</td>
-            </tr>
-        `).join('');
-    }
-    
-    exportToExcel() {
-        try {
-            const table = document.getElementById('assignmentTable');
-            const workbook = XLSX.utils.table_to_book(table, {sheet: "配對結果"});
-            
-            // 產生檔名（包含日期時間）
-            const now = new Date();
-            const filename = `自動配對結果_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}.xlsx`;
-            
-            XLSX.writeFile(workbook, filename);
-            this.showNotification('Excel檔案已下載', 'success');
-        } catch (error) {
-            this.showNotification('輸出失敗：' + error.message, 'error');
-        }
-    }
-    
-    closeModal(modal) {
-        modal.remove();
-    }
         
         // 產生所有建議
         async generateAllSuggestions() {
