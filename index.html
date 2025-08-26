@@ -2290,13 +2290,91 @@
         </div>
     </div>
 <script>
-    // Google Apps Script Web App URL (需要替換為實際的 URL)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbx8FdWSG6WhrnROdlQqqTLYNBW1lDZPN1xcNsOgwCqR29H6ohuS4iGxRHGJV48HL9mDnw/exec';
+    // 全域輔助函數
+window.getCurrentUserLevel = function() {
+    if (!window.loginManager || !window.loginManager.currentUser) return 's1';
+    return window.loginManager.currentUser.level || window.loginManager.currentUser.級別 || 's1';
+};
 
-    // 執行自動配對的主函數
+window.checkPermission = function(action) {
+    if (!window.loginManager) return false;
+    return window.loginManager.checkPermission(action);
+};
+
+window.showNotification = function(message, type = 'info') {
+    if (window.app && typeof window.app.showNotification === 'function') {
+        window.app.showNotification(message, type);
+    } else {
+        console.log(`${type.toUpperCase()}: ${message}`);
+        // 簡單的通知顯示
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 9999;
+            max-width: 300px;
+        `;
+        
+        switch(type) {
+            case 'success':
+                notification.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                break;
+            case 'error':
+                notification.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                break;
+            case 'warning':
+                notification.style.background = 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)';
+                notification.style.color = '#212529';
+                break;
+            default:
+                notification.style.background = 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)';
+        }
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+};
+// 在 HTML 文件的 JavaScript 部分添加以下函數
+
+// 獲取任務統計的函數
+function getTaskStats() {
+    return app.callGAS('getTaskStats');
+}
+
+// 獲取當前用戶權限等級
+function getCurrentUserLevel() {
+    if (!loginManager.currentUser) return 's1';
+    return loginManager.currentUser.level || loginManager.currentUser.級別 || 's1';
+}
+
+// 修正通知函數調用
+function showNotification(message, type = 'info') {
+    if (window.app) {
+        app.showNotification(message, type);
+    } else {
+        console.log(`${type.toUpperCase()}: ${message}`);
+    }
+}
+
+
+    // Google Apps Script Web App URL (需要替換為實際的 URL)
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwblR47JFjPc3jen7wEURY5Peup9qr2i3dxUHCUqYhDxAvVDTZTe4bFSuYdZyfzdbGw2Q/exec';
+
 async function executeAutoAssign() {
     try {
-        // 權限檢查（保留原有邏輯）
+        // 權限檢查
         if (!checkPermission('autoAssign')) {
             showNotification('您沒有執行自動配對的權限', 'error');
             return;
@@ -2305,15 +2383,31 @@ async function executeAutoAssign() {
         // 顯示載入中提示
         showNotification('正在執行自動配對...', 'info');
         
-        // 呼叫外部 Apps Script 執行自動配對
-        const response = await callExternalAutoAssign();
+        // 使用正確的 API URL
+        const response = await fetch('https://script.google.com/macros/s/AKfycbxtyQX-23yi79KpkBQO71nvv4Tp2IUbC0X2rsdEdk60j9ZrUjVkvzMj9BDZIPcvg5yWRA/exec', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                action: '一鍵自動配對'  // 使用一鍵自動配對
+            })
+        });
         
-        if (response.success) {
-            // 顯示配送任務結果視窗
-            showDeliveryTasksModal();
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
             showNotification('自動配對完成！', 'success');
+            // 重新載入資料
+            if (window.app) {
+                app.loadData();
+            }
         } else {
-            showNotification('自動配對執行失敗：' + response.message, 'error');
+            showNotification('自動配對執行失敗：' + result.message, 'error');
         }
         
     } catch (error) {
@@ -2321,6 +2415,7 @@ async function executeAutoAssign() {
         showNotification('執行自動配對時發生錯誤', 'error');
     }
 }
+
 
 // 呼叫外部 Apps Script
 async function callExternalAutoAssign() {
