@@ -2733,7 +2733,7 @@ class DriverDataManager {
                 this.originalData = JSON.parse(JSON.stringify(result.data));
                 this.currentData = result.data;
                 this.renderDriverDataTable();
-                app.showNotification('司機資料交換完成', 'success');
+                app.showNotification('司機資料定位完成', 'success');
             } else {
                 app.showNotification('載入司機資料失敗: ' + result.error, 'error');
             }
@@ -2949,7 +2949,7 @@ class VehicleDataManager {
                 this.originalData = JSON.parse(JSON.stringify(result.data));
                 this.currentData = result.data;
                 this.renderVehicleDataTable();
-                app.showNotification('車輛資料交換完成', 'success');
+                app.showNotification('車輛資料定位完成', 'success');
             } else {
                 app.showNotification('載入車輛資料失敗: ' + result.error, 'error');
             }
@@ -3637,7 +3637,7 @@ async loadData() {
         this.updateKPI();
         this.checkAlerts();
         
-        this.showNotification('資料交換完成', 'success');
+        this.showNotification('資料定位完成', 'success');
         
     } catch (error) {
         console.error('載入資料失敗:', error);
