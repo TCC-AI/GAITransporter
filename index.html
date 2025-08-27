@@ -2431,7 +2431,7 @@ function showNotification(message, type = 'info') {
 
 
     // Google Apps Script Web App URL (需要替換為實際的 URL)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwoGDNfuYEdbKIZm5VQwJz3FxUazmMa1q7NAH5ddG67g0Ewzvw5LNa-f0y8rgA169BTKA/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwlQDpY_8Y913y_mHIrYTABWljo3wyp1GJPxC4fUDbDp-MqJ36d_pkzK96jnI9oEjSMzA/exec';
 
 async function executeAutoAssign() {
     try {
@@ -2726,8 +2726,8 @@ function exportTasksToExcel() {
     }
 }
 
-// 關閉配送任務視窗
-function closeDeliveryTasksModal() {
+// 關閉配送任務視窗並更新儀表板數據
+async function closeDeliveryTasksModal() {
     const modal = document.querySelector('.delivery-tasks-modal');
     if (modal) {
         modal.classList.remove('show');
@@ -2735,7 +2735,47 @@ function closeDeliveryTasksModal() {
             modal.remove();
         }, 300);
     }
+    
+    // 🔥 新增：從 Google Sheets 更新儀表板數據
+    try {
+        // 顯示載入提示
+        showNotification('正在更新儀表板數據...', 'info');
+        
+        // 從指定的 Google Sheets 讀取數據
+        const result = await app.callGAS('getCalculationSheetData', {
+            sheetId: '1imMGGvAaNjlYpQ1CS63DWSewFQrmaTt3hNQAdrRUBjs',
+            sheetName: '計算'
+        });
+        
+        if (result.success && result.data) {
+            // 更新【指派率】- 從 B1 欄位
+            if (result.data.assignRate !== undefined) {
+                const assignRateElement = document.getElementById('assign-rate');
+                if (assignRateElement) {
+                    assignRateElement.textContent = result.data.assignRate;
+                }
+            }
+            
+            // 更新【可用車輛】- 從 B2 欄位
+            if (result.data.availableVehicles !== undefined) {
+                const availableVehiclesElement = document.getElementById('available-vehicles');
+                if (availableVehiclesElement) {
+                    availableVehiclesElement.textContent = result.data.availableVehicles;
+                }
+            }
+            
+            showNotification('儀表板數據更新完成', 'success');
+        } else {
+            console.warn('無法取得計算工作表數據:', result.error);
+            showNotification('儀表板數據更新失敗', 'warning');
+        }
+        
+    } catch (error) {
+        console.error('更新儀表板數據時發生錯誤:', error);
+        showNotification('儀表板數據更新失敗', 'error');
+    }
 }
+
 
 
 // 權限檢查函數（保留原有邏輯）
