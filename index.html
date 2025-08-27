@@ -2527,7 +2527,7 @@ function showNotification(message, type = 'info') {
 
 
     // Google Apps Script Web App URL (需要替換為實際的 URL)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxu6soTEHQO0mPNov8EWYUvJbQgLKzxckWI5BPMj4iOJ1_bxR2fsYlSAfjFkD3A3FUqoA/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzHWckSdKGJFT41V2XcLGKDzJV0JtcrqiCw4t4-0pCrZbMrEX2dhL6tFg_8kiUV40DmNw/exec';
 
 async function executeAutoAssign() {
     try {
@@ -5592,11 +5592,13 @@ function addTaskCardClickEvents() {
     });
 }
 
-// 高亮顯示配對關係
+// 高亮顯示配對關係 (增強除錯版本)
 async function highlightMatchingRelations(taskId) {
     try {
         // 清除現有高亮和箭頭
         clearExistingArrows();
+        
+        console.log('查詢任務配對:', taskId);
         
         // 從 Google Sheets 取得該任務的配對資料
         const matchingResult = await app.callGAS('getTaskMatching', {
@@ -5605,31 +5607,58 @@ async function highlightMatchingRelations(taskId) {
             taskId: taskId
         });
         
+        console.log('配對查詢結果:', matchingResult);
+        
         if (matchingResult.success && matchingResult.data) {
-            const { driverId, vehicleId } = matchingResult.data;
+            const { driverId, vehicleId, hasMatching, debug } = matchingResult.data;
             
-            // 高亮顯示相關卡片
-            highlightCard('task', taskId);
-            if (driverId) highlightCard('driver', driverId);
-            if (vehicleId) highlightCard('vehicle', vehicleId);
+            console.log('配對資料:', { driverId, vehicleId, hasMatching });
             
-            // 產生箭頭指引
-            if (driverId && vehicleId) {
+            if (hasMatching) {
+                // 高亮顯示相關卡片
+                highlightCard('task', taskId);
+                if (driverId) highlightCard('driver', driverId);
+                if (vehicleId) highlightCard('vehicle', vehicleId);
+                
+                // 產生箭頭指引
                 setTimeout(() => {
                     generateArrowsForTask(taskId, driverId, vehicleId);
                 }, 200);
+                
+                showNotification(`已顯示 ${taskId} 的配對關聯`, 'info');
+            } else {
+                // 顯示詳細的除錯資訊
+                const debugInfo = debug ? 
+                    `\n除錯資訊:\n- 找到位置: 第${debug.foundInRow}行\n- 司機欄位值: "${debug.rawDriverValue}"\n- 車輛欄位值: "${debug.rawVehicleValue}"` : '';
+                
+                showNotification(`任務 "${taskId}" 尚未完成配對${debugInfo}`, 'warning');
+                
+                // 只高亮任務卡片
+                highlightCard('task', taskId);
+            }
+        } else {
+            // 顯示詳細錯誤資訊
+            let errorMsg = `查詢配對失敗: ${matchingResult.error}`;
+            
+            if (matchingResult.debug) {
+                const debug = matchingResult.debug;
+                errorMsg += `\n\n除錯資訊:`;
+                if (debug.searchedTaskId) errorMsg += `\n- 搜尋任務: "${debug.searchedTaskId}"`;
+                if (debug.taskColumnName) errorMsg += `\n- 任務欄位: "${debug.taskColumnName}"`;
+                if (debug.sampleTaskValues) errorMsg += `\n- 工作表中的任務範例: ${debug.sampleTaskValues.slice(0,3).join(', ')}`;
+                if (debug.totalRows) errorMsg += `\n- 總資料行數: ${debug.totalRows}`;
             }
             
-            showNotification(`已顯示 ${taskId} 的配對關聯`, 'info');
-        } else {
-            showNotification('該任務尚未配對', 'warning');
+            console.error('配對查詢失敗:', matchingResult);
+            showNotification(errorMsg, 'error');
         }
         
     } catch (error) {
         console.error('高亮顯示配對關係失敗:', error);
-        showNotification('顯示配對關係失敗', 'error');
+        showNotification('顯示配對關係失敗: ' + error.message, 'error');
     }
 }
+
 
 // 高亮顯示卡片
 function highlightCard(type, id) {
