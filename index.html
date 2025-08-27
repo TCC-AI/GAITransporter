@@ -4313,11 +4313,11 @@ async updateKPI() {
                 document.getElementById('q-tasks').textContent = stats.b2Tasks || 0;
                 document.getElementById('r-tasks').textContent = stats.b1Tasks || 0;
                 document.getElementById('assign-rate').textContent = `${stats.assignRate || 0}%`;
-                // 🔥 修改這裡：設定可用車輛預設為 37
-                document.getElementById('available-vehicles').textContent = 37;
+                // 🔥 修改這裡：設定可用車輛預設為 42
+                document.getElementById('available-vehicles').textContent = 42;
                 
-                // 🔥 修改這裡：設定可用車輛預設為 37
-                document.getElementById('available-vehicles').textContent = 37;
+                // 🔥 修改這裡：設定可用車輛預設為 42
+                document.getElementById('available-vehicles').textContent = 42;
             }
         } else {
             this.updateKPIFallback();
