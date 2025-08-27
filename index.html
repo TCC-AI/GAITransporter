@@ -5,6 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>運務GAI數據管理系統</title>
     <style>
+        /* 進度動畫視窗樣式 */
+.progress-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.progress-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.progress-content {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 300px;
+}
+
+.progress-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(0, 180, 219, 0.2);
+    border-top: 4px solid #00b4db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+.progress-text {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.progress-subtext {
+    font-size: 14px;
+    color: #666;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
         /* 配送任務模態視窗樣式 */
 .delivery-tasks-modal {
     position: fixed;
@@ -2370,7 +2430,7 @@ function showNotification(message, type = 'info') {
 
 
     // Google Apps Script Web App URL (需要替換為實際的 URL)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbyoOPFLzaEoqWaU_HUIATn99xG7yS0QbmZx1UVK2kheomAvmv5g01pqKaWPgfeJs4UBsw/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbykc26QuQAFMGmooQL2HYMdJ-9fQY0AY3rZ8MIq7hRDYgAPi04-8kWY2ch9MR14K4SDhg/exec';
 
 async function executeAutoAssign() {
     try {
@@ -2380,43 +2440,56 @@ async function executeAutoAssign() {
             return;
         }
 
-        // 顯示載入中提示
-        showNotification('正在執行自動配對...', 'info');
+        // 步驟1：顯示進度動畫視窗
+        showProgressModal();
         
-        // 使用正確的 API URL
-        const response = await fetch('https://script.google.com/macros/s/AKfycbyXhqdP-ZHw6pxHfi0Q-CBqEWaFMOrKV4wEudfpp-PuX0PqhXidw-e5VgZjEW3z_d5d1g/exec', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                action: '一鍵自動配對'  // 使用一鍵自動配對
-            })
-        });
+        // 等待5秒
+        await new Promise(resolve => setTimeout(resolve, 5000));
         
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        // 隱藏進度動畫
+        hideProgressModal();
         
-        const result = await response.json();
-        
-        if (result.success) {
-            showNotification('自動配對完成！', 'success');
-            // 重新載入資料
-            if (window.app) {
-                app.loadData();
-            }
-        } else {
-            showNotification('自動配對執行失敗：' + result.message, 'error');
-        }
+        // 步驟2：顯示待配送任務大視窗
+        await showDeliveryTasksModal();
         
     } catch (error) {
         console.error('執行自動配對時發生錯誤：', error);
+        hideProgressModal();
         showNotification('執行自動配對時發生錯誤', 'error');
     }
 }
 
+// 顯示進度動畫視窗
+function showProgressModal() {
+    const modal = document.createElement('div');
+    modal.className = 'progress-modal';
+    modal.id = 'progress-modal';
+    modal.innerHTML = `
+        <div class="progress-content">
+            <div class="progress-spinner"></div>
+            <div class="progress-text">正在執行條件配對...</div>
+            <div class="progress-subtext">系統正在分析最佳配送方案</div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 顯示動畫
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+}
 
+// 隱藏進度動畫視窗
+function hideProgressModal() {
+    const modal = document.getElementById('progress-modal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+}
 
 // 顯示配送任務結果的大視窗
 async function showDeliveryTasksModal() {
@@ -2441,17 +2514,20 @@ async function showDeliveryTasksModal() {
 
 // 從 Google Sheets 取得配送任務資料
 async function getDeliveryTasksData() {
-    const sheetId = '1imMGGvAaNjlYpQ1CS63DWSewFQrmaTt3hNQAdrRUBjs';
-    const sheetName = '待配送任務';
-    
     try {
-        // 使用 Google Apps Script 函數取得資料
-        const response = await google.script.run
-            .withSuccessHandler(data => data)
-            .withFailureHandler(error => { throw error; })
-            .getSheetData(sheetId, sheetName);
-            
-        return response;
+        const response = await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `action=getDeliveryTasks&data=${encodeURIComponent(JSON.stringify({}))}`
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            return result.data;
+        } else {
+            throw new Error(result.error || '取得資料失敗');
+        }
         
     } catch (error) {
         console.error('取得工作表資料失敗：', error);
@@ -2464,12 +2540,12 @@ function createDeliveryTasksModal(data) {
     const modal = document.createElement('div');
     modal.className = 'delivery-tasks-modal';
     modal.innerHTML = `
-        <div class="modal-backdrop"></div>
+        <div class="modal-backdrop" onclick="closeDeliveryTasksModal()"></div>
         <div class="modal-content">
             <div class="modal-header">
                 <h2>🚛 待配送任務列表</h2>
                 <div class="modal-buttons">
-                    <button onclick="exportToExcel()" class="export-btn">
+                    <button onclick="exportTasksToExcel()" class="export-btn">
                         📊 輸出
                     </button>
                     <button onclick="closeDeliveryTasksModal()" class="close-btn">
@@ -2494,7 +2570,7 @@ function generateTasksTable(data) {
         return '<p class="no-data">暫無配送任務資料</p>';
     }
     
-    // 表格標題（第一列）
+    // 表格標題（固定的標題）
     const headers = ['配送日期', '路線名稱', '板數總和', '取貨', '配送', '任務屬性', '配對車輛(廠牌-車號)', '配對運務士'];
     
     let tableHTML = `
@@ -2507,14 +2583,19 @@ function generateTasksTable(data) {
             <tbody>
     `;
     
-    // 資料列（跳過第一列標題）
-    for (let i = 1; i < data.length; i++) {
+    // 資料列（跳過第一列標題，如果資料包含標題）
+    const startIndex = data[0] && Array.isArray(data[0]) && 
+                      data[0].some(cell => typeof cell === 'string' && headers.includes(cell)) ? 1 : 0;
+    
+    for (let i = startIndex; i < data.length; i++) {
         const row = data[i];
-        tableHTML += `
-            <tr>
-                ${row.map(cell => `<td>${cell || ''}</td>`).join('')}
-            </tr>
-        `;
+        if (Array.isArray(row)) {
+            tableHTML += `
+                <tr>
+                    ${row.slice(0, 8).map(cell => `<td>${cell || ''}</td>`).join('')}
+                </tr>
+            `;
+        }
     }
     
     tableHTML += `
@@ -2524,8 +2605,9 @@ function generateTasksTable(data) {
     
     return tableHTML;
 }
+
 // 輸出 Excel 檔案
-function exportToExcel() {
+function exportTasksToExcel() {
     try {
         const table = document.querySelector('.tasks-table');
         if (!table) {
@@ -2533,16 +2615,34 @@ function exportToExcel() {
             return;
         }
         
-        // 使用 SheetJS 或類似庫將表格轉換為 Excel
-        const wb = XLSX.utils.table_to_book(table);
-        const fileName = `待配送任務_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        // 創建 CSV 內容
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const csvContent = rows.map(row => {
+            const cells = Array.from(row.querySelectorAll('th, td'));
+            return cells.map(cell => `"${cell.textContent.replace(/"/g, '""')}"`).join(',');
+        }).join('\n');
         
-        XLSX.writeFile(wb, fileName);
-        showNotification('Excel 檔案已下載', 'success');
+        // 下載 CSV 檔案
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const fileName = `待配送任務_${new Date().toISOString().slice(0, 10)}.csv`;
+        
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+        
+        showNotification('檔案已下載', 'success');
         
     } catch (error) {
-        console.error('輸出 Excel 失敗：', error);
-        showNotification('輸出 Excel 失敗', 'error');
+        console.error('輸出檔案失敗：', error);
+        showNotification('輸出檔案失敗', 'error');
     }
 }
 
@@ -2556,6 +2656,7 @@ function closeDeliveryTasksModal() {
         }, 300);
     }
 }
+
 
 // 權限檢查函數（保留原有邏輯）
 function checkPermission(action) {
