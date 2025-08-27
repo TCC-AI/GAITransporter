@@ -4130,20 +4130,14 @@ async updateKPI() {
                 // 🔥 修改這裡：設定可用車輛預設為 37
                 document.getElementById('available-vehicles').textContent = 37;
                 
-                // 可用車輛數量仍然從車輛資料中獲取
-                const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
-                document.getElementById('available-vehicles').textContent = availableVehicles;
-            } else {
-                console.warn('收到無效的統計數據，跳過更新');
+                // 🔥 修改這裡：設定可用車輛預設為 37
+                document.getElementById('available-vehicles').textContent = 37;
             }
         } else {
-            console.error('獲取統計資料失敗:', statsResult?.error || 'API 回應異常');
-            // 如果API失敗，使用原有的計算方式作為備用
             this.updateKPIFallback();
         }
     } catch (error) {
         console.error('更新KPI錯誤:', error);
-        // 如果API失敗，使用原有的計算方式作為備用
         this.updateKPIFallback();
     }
 }
