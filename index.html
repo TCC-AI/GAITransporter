@@ -2269,9 +2269,9 @@
         <!-- 篩選器 -->
         <div class="filters">
             <div class="filter-group">
-                <label>日期</label>
-                <input type="date" id="date-filter" onchange="applyFilters()">
-            </div>
+    <label>日期</label>
+    <input type="date" id="date-filter" onchange="applyFiltersAndUpdateTasks()">
+</div>
             <div class="filter-group">
                 <label>客戶等級</label>
                 <select id="level-filter" onchange="applyFilters()">
@@ -2432,7 +2432,7 @@ function showNotification(message, type = 'info') {
 
 
     // Google Apps Script Web App URL (需要替換為實際的 URL)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwlQDpY_8Y913y_mHIrYTABWljo3wyp1GJPxC4fUDbDp-MqJ36d_pkzK96jnI9oEjSMzA/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwcnts5OTtlnCZ7S5fuqk_1SsTL3UtH1ktPb7ztldPV7fiA437UtGw2CxA7FWoUTjZqFA/exec';
 
 async function executeAutoAssign() {
     try {
@@ -4691,16 +4691,22 @@ async updateKPI() {
     }
 
     // 頁面載入完成後執行
-    window.addEventListener('DOMContentLoaded', function() {
-        // 等待登入完成後再初始化主系統
-        const checkLogin = setInterval(() => {
+// 在 window.addEventListener('DOMContentLoaded', function() 中新增
+window.addEventListener('DOMContentLoaded', function() {
+    // 設定今日日期
+    const dateFilter = document.getElementById('date-filter');
+    if (dateFilter) {
+        const today = new Date().toISOString().split('T')[0];
+        dateFilter.value = today;
+        
+        // 頁面載入完成後自動載入今日任務
+        setTimeout(() => {
             if (loginManager.isLoggedIn && window.app) {
-                clearInterval(checkLogin);
-                app.initPermissionControl();
-                app.loadData();
+                updateTasksByDate(today);
             }
-        }, 100);
-    });
+        }, 1000);
+    }
+});
 
     // 鍵盤快捷鍵
     document.addEventListener('keydown', function(e) {
@@ -5286,6 +5292,72 @@ setInterval(monitorKPIChanges, 2000);
 
 // 初始化保護機制
 window.pauseAutoUpdate = false;
+// 🔥 新增：當日期變更時同步更新任務顯示
+async function applyFiltersAndUpdateTasks() {
+    // 先執行原有的篩選邏輯
+    applyFilters();
+    
+    // 取得選定的日期
+    const selectedDate = document.getElementById('date-filter').value;
+    
+    if (selectedDate) {
+        // 🔥 新增：根據日期篩選並更新任務顯示
+        await updateTasksByDate(selectedDate);
+    }
+}
+
+// 🔥 新增：根據指定日期更新任務資料
+async function updateTasksByDate(selectedDate) {
+    try {
+        // 顯示載入狀態
+        document.getElementById('tasks-loading').classList.add('show');
+        
+        // 從 Google Sheets 取得指定日期的任務資料
+        const result = await app.callGAS('getTasksByDate', {
+            sheetId: '1imMGGvAaNjlYpQ1CS63DWSewFQrmaTt3hNQAdrRUBjs',
+            sheetName: '待配送任務',
+            targetDate: selectedDate
+        });
+        
+        if (result.success) {
+            // 更新任務資料
+            app.tasks = result.data || [];
+            
+            // 重新渲染任務列表
+            app.renderTasks();
+            
+            // 更新 KPI 數據
+            app.updateTaskKPI(app.tasks);
+            
+            showNotification(`已載入 ${selectedDate} 的 ${app.tasks.length} 筆任務`, 'success');
+        } else {
+            console.error('載入指定日期任務失敗:', result.error);
+            showNotification('載入指定日期任務失敗', 'error');
+        }
+        
+    } catch (error) {
+        console.error('更新任務資料時發生錯誤:', error);
+        showNotification('更新任務資料失敗', 'error');
+    } finally {
+        // 隱藏載入狀態
+        document.getElementById('tasks-loading').classList.remove('show');
+    }
+}
+
+// 修改原有的 applyFilters 函數，移除日期篩選邏輯（因為已在上面處理）
+function applyFilters() {
+    if (!window.app) return;
+    
+    // 只處理非日期的篩選條件
+    app.filters.level = document.getElementById('level-filter').value;
+    app.filters.vehicleType = document.getElementById('vehicle-type-filter').value;
+    app.filters.driverLevel = document.getElementById('driver-level-filter').value;
+    app.filters.status = document.getElementById('status-filter').value;
+    
+    // 重新渲染（但不包含日期篩選，因為已經在 updateTasksByDate 中處理）
+    app.renderAll();
+    app.updateKPI();
+}
 
 </script>
 
