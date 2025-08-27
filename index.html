@@ -2739,7 +2739,7 @@ async function closeDeliveryTasksModal() {
     // 🔥 新增：從 Google Sheets 更新儀表板數據
     try {
         // 顯示載入提示
-        showNotification('正在更新儀表板數據...', 'info');
+        //showNotification('正在更新儀表板數據...', 'info');
         
         // 從指定的 Google Sheets 讀取數據
         const result = await app.callGAS('getCalculationSheetData', {
