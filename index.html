@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>運務GAI數據管理系統</title>
+    <title>昶青運務GAI數據管理系統</title>
     <style>
         /* 進度動畫視窗樣式 */
 .progress-modal {
@@ -2129,7 +2129,7 @@
             </div>
             <div class="system-title">
                 <div class="truck-icon">🚛</div>
-                <h3>運務GAI數據管理系統</h3>
+                <h3>昶青運務GAI數據管理系統</h3>
             </div>
         </div>
         
@@ -2202,7 +2202,7 @@
     <div id="app">
         <!-- 標題列 -->
         <header>
-            <h1>🚛 運務GAI數據管理系統</h1>
+            <h1>🚛 昶青運務GAI數據管理系統</h1>
             <div class="toolbar">
                 <button onclick="loadData()">🔄 重新載入資料</button>
                 <button onclick="executeAutoAssign()" class="primary">🤖 一鍵自動配對</button>
@@ -2733,7 +2733,7 @@ class DriverDataManager {
                 this.originalData = JSON.parse(JSON.stringify(result.data));
                 this.currentData = result.data;
                 this.renderDriverDataTable();
-                app.showNotification('司機資料載入完成', 'success');
+                app.showNotification('司機資料交換完成', 'success');
             } else {
                 app.showNotification('載入司機資料失敗: ' + result.error, 'error');
             }
@@ -2949,7 +2949,7 @@ class VehicleDataManager {
                 this.originalData = JSON.parse(JSON.stringify(result.data));
                 this.currentData = result.data;
                 this.renderVehicleDataTable();
-                app.showNotification('車輛資料載入完成', 'success');
+                app.showNotification('車輛資料交換完成', 'success');
             } else {
                 app.showNotification('載入車輛資料失敗: ' + result.error, 'error');
             }
@@ -3637,7 +3637,7 @@ async loadData() {
         this.updateKPI();
         this.checkAlerts();
         
-        this.showNotification('資料載入完成', 'success');
+        this.showNotification('資料交換完成', 'success');
         
     } catch (error) {
         console.error('載入資料失敗:', error);
