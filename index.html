@@ -5,6 +5,101 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>昶青運務GAI數據管理系統</title>
     <style>
+        /* 配對關聯箭頭樣式 */
+.matching-arrow {
+    position: fixed;
+    z-index: 1500;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+
+.matching-arrow::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: -4px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+}
+
+.task-to-vehicle {
+    background: linear-gradient(90deg, #ff4757 0%, #ff6b6b 100%);
+    height: 3px;
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+}
+
+.task-to-vehicle::after {
+    border-left-color: #ff4757;
+}
+
+.vehicle-to-driver {
+    background: linear-gradient(90deg, #4ecdc4 0%, #44a08d 100%);
+    height: 3px;
+    box-shadow: 0 2px 8px rgba(78, 205, 196, 0.3);
+}
+
+.vehicle-to-driver::after {
+    border-left-color: #4ecdc4;
+}
+
+/* 箭頭動畫 */
+@keyframes arrowPulse {
+    0%, 100% { 
+        opacity: 0.8; 
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 1; 
+        transform: scale(1.02);
+    }
+}
+
+.matching-arrow {
+    animation: arrowPulse 2s infinite ease-in-out;
+}
+
+/* 高亮顯示樣式 */
+.highlighted {
+    border: 3px solid #ff4757 !important;
+    box-shadow: 0 0 25px rgba(255, 71, 87, 0.6) !important;
+    transform: scale(1.03) !important;
+    z-index: 100 !important;
+    position: relative !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 245, 245, 0.95) 100%) !important;
+}
+
+.highlighted::before {
+    content: '👆 已選取';
+    position: absolute;
+    top: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff4757;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    animation: bounce 1.5s infinite;
+    z-index: 1000;
+}
+
+@keyframes bounce {
+    0%, 100% { 
+        transform: translateX(-50%) translateY(0); 
+        opacity: 1;
+    }
+    50% { 
+        transform: translateX(-50%) translateY(-3px); 
+        opacity: 0.8;
+    }
+}
+
         /* 進度動畫視窗樣式 */
 .progress-modal {
     position: fixed;
@@ -2432,7 +2527,7 @@ function showNotification(message, type = 'info') {
 
 
     // Google Apps Script Web App URL (需要替換為實際的 URL)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwcnts5OTtlnCZ7S5fuqk_1SsTL3UtH1ktPb7ztldPV7fiA437UtGw2CxA7FWoUTjZqFA/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxu6soTEHQO0mPNov8EWYUvJbQgLKzxckWI5BPMj4iOJ1_bxR2fsYlSAfjFkD3A3FUqoA/exec';
 
 async function executeAutoAssign() {
     try {
@@ -2727,7 +2822,7 @@ function exportTasksToExcel() {
     }
 }
 
-// 關閉配送任務視窗並更新儀表板數據
+// 修改現有的 closeDeliveryTasksModal 函數
 async function closeDeliveryTasksModal() {
     const modal = document.querySelector('.delivery-tasks-modal');
     if (modal) {
@@ -2737,19 +2832,16 @@ async function closeDeliveryTasksModal() {
         }, 300);
     }
     
-    // 🔥 新增：從 Google Sheets 更新儀表板數據
+    // 現有的儀表板數據更新邏輯保持不變
     try {
-        // 顯示載入提示
-        //showNotification('正在更新儀表板數據...', 'info');
+        showNotification('正在更新儀表板數據...', 'info');
         
-        // 從指定的 Google Sheets 讀取數據
         const result = await app.callGAS('getCalculationSheetData', {
             sheetId: '1imMGGvAaNjlYpQ1CS63DWSewFQrmaTt3hNQAdrRUBjs',
             sheetName: '計算'
         });
         
         if (result.success && result.data) {
-            // 更新【指派率】- 從 B1 欄位
             if (result.data.assignRate !== undefined) {
                 const assignRateElement = document.getElementById('assign-rate');
                 if (assignRateElement) {
@@ -2757,7 +2849,6 @@ async function closeDeliveryTasksModal() {
                 }
             }
             
-            // 更新【可用車輛】- 從 B2 欄位
             if (result.data.availableVehicles !== undefined) {
                 const availableVehiclesElement = document.getElementById('available-vehicles');
                 if (availableVehiclesElement) {
@@ -2775,7 +2866,13 @@ async function closeDeliveryTasksModal() {
         console.error('更新儀表板數據時發生錯誤:', error);
         showNotification('儀表板數據更新失敗', 'error');
     }
+    
+    // 🔥 新增：產生配對關聯紅箭頭
+    setTimeout(() => {
+        generateMatchingArrows();
+    }, 500);
 }
+
 
 
 
@@ -5354,6 +5451,240 @@ function applyFilters() {
     app.renderAll();
     app.updateKPI();
 }
+// 🔥 新增：產生配對關聯紅箭頭
+async function generateMatchingArrows() {
+    try {
+        // 清除現有箭頭
+        clearExistingArrows();
+        
+        // 從 Google Sheets 取得配對結果
+        const matchingResult = await app.callGAS('getMatchingData', {
+            sheetId: '1imMGGvAaNjlYpQ1CS63DWSewFQrmaTt3hNQAdrRUBjs',
+            sheetName: '待配送任務'
+        });
+        
+        if (matchingResult.success && matchingResult.data && matchingResult.data.length > 0) {
+            // 為每個配對結果建立箭頭
+            matchingResult.data.forEach((match, index) => {
+                setTimeout(() => createMatchingArrow(match), index * 100);
+            });
+            
+            showNotification(`已顯示 ${matchingResult.data.length} 個配對關聯`, 'info');
+        } else {
+            showNotification('目前沒有配對資料', 'warning');
+        }
+        
+    } catch (error) {
+        console.error('產生配對箭頭失敗:', error);
+        showNotification('產生配對箭頭失敗', 'error');
+    }
+}
+
+// 清除現有箭頭
+function clearExistingArrows() {
+    const existingArrows = document.querySelectorAll('.matching-arrow');
+    existingArrows.forEach(arrow => arrow.remove());
+    
+    // 清除高亮
+    const highlightedCards = document.querySelectorAll('.highlighted');
+    highlightedCards.forEach(card => card.classList.remove('highlighted'));
+}
+
+// 建立配對箭頭
+function createMatchingArrow(matchData) {
+    const { taskId, driverId, vehicleId } = matchData;
+    
+    // 找到對應的卡片元素
+    const taskCard = findCardByContent('.task-card', taskId);
+    const driverCard = findCardByContent('.driver-card', driverId);
+    const vehicleCard = findCardByContent('.vehicle-card', vehicleId);
+    
+    if (taskCard && vehicleCard) {
+        // 建立任務到車輛的箭頭
+        createArrow(taskCard, vehicleCard, 'task-to-vehicle');
+    }
+    
+    if (vehicleCard && driverCard) {
+        // 建立車輛到司機的箭頭
+        createArrow(vehicleCard, driverCard, 'vehicle-to-driver');
+    }
+}
+
+// 輔助函數：根據內容查找卡片
+function findCardByContent(selector, content) {
+    const cards = document.querySelectorAll(selector);
+    for (let card of cards) {
+        if (card.textContent.includes(content)) {
+            return card;
+        }
+    }
+    return null;
+}
+
+// 建立單一箭頭元素
+function createArrow(fromElement, toElement, type) {
+    const arrow = document.createElement('div');
+    arrow.className = `matching-arrow ${type}`;
+    
+    // 計算箭頭位置
+    const fromRect = fromElement.getBoundingClientRect();
+    const toRect = toElement.getBoundingClientRect();
+    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    
+    const startX = fromRect.right + scrollX;
+    const startY = fromRect.top + fromRect.height / 2 + scrollY;
+    const endX = toRect.left + scrollX;
+    const endY = toRect.top + toRect.height / 2 + scrollY;
+    
+    const deltaX = endX - startX;
+    const deltaY = endY - startY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const angle = Math.atan2(deltaY, deltaX);
+    
+    // 設定箭頭樣式和位置
+    arrow.style.cssText = `
+        position: absolute;
+        left: ${startX}px;
+        top: ${startY - 1.5}px;
+        width: ${distance}px;
+        height: 3px;
+        transform-origin: left center;
+        transform: rotate(${angle}rad);
+        z-index: 1500;
+        pointer-events: auto;
+        cursor: pointer;
+    `;
+    
+    // 添加點擊移除功能
+    arrow.addEventListener('click', () => {
+        arrow.remove();
+        showNotification('已移除配對箭頭', 'info');
+    });
+    
+    // 添加懸停效果
+    arrow.addEventListener('mouseenter', () => {
+        arrow.style.height = '4px';
+        arrow.style.opacity = '1';
+    });
+    
+    arrow.addEventListener('mouseleave', () => {
+        arrow.style.height = '3px';
+        arrow.style.opacity = '0.8';
+    });
+    
+    document.body.appendChild(arrow);
+}
+
+// 修改任務卡片添加點擊事件
+function addTaskCardClickEvents() {
+    // 使用事件委派來處理動態生成的任務卡片
+    document.addEventListener('click', function(e) {
+        const taskCard = e.target.closest('.task-card');
+        if (taskCard && !e.target.classList.contains('suggest-btn')) {
+            // 取得任務ID
+            const taskTitle = taskCard.querySelector('strong');
+            if (taskTitle) {
+                const taskId = taskTitle.textContent.trim();
+                highlightMatchingRelations(taskId);
+            }
+        }
+    });
+}
+
+// 高亮顯示配對關係
+async function highlightMatchingRelations(taskId) {
+    try {
+        // 清除現有高亮和箭頭
+        clearExistingArrows();
+        
+        // 從 Google Sheets 取得該任務的配對資料
+        const matchingResult = await app.callGAS('getTaskMatching', {
+            sheetId: '1imMGGvAaNjlYpQ1CS63DWSewFQrmaTt3hNQAdrRUBjs',
+            sheetName: '待配送任務',
+            taskId: taskId
+        });
+        
+        if (matchingResult.success && matchingResult.data) {
+            const { driverId, vehicleId } = matchingResult.data;
+            
+            // 高亮顯示相關卡片
+            highlightCard('task', taskId);
+            if (driverId) highlightCard('driver', driverId);
+            if (vehicleId) highlightCard('vehicle', vehicleId);
+            
+            // 產生箭頭指引
+            if (driverId && vehicleId) {
+                setTimeout(() => {
+                    generateArrowsForTask(taskId, driverId, vehicleId);
+                }, 200);
+            }
+            
+            showNotification(`已顯示 ${taskId} 的配對關聯`, 'info');
+        } else {
+            showNotification('該任務尚未配對', 'warning');
+        }
+        
+    } catch (error) {
+        console.error('高亮顯示配對關係失敗:', error);
+        showNotification('顯示配對關係失敗', 'error');
+    }
+}
+
+// 高亮顯示卡片
+function highlightCard(type, id) {
+    let card;
+    
+    if (type === 'task') {
+        card = findCardByContent('.task-card', id);
+    } else if (type === 'driver') {
+        card = findCardByContent('.driver-card', id);
+    } else if (type === 'vehicle') {
+        card = findCardByContent('.vehicle-card', id);
+    }
+    
+    if (card) {
+        card.classList.add('highlighted');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+// 為特定任務產生箭頭
+function generateArrowsForTask(taskId, driverId, vehicleId) {
+    const taskCard = findCardByContent('.task-card', taskId);
+    const driverCard = findCardByContent('.driver-card', driverId);
+    const vehicleCard = findCardByContent('.vehicle-card', vehicleId);
+    
+    if (taskCard && vehicleCard) {
+        createArrow(taskCard, vehicleCard, 'task-to-vehicle');
+    }
+    
+    if (vehicleCard && driverCard) {
+        createArrow(vehicleCard, driverCard, 'vehicle-to-driver');
+    }
+}
+
+// 初始化任務卡片點擊事件
+document.addEventListener('DOMContentLoaded', function() {
+    addTaskCardClickEvents();
+});
+
+// 窗口大小變更時重新繪製箭頭
+window.addEventListener('resize', function() {
+    const arrows = document.querySelectorAll('.matching-arrow');
+    if (arrows.length > 0) {
+        // 延遲重繪以確保佈局完成
+        setTimeout(() => {
+            clearExistingArrows();
+            generateMatchingArrows();
+        }, 100);
+    }
+});
+
+// 添加到全域物件
+window.generateMatchingArrows = generateMatchingArrows;
+window.clearExistingArrows = clearExistingArrows;
+window.highlightMatchingRelations = highlightMatchingRelations;
 
 </script>
 
