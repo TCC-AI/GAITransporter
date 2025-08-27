@@ -2457,8 +2457,8 @@ async function executeAutoAssign() {
         // 步驟1：顯示進度動畫視窗
         showProgressModal();
         
-        // 等待8秒
-        await new Promise(resolve => setTimeout(resolve, 8000));
+        // 等待5秒
+        await new Promise(resolve => setTimeout(resolve, 5000));
         
         // 🔥 新增：恢復數據（防止被清零）
         document.getElementById('total-tasks').textContent = currentStats.totalTasks;
