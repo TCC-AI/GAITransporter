@@ -2431,7 +2431,7 @@ function showNotification(message, type = 'info') {
 
 
     // Google Apps Script Web App URL (需要替換為實際的 URL)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbykc26QuQAFMGmooQL2HYMdJ-9fQY0AY3rZ8MIq7hRDYgAPi04-8kWY2ch9MR14K4SDhg/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwoGDNfuYEdbKIZm5VQwJz3FxUazmMa1q7NAH5ddG67g0Ewzvw5LNa-f0y8rgA169BTKA/exec';
 
 async function executeAutoAssign() {
     try {
@@ -2621,7 +2621,14 @@ function generateTasksTable(data) {
         if (Array.isArray(row)) {
             tableHTML += `
                 <tr>
-                    ${row.slice(0, 8).map(cell => `<td>${cell || ''}</td>`).join('')}
+                    ${row.slice(0, 8).map((cell, index) => {
+                        // 🔥 新增：特別處理日期欄位（第一欄）
+                        if (index === 0 && cell) {
+                            const formattedDate = formatDateForDisplay(cell);
+                            return `<td>${formattedDate}</td>`;
+                        }
+                        return `<td>${cell || ''}</td>`;
+                    }).join('')}
                 </tr>
             `;
         }
@@ -2634,6 +2641,50 @@ function generateTasksTable(data) {
     
     return tableHTML;
 }
+
+// 🔥 新增：日期格式化函數
+function formatDateForDisplay(dateValue) {
+    if (!dateValue) return '';
+    
+    try {
+        // 如果是 ISO 格式字串
+        if (typeof dateValue === 'string' && dateValue.includes('T')) {
+            const date = new Date(dateValue);
+            if (!isNaN(date.getTime())) {
+                // 轉換為台灣時間並格式化
+                const taiwanDate = new Date(date.getTime() + (8 * 60 * 60 * 1000));
+                return taiwanDate.toISOString().split('T')[0]; // YYYY-MM-DD
+            }
+        }
+        
+        // 如果是純日期字串
+        if (typeof dateValue === 'string') {
+            // 檢查是否已經是 YYYY-MM-DD 格式
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+                return dateValue;
+            }
+            
+            // 嘗試解析其他格式
+            const date = new Date(dateValue);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+        }
+        
+        // 如果是 Date 物件
+        if (dateValue instanceof Date && !isNaN(dateValue.getTime())) {
+            return dateValue.toISOString().split('T')[0];
+        }
+        
+        // 如果無法解析，返回原始值
+        return dateValue.toString();
+        
+    } catch (error) {
+        console.error('日期格式化錯誤:', error);
+        return dateValue.toString();
+    }
+}
+
 
 // 輸出 Excel 檔案
 function exportTasksToExcel() {
