@@ -5,6 +5,410 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>昶青運務GAI數據管理系統</title>
     <style>
+        /* ==================== 配送任務列表美化樣式 ==================== */
+
+.delivery-tasks-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+}
+
+.delivery-tasks-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    position: relative;
+    width: 95%;
+    max-width: 1600px;
+    height: 90vh;
+    margin: 5vh auto;
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border-radius: 20px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 35px;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.modal-header h2::before {
+    content: "📋";
+    font-size: 2rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+}
+
+.export-btn, .close-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.export-btn {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(21, 128, 61, 0.9) 100%);
+    color: white;
+    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+}
+
+.export-btn:hover {
+    background: linear-gradient(135deg, rgba(21, 128, 61, 0.95) 0%, rgba(20, 83, 45, 0.95) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(34, 197, 94, 0.4);
+}
+
+.close-btn {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.9) 0%, rgba(185, 28, 28, 0.9) 100%);
+    color: white;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+}
+
+.close-btn:hover {
+    background: linear-gradient(135deg, rgba(185, 28, 28, 0.95) 0%, rgba(153, 27, 27, 0.95) 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(239, 68, 68, 0.4);
+}
+
+.modal-body {
+    flex: 1;
+    padding: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.table-container {
+    height: 100%;
+    overflow: auto;
+    position: relative;
+}
+
+.tasks-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+    background: white;
+}
+
+.tasks-table th {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    color: white;
+    padding: 18px 12px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 3px solid #0ea5e9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tasks-table th:first-child {
+    border-top-left-radius: 0;
+}
+
+.tasks-table th:last-child {
+    border-top-right-radius: 0;
+}
+
+.tasks-table td {
+    padding: 16px 12px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: center;
+    vertical-align: middle;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.tasks-table tr {
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.tasks-table tr:nth-child(even) {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.tasks-table tr:hover {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    transform: scale(1.01);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+    z-index: 10;
+}
+
+/* 任務屬性列美化 */
+.tasks-table td:nth-child(6) {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    font-weight: 600;
+    color: #92400e;
+    border-radius: 8px;
+    margin: 4px;
+    border: 1px solid #f59e0b;
+}
+
+/* 配對運務士列美化 */
+.tasks-table td:nth-child(8) {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    font-weight: 600;
+    color: #166534;
+    border-radius: 8px;
+    margin: 4px;
+    border: 1px solid #22c55e;
+}
+
+/* 路線名稱加強 */
+.tasks-table td:nth-child(2) {
+    font-weight: 700;
+    color: #1e40af;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+/* 板數總和突出顯示 */
+.tasks-table td:nth-child(3) {
+    font-weight: 800;
+    font-size: 16px;
+    color: #dc2626;
+    background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+    border-radius: 6px;
+}
+
+/* 配送地點美化 */
+.tasks-table td:nth-child(5) {
+    font-size: 12px;
+    line-height: 1.4;
+    color: #374151;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.no-data {
+    text-align: center;
+    padding: 60px 40px;
+    color: #64748b;
+    font-size: 1.2rem;
+    font-weight: 500;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 12px;
+    margin: 40px;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.no-data::before {
+    content: "📭";
+    display: block;
+    font-size: 3rem;
+    margin-bottom: 16px;
+    opacity: 0.6;
+}
+
+/* 滾動條美化 */
+.table-container::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    border-radius: 10px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border-radius: 10px;
+    border: 2px solid #f1f5f9;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+.table-container::-webkit-scrollbar-corner {
+    background: #f1f5f9;
+}
+
+/* 響應式設計 */
+@media (max-width: 1200px) {
+    .modal-content {
+        width: 98%;
+        height: 95vh;
+        margin: 2.5vh auto;
+    }
+    
+    .tasks-table {
+        font-size: 12px;
+    }
+    
+    .tasks-table th,
+    .tasks-table td {
+        padding: 12px 8px;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-header {
+        padding: 20px;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .modal-header h2 {
+        font-size: 1.4rem;
+    }
+    
+    .modal-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .export-btn, .close-btn {
+        flex: 1;
+        padding: 10px 16px;
+    }
+    
+    .tasks-table {
+        font-size: 11px;
+    }
+    
+    .tasks-table th,
+    .tasks-table td {
+        padding: 8px 4px;
+    }
+}
+
+/* 載入動畫 */
+.table-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.table-loading .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.table-loading .loading-text {
+    color: #64748b;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* 表格動畫效果 */
+.tasks-table tr {
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 按鈕點擊效果 */
+.export-btn:active, .close-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+/* 表格標題圖示 */
+.tasks-table th:nth-child(1)::before { content: "📅 "; }
+.tasks-table th:nth-child(2)::before { content: "🚛 "; }
+.tasks-table th:nth-child(3)::before { content: "📦 "; }
+.tasks-table th:nth-child(4)::before { content: "📍 "; }
+.tasks-table th:nth-child(5)::before { content: "🎯 "; }
+.tasks-table th:nth-child(6)::before { content: "⚙️ "; }
+.tasks-table th:nth-child(7)::before { content: "🚗 "; }
+.tasks-table th:nth-child(8)::before { content: "👨‍💼 "; }
+
         /* 進度動畫視窗樣式 */
 .progress-modal {
     position: fixed;
