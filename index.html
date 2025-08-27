@@ -2441,11 +2441,32 @@ async function executeAutoAssign() {
             return;
         }
 
+        // 🔥 新增：暫停自動更新
+        window.pauseAutoUpdate = true;
+        
+        // 🔥 新增：保存當前數據
+        const currentStats = {
+            totalTasks: document.getElementById('total-tasks').textContent,
+            pTasks: document.getElementById('p-tasks').textContent,
+            qTasks: document.getElementById('q-tasks').textContent,
+            rTasks: document.getElementById('r-tasks').textContent,
+            assignRate: document.getElementById('assign-rate').textContent,
+            availableVehicles: document.getElementById('available-vehicles').textContent
+        };
+
         // 步驟1：顯示進度動畫視窗
         showProgressModal();
         
         // 等待5秒
         await new Promise(resolve => setTimeout(resolve, 5000));
+        
+        // 🔥 新增：恢復數據（防止被清零）
+        document.getElementById('total-tasks').textContent = currentStats.totalTasks;
+        document.getElementById('p-tasks').textContent = currentStats.pTasks;
+        document.getElementById('q-tasks').textContent = currentStats.qTasks;
+        document.getElementById('r-tasks').textContent = currentStats.rTasks;
+        document.getElementById('assign-rate').textContent = currentStats.assignRate;
+        document.getElementById('available-vehicles').textContent = currentStats.availableVehicles;
         
         // 隱藏進度動畫
         hideProgressModal();
@@ -2453,12 +2474,19 @@ async function executeAutoAssign() {
         // 步驟2：顯示待配送任務大視窗
         await showDeliveryTasksModal();
         
+        // 🔥 新增：恢復自動更新
+        window.pauseAutoUpdate = false;
+        
     } catch (error) {
         console.error('執行自動配對時發生錯誤：', error);
         hideProgressModal();
         showNotification('執行自動配對時發生錯誤', 'error');
+        
+        // 🔥 新增：確保恢復自動更新
+        window.pauseAutoUpdate = false;
     }
 }
+
 
 // 顯示進度動畫視窗
 function showProgressModal() {
@@ -3574,44 +3602,51 @@ addUserInfoToHeader() {
             return loginManager.checkPermission(action);
         }
         
-        // 載入所有資料
-        async loadData() {
-            if (!this.checkPermission('reload')) {
-                this.showNotification('您沒有重新載入資料的權限', 'error');
-                return;
-            }
-            
-            this.showLoading(true);
-            
-            try {
-                // 顯示載入動畫
-                document.getElementById('tasks-loading').classList.add('show');
-                document.getElementById('vehicles-loading').classList.add('show');
-                document.getElementById('drivers-loading').classList.add('show');
-                
-                const [tasksRes, driversRes, vehiclesRes] = await Promise.all([
-                    this.callGAS('getTasks'),
-                    this.callGAS('getDrivers'),
-                    this.callGAS('getVehicles')
-                ]);
-                
-                if (tasksRes.success) this.tasks = tasksRes.data || [];
-                if (driversRes.success) this.drivers = driversRes.data || [];
-                if (vehiclesRes.success) this.vehicles = vehiclesRes.data || [];
-                
-                this.renderAll();
-                this.updateKPI();
-                this.checkAlerts();
-                
-                this.showNotification('資料載入完成', 'success');
-                
-            } catch (error) {
-                console.error('載入資料失敗:', error);
-                this.showNotification('載入資料失敗，請重試', 'error');
-            } finally {
-                this.showLoading(false);
-            }
-        }
+ // 載入所有資料
+async loadData() {
+    // 🔥 新增：檢查是否暫停更新
+    if (window.pauseAutoUpdate) {
+        console.log('數據載入已暫停');
+        return;
+    }
+    
+    if (!this.checkPermission('reload')) {
+        this.showNotification('您沒有重新載入資料的權限', 'error');
+        return;
+    }
+    
+    this.showLoading(true);
+    
+    try {
+        // 顯示載入動畫
+        document.getElementById('tasks-loading').classList.add('show');
+        document.getElementById('vehicles-loading').classList.add('show');
+        document.getElementById('drivers-loading').classList.add('show');
+        
+        const [tasksRes, driversRes, vehiclesRes] = await Promise.all([
+            this.callGAS('getTasks'),
+            this.callGAS('getDrivers'),
+            this.callGAS('getVehicles')
+        ]);
+        
+        if (tasksRes.success) this.tasks = tasksRes.data || [];
+        if (driversRes.success) this.drivers = driversRes.data || [];
+        if (vehiclesRes.success) this.vehicles = vehiclesRes.data || [];
+        
+        this.renderAll();
+        this.updateKPI();
+        this.checkAlerts();
+        
+        this.showNotification('資料載入完成', 'success');
+        
+    } catch (error) {
+        console.error('載入資料失敗:', error);
+        this.showNotification('載入資料失敗，請重試', 'error');
+    } finally {
+        this.showLoading(false);
+    }
+}
+
         
         // 呼叫 Google Apps Script
         async callGAS(action, data = {}) {
@@ -3978,35 +4013,47 @@ addUserInfoToHeader() {
             document.getElementById('r-tasks').textContent = rTasks || 0;
         }
         
-        // 更新 KPI 數據
-        async updateKPI() {
-            try {
-                // 調用新的統計API
-                const statsResult = await this.callGAS('getTaskStats');
+// 更新 KPI 數據
+async updateKPI() {
+    // 🔥 新增：檢查是否暫停更新
+    if (window.pauseAutoUpdate) {
+        console.log('KPI 更新已暫停');
+        return;
+    }
+    
+    try {
+        // 調用新的統計API
+        const statsResult = await this.callGAS('getTaskStats');
+        
+        if (statsResult && statsResult.success) {
+            const stats = statsResult.data;
+            
+            // 🔥 新增：檢查數據有效性
+            if (stats.totalTasks !== undefined && stats.totalTasks !== null) {
+                document.getElementById('total-tasks').textContent = stats.totalTasks || 0;
+                document.getElementById('p-tasks').textContent = stats.b3Tasks || 0;
+                document.getElementById('q-tasks').textContent = stats.b2Tasks || 0;
+                document.getElementById('r-tasks').textContent = stats.b1Tasks || 0;
+                document.getElementById('assign-rate').textContent = `${stats.assignRate || 0}%`;
                 
-                if (statsResult && statsResult.success) {
-                    const stats = statsResult.data;
-                    
-                    document.getElementById('total-tasks').textContent = stats.totalTasks || 0;
-                    document.getElementById('p-tasks').textContent = stats.b3Tasks || 0;
-                    document.getElementById('q-tasks').textContent = stats.b2Tasks || 0;
-                    document.getElementById('r-tasks').textContent = stats.b1Tasks || 0;
-                    document.getElementById('assign-rate').textContent = `${stats.assignRate || 0}%`;
-                    
-                    // 可用車輛數量仍然從車輛資料中獲取
-                    const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
-                    document.getElementById('available-vehicles').textContent = availableVehicles;
-                } else {
-                    console.error('獲取統計資料失敗:', statsResult?.error || 'API 回應異常');
-                    // 如果API失敗，使用原有的計算方式作為備用
-                    this.updateKPIFallback();
-                }
-            } catch (error) {
-                console.error('更新KPI錯誤:', error);
-                // 如果API失敗，使用原有的計算方式作為備用
-                this.updateKPIFallback();
+                // 可用車輛數量仍然從車輛資料中獲取
+                const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
+                document.getElementById('available-vehicles').textContent = availableVehicles;
+            } else {
+                console.warn('收到無效的統計數據，跳過更新');
             }
+        } else {
+            console.error('獲取統計資料失敗:', statsResult?.error || 'API 回應異常');
+            // 如果API失敗，使用原有的計算方式作為備用
+            this.updateKPIFallback();
         }
+    } catch (error) {
+        console.error('更新KPI錯誤:', error);
+        // 如果API失敗，使用原有的計算方式作為備用
+        this.updateKPIFallback();
+    }
+}
+
         
         // 備用的KPI更新方法
         updateKPIFallback() {
@@ -4692,20 +4739,22 @@ addUserInfoToHeader() {
     });
 
     // 添加頁面可見性變更處理
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'visible' && loginManager.isLoggedIn) {
-            // 頁面重新可見時，檢查是否需要更新資料
-            const lastUpdate = sessionStorage.getItem('lastDataUpdate');
-            const now = new Date().getTime();
-            
-            if (!lastUpdate || (now - parseInt(lastUpdate)) > 600000) { // 10分鐘
-                if (window.app) {
-                    app.loadData();
-                }
-                sessionStorage.setItem('lastDataUpdate', now.toString());
+// 修改頁面可見性變更處理
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible' && loginManager.isLoggedIn && !window.pauseAutoUpdate) {
+        // 頁面重新可見時，檢查是否需要更新資料
+        const lastUpdate = sessionStorage.getItem('lastDataUpdate');
+        const now = new Date().getTime();
+        
+        if (!lastUpdate || (now - parseInt(lastUpdate)) > 600000) { // 10分鐘
+            if (window.app) {
+                app.loadData();
             }
+            sessionStorage.setItem('lastDataUpdate', now.toString());
         }
-    });
+    }
+});
+
 
     // 添加錯誤處理
     window.addEventListener('error', function(e) {
@@ -5100,6 +5149,51 @@ window.refreshVehicleData = refreshVehicleData;
     console.log('   Ctrl + C: 衝突檢查');
     console.log('   Ctrl + F: 快速搜尋');
     console.log('   ESC: 關閉面板');
+// 🔥 新增：防止數據被意外清零的保護機制
+let lastValidStats = null;
+
+// 監控數據變化
+function monitorKPIChanges() {
+    const currentStats = {
+        totalTasks: document.getElementById('total-tasks').textContent,
+        pTasks: document.getElementById('p-tasks').textContent,
+        qTasks: document.getElementById('q-tasks').textContent,
+        rTasks: document.getElementById('r-tasks').textContent,
+        assignRate: document.getElementById('assign-rate').textContent,
+        availableVehicles: document.getElementById('available-vehicles').textContent
+    };
+    
+    // 檢查是否所有數據都變成0
+    const allZero = Object.values(currentStats).every(value => 
+        value === '0' || value === '0%'
+    );
+    
+    if (allZero && lastValidStats && !window.pauseAutoUpdate) {
+        console.warn('偵測到數據異常歸零，恢復上次有效數據');
+        
+        // 恢復上次有效數據
+        document.getElementById('total-tasks').textContent = lastValidStats.totalTasks;
+        document.getElementById('p-tasks').textContent = lastValidStats.pTasks;
+        document.getElementById('q-tasks').textContent = lastValidStats.qTasks;
+        document.getElementById('r-tasks').textContent = lastValidStats.rTasks;
+        document.getElementById('assign-rate').textContent = lastValidStats.assignRate;
+        document.getElementById('available-vehicles').textContent = lastValidStats.availableVehicles;
+        
+        // 重新載入數據
+        if (window.app) {
+            setTimeout(() => app.loadData(), 1000);
+        }
+    } else if (!allZero) {
+        // 保存有效數據
+        lastValidStats = { ...currentStats };
+    }
+}
+
+// 每2秒監控一次
+setInterval(monitorKPIChanges, 2000);
+
+// 初始化保護機制
+window.pauseAutoUpdate = false;
 
 </script>
 
