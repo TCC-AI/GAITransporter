@@ -1308,16 +1308,66 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
         }
 
-        .toolbar button.primary {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 50%, #ff4757 100%);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
-        }
+.toolbar button.primary {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 50%, #ff4757 100%);
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
 
-        .toolbar button.primary:hover {
-            background: linear-gradient(135deg, #ff5252 0%, #e53e3e 50%, #ff3742 100%);
-            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
-        }
+.toolbar button.primary:hover {
+    background: linear-gradient(135deg, #ff5252 0%, #e53e3e 50%, #ff3742 100%);
+    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+    transform: translateY(-3px);
+    animation: ripple-shake 0.8s ease-in-out;
+}
+
+/* 波紋效果 */
+.toolbar button.primary::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+    z-index: 0;
+}
+
+.toolbar button.primary:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* 震動波紋動畫 */
+@keyframes ripple-shake {
+    0%, 100% { 
+        transform: translateY(-3px) scale(1) translateX(0); 
+    }
+    10%, 30%, 50%, 70%, 90% { 
+        transform: translateY(-3px) scale(1.02) translateX(-2px); 
+    }
+    20%, 40%, 60%, 80% { 
+        transform: translateY(-3px) scale(1.02) translateX(2px); 
+    }
+}
+
+/* 確保按鈕文字在波紋上方 */
+.toolbar button.primary {
+    position: relative;
+    z-index: 1;
+}
+
+.toolbar button.primary * {
+    position: relative;
+    z-index: 1;
+}
+
 
         /* 主控台 KPI 區域 */
         .dashboard {
