@@ -2664,6 +2664,8 @@ async function executeAutoAssign() {
         
         // 🔥 新增：恢復自動更新
         window.pauseAutoUpdate = false;
+        // 🔥 使用動畫序列控制器
+        await animationController.startAnimationSequence();
         
     } catch (error) {
         console.error('執行自動配對時發生錯誤：', error);
@@ -2674,6 +2676,7 @@ async function executeAutoAssign() {
         window.pauseAutoUpdate = false;
     }
 }
+
 
 // 🔥 調試模式相關代碼
 window.debugMode = true; // 預設關閉，可改為 true 開啟
@@ -2766,6 +2769,76 @@ function debugArrowPositions(taskId, driverId, vehicleId) {
     
     console.log('🔧 ===== 調試結束 =====');
 }
+    // 🔥 新增：動畫序列控制器
+class AnimationSequenceController {
+    constructor() {
+        this.isAnimating = false;
+        this.animationQueue = [];
+    }
+    
+    // 開始動畫序列
+    async startAnimationSequence() {
+        if (this.isAnimating) {
+            console.log('⏳ 動畫序列正在進行中，請稍候...');
+            return;
+        }
+        
+        this.isAnimating = true;
+        console.log('🎬 === 開始完整動畫序列 ===');
+        
+        try {
+            // 第1階段：進度動畫
+            console.log('🎬 第1階段：進度動畫');
+            await this.waitForProgressAnimation();
+            
+            // 第2階段：模態視窗動畫
+            console.log('🎬 第2階段：模態視窗動畫');
+            await this.waitForModalAnimation();
+            
+            // 第3階段：數據更新動畫
+            console.log('🎬 第3階段：數據更新動畫');
+            await this.waitForDataUpdateAnimation();
+            
+            // 第4階段：卡片渲染動畫
+            console.log('🎬 第4階段：卡片渲染動畫');
+            await this.waitForCardRenderAnimation();
+            
+            // 🎯 最終階段：箭頭產生動畫
+            console.log('🎬 最終階段：箭頭產生動畫');
+            await this.executeArrowGeneration();
+            
+            console.log('🎉 === 完整動畫序列結束 ===');
+            
+        } finally {
+            this.isAnimating = false;
+        }
+    }
+    
+    async waitForProgressAnimation() {
+        return new Promise(resolve => setTimeout(resolve, 5000));
+    }
+    
+    async waitForModalAnimation() {
+        return new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    async waitForDataUpdateAnimation() {
+        return new Promise(resolve => setTimeout(resolve, 1500));
+    }
+    
+    async waitForCardRenderAnimation() {
+        return new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    async executeArrowGeneration() {
+        console.log('🏹 執行箭頭產生（動畫序列的最後階段）');
+        return generateMatchingArrows();
+    }
+}
+
+// 創建動畫控制器實例
+const animationController = new AnimationSequenceController();
+
     // 添加切換調試模式的函數
 function toggleDebugMode() {
     window.debugMode = !window.debugMode;
@@ -3163,7 +3236,6 @@ function exportTasksToExcel() {
     }
 }
 
-// 修改現有的 closeDeliveryTasksModal 函數
 async function closeDeliveryTasksModal() {
     const modal = document.querySelector('.delivery-tasks-modal');
     if (modal) {
@@ -3173,10 +3245,15 @@ async function closeDeliveryTasksModal() {
         }, 300);
     }
     
-    // 現有的儀表板數據更新邏輯保持不變
+    // 🔥 修改：按順序執行所有動畫，箭頭產生放在最後
     try {
+        // 第1步：顯示開始更新通知
         showNotification('正在更新儀表板數據...', 'info');
         
+        // 第2步：等待模態視窗關閉動畫完成
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // 第3步：更新儀表板數據
         const result = await app.callGAS('getCalculationSheetData', {
             sheetId: '1imMGGvAaNjlYpQ1CS63DWSewFQrmaTt3hNQAdrRUBjs',
             sheetName: '計算'
@@ -3196,23 +3273,43 @@ async function closeDeliveryTasksModal() {
                     availableVehiclesElement.textContent = result.data.availableVehicles;
                 }
             }
-            
-            showNotification('儀表板數據更新完成', 'success');
-        } else {
-            console.warn('無法取得計算工作表數據:', result.error);
-            showNotification('儀表板數據更新失敗', 'warning');
         }
+        
+        // 第4步：顯示數據更新完成通知
+        showNotification('儀表板數據更新完成', 'success');
+        
+        // 第5步：等待通知顯示完成
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // 第6步：重新載入並渲染所有數據
+        if (window.app) {
+            await app.loadData();
+        }
+        
+        // 第7步：等待數據載入和渲染完成
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // 🎯 最後一步：產生配對關聯箭頭（紅箭頭、綠箭頭）
+        console.log('🏹 開始產生配對箭頭 - 這是所有動畫的最後一個步驟');
+        showNotification('正在產生配對關聯箭頭...', 'info');
+        
+        // 等待一小段時間確保所有元素都已渲染完成
+        setTimeout(() => {
+            generateMatchingArrows();
+            showNotification('✅ 配對關聯箭頭產生完成', 'success');
+        }, 800);
         
     } catch (error) {
         console.error('更新儀表板數據時發生錯誤:', error);
         showNotification('儀表板數據更新失敗', 'error');
+        
+        // 即使發生錯誤，仍然嘗試產生箭頭（在最後）
+        setTimeout(() => {
+            generateMatchingArrows();
+        }, 1000);
     }
-    
-    // 🔥 新增：產生配對關聯紅箭頭
-    setTimeout(() => {
-        generateMatchingArrows();
-    }, 500);
 }
+
 
 
 
@@ -5792,11 +5889,15 @@ function applyFilters() {
     app.renderAll();
     app.updateKPI();
 }
-// 🔥 新增：產生配對關聯紅箭頭
 async function generateMatchingArrows() {
     try {
+        console.log('🎯 === 開始執行箭頭產生程序（所有動畫的最後階段）===');
+        
         // 清除現有箭頭
         clearExistingArrows();
+        
+        // 顯示載入狀態
+        showNotification('正在分析配對關係...', 'info');
         
         // 從 Google Sheets 取得配對結果
         const matchingResult = await app.callGAS('getMatchingData', {
@@ -5805,21 +5906,38 @@ async function generateMatchingArrows() {
         });
         
         if (matchingResult.success && matchingResult.data && matchingResult.data.length > 0) {
-            // 為每個配對結果建立箭頭
-            matchingResult.data.forEach((match, index) => {
-                setTimeout(() => createMatchingArrow(match), index * 100);
-            });
+            console.log(`🏹 找到 ${matchingResult.data.length} 個配對關係，開始逐一產生箭頭`);
             
-            showNotification(`已顯示 ${matchingResult.data.length} 個配對關聯`, 'info');
+            // 🔥 修改：增加延遲，確保在所有動畫之後
+            for (let i = 0; i < matchingResult.data.length; i++) {
+                const match = matchingResult.data[i];
+                
+                // 每個箭頭間隔200ms產生，營造漸進效果
+                setTimeout(() => {
+                    console.log(`🏹 產生第 ${i + 1} 個配對箭頭:`, match);
+                    createMatchingArrow(match);
+                    
+                    // 如果是最後一個箭頭
+                    if (i === matchingResult.data.length - 1) {
+                        setTimeout(() => {
+                            showNotification(`🎉 所有配對箭頭已完成！共顯示 ${matchingResult.data.length} 個配對關聯`, 'success');
+                            console.log('🎯 === 箭頭產生程序完成（動畫序列結束）===');
+                        }, 300);
+                    }
+                }, i * 200);
+            }
+            
         } else {
-            showNotification('目前沒有配對資料', 'warning');
+            console.log('⚠️ 沒有找到配對資料');
+            showNotification('目前沒有配對資料需要顯示箭頭', 'warning');
         }
         
     } catch (error) {
-        console.error('產生配對箭頭失敗:', error);
-        showNotification('產生配對箭頭失敗', 'error');
+        console.error('❌ 產生配對箭頭失敗:', error);
+        showNotification('產生配對箭頭失敗: ' + error.message, 'error');
     }
 }
+
 
 // 清除現有箭頭
 function clearExistingArrows() {
@@ -5831,25 +5949,46 @@ function clearExistingArrows() {
     highlightedCards.forEach(card => card.classList.remove('highlighted'));
 }
 
-// 建立配對箭頭
 function createMatchingArrow(matchData) {
     const { taskId, driverId, vehicleId } = matchData;
+    
+    console.log(`🎨 開始繪製箭頭 - 任務: ${taskId}, 司機: ${driverId}, 車輛: ${vehicleId}`);
     
     // 找到對應的卡片元素
     const taskCard = findCardByContent('.task-card', taskId);
     const driverCard = findCardByContent('.driver-card', driverId);
     const vehicleCard = findCardByContent('.vehicle-card', vehicleId);
     
-    if (taskCard && vehicleCard) {
-        // 建立任務到車輛的箭頭
-        createArrow(taskCard, vehicleCard, 'task-to-vehicle');
+    // 驗證元素存在
+    if (!taskCard) {
+        console.warn(`⚠️ 找不到任務卡片: ${taskId}`);
+        return;
+    }
+    if (!vehicleCard) {
+        console.warn(`⚠️ 找不到車輛卡片: ${vehicleId}`);
+        return;
+    }
+    if (!driverCard) {
+        console.warn(`⚠️ 找不到司機卡片: ${driverId}`);
+        return;
     }
     
-    if (vehicleCard && driverCard) {
-        // 建立車輛到司機的箭頭
-        createArrow(vehicleCard, driverCard, 'vehicle-to-driver');
-    }
+    // 🔥 按順序產生箭頭：先紅箭頭，後綠箭頭
+    setTimeout(() => {
+        if (taskCard && vehicleCard) {
+            console.log('🔴 產生紅箭頭: 任務 → 車輛');
+            createArrow(taskCard, vehicleCard, 'task-to-vehicle');
+        }
+    }, 100);
+    
+    setTimeout(() => {
+        if (vehicleCard && driverCard) {
+            console.log('🟢 產生綠箭頭: 車輛 → 司機');
+            createArrow(vehicleCard, driverCard, 'vehicle-to-driver');
+        }
+    }, 300);
 }
+
 
 // 輔助函數：根據內容查找卡片
 // 🔥 修正版本：更精確的元素查找
