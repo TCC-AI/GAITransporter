@@ -465,7 +465,7 @@ header {
     100% { transform: rotate(360deg); }
 }
 
-        /* 配送任務模態視窗樣式 */
+       /* ===== 🔥 待配送任務列表美化樣式 ===== */
 .delivery-tasks-modal {
     position: fixed;
     top: 0;
@@ -476,7 +476,238 @@ header {
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
 }
+
+.delivery-tasks-modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    position: relative;
+    width: 95%;
+    max-width: 1600px;
+    height: 95%;
+    max-height: 90vh;
+    margin: 2.5% auto;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%);
+    border-radius: 20px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 35px;
+    border-bottom: none;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 20px 20px 0 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 15px;
+    position: relative;
+    z-index: 1;
+}
+
+.export-btn, .close-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.export-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.export-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+
+.export-btn:hover::before {
+    left: 100%;
+}
+
+.export-btn:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.close-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.close-btn:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+}
+
+.modal-body {
+    flex: 1;
+    padding: 30px 35px;
+    overflow: hidden;
+}
+
+.table-container {
+    height: 100%;
+    overflow: auto;
+    border: 1px solid rgba(226, 232, 240, 0.6);
+    border-radius: 15px;
+    background: white;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    position: relative;
+}
+
+.table-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
+    backdrop-filter: blur(10px);
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.table-container.loading::before {
+    opacity: 1;
+}
+
+.tasks-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 16px;
+    border-radius: 15px;
+    overflow: hidden;
+    background: white;
+}
+
+.tasks-table th {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    padding: 18px 15px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.tasks-table th:first-child {
+    border-top-left-radius: 15px;
+}
+
+.tasks-table th:last-child {
+    border-top-right-radius: 15px;
+}
+
+.tasks-table td {
+    padding: 16px 15px;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    font-size: 16px;
+    font-weight: 500;
+    color: #334155;
+    transition: all 0.3s ease;
+    text-align: center;
+    position: relative;
+}
+
+.tasks-table tr {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tasks-table tr:hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(124, 58, 237, 0.05) 100%);
+    transform: scale(1.01);
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+}
+
+.tasks-table tr:nth-child(even) {
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%);
+}
+
+.tasks-table tr:nth-child(even):hover {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(124, 58, 237, 0.08) 100%);
+}
+
+/*
+
 
 .delivery-tasks-modal.show {
     opacity: 1;
@@ -3256,7 +3487,7 @@ function createDeliveryTasksModal(data) {
 // 生成任務表格
 function generateTasksTable(data) {
     if (!data || data.length === 0) {
-        return '<p class="no-data">暫無配送任務資料</p>';
+        return '<p class="no-data">✨ 暫無配送任務資料</p>';
     }
     
     // 表格標題（固定的標題）
@@ -3279,13 +3510,20 @@ function generateTasksTable(data) {
     for (let i = startIndex; i < data.length; i++) {
         const row = data[i];
         if (Array.isArray(row)) {
+            // 🔥 新增：為每一行添加數據屬性
+            const taskLevel = row[5] || ''; // 任務屬性欄位
+            
             tableHTML += `
-                <tr>
+                <tr data-level="${taskLevel}" data-row="${i}">
                     ${row.slice(0, 8).map((cell, index) => {
-                        // 🔥 新增：特別處理日期欄位（第一欄）
+                        // 🔥 特別處理日期欄位（第一欄）
                         if (index === 0 && cell) {
                             const formattedDate = formatDateForDisplay(cell);
                             return `<td>${formattedDate}</td>`;
+                        }
+                        // 🔥 特別處理任務屬性欄位（第六欄）
+                        if (index === 5 && cell) {
+                            return `<td class="level-cell" data-level="${cell}">${cell}</td>`;
                         }
                         return `<td>${cell || ''}</td>`;
                     }).join('')}
@@ -3301,6 +3539,7 @@ function generateTasksTable(data) {
     
     return tableHTML;
 }
+
 
 // 🔥 新增：日期格式化函數
 function formatDateForDisplay(dateValue) {
