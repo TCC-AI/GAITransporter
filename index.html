@@ -2681,95 +2681,11 @@ async function executeAutoAssign() {
 // 🔥 調試模式相關代碼
 window.debugMode = true; // 預設關閉，可改為 true 開啟
 
-// 調試函數：顯示箭頭位置資訊
+// 🔥 移除所有箭頭相關的調試功能
 function debugArrowPositions(taskId, driverId, vehicleId) {
-    console.log('🔧 ===== 調試箭頭位置 =====');
-    console.log('📝 配對資訊:', { taskId, driverId, vehicleId });
-    
-    const taskCard = findCardByContent('.task-card', taskId);
-    const driverCard = findCardByContent('.driver-card', driverId);
-    const vehicleCard = findCardByContent('.vehicle-card', vehicleId);
-    
-    // 任務卡片調試
-    if (taskCard) {
-        const rect = taskCard.getBoundingClientRect();
-        console.log('📋 任務卡片 ✅:', {
-            找到: true,
-            ID: taskId,
-            位置: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
-            內容預覽: taskCard.textContent.substring(0, 50) + '...',
-            元素: taskCard
-        });
-        
-        // 添加紅色邊框
-        taskCard.style.border = '3px solid red';
-        taskCard.style.boxShadow = '0 0 10px red';
-    } else {
-        console.log('📋 任務卡片 ❌:', {
-            找到: false,
-            搜尋ID: taskId,
-            可能原因: '任務ID不匹配或卡片尚未載入'
-        });
-    }
-    
-    // 司機卡片調試
-    if (driverCard) {
-        const rect = driverCard.getBoundingClientRect();
-        console.log('👨‍💼 司機卡片 ✅:', {
-            找到: true,
-            ID: driverId,
-            位置: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
-            內容預覽: driverCard.textContent.substring(0, 50) + '...',
-            元素: driverCard
-        });
-        
-        // 添加藍色邊框
-        driverCard.style.border = '3px solid blue';
-        driverCard.style.boxShadow = '0 0 10px blue';
-    } else {
-        console.log('👨‍💼 司機卡片 ❌:', {
-            找到: false,
-            搜尋ID: driverId,
-            可能原因: '司機ID不匹配或卡片尚未載入'
-        });
-    }
-    
-    // 車輛卡片調試
-    if (vehicleCard) {
-        const rect = vehicleCard.getBoundingClientRect();
-        console.log('🚛 車輛卡片 ✅:', {
-            找到: true,
-            ID: vehicleId,
-            位置: { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
-            內容預覽: vehicleCard.textContent.substring(0, 50) + '...',
-            元素: vehicleCard
-        });
-        
-        // 添加綠色邊框
-        vehicleCard.style.border = '3px solid green';
-        vehicleCard.style.boxShadow = '0 0 10px green';
-    } else {
-        console.log('🚛 車輛卡片 ❌:', {
-            找到: false,
-            搜尋ID: vehicleId,
-            可能原因: '車輛ID不匹配或卡片尚未載入'
-        });
-    }
-    
-    // 5秒後移除邊框
-    setTimeout(() => {
-        [taskCard, driverCard, vehicleCard].forEach(card => {
-            if (card) {
-                card.style.border = '';
-                card.style.boxShadow = '';
-            }
-        });
-        console.log('🔧 調試邊框已移除');
-    }, 5000);
-    
-    console.log('🔧 ===== 調試結束 =====');
+    console.log('🚫 箭頭調試功能已被禁用');
+    return;
 }
-    // 🔥 新增：動畫序列控制器
 class AnimationSequenceController {
     constructor() {
         this.isAnimating = false;
@@ -2803,9 +2719,8 @@ class AnimationSequenceController {
             console.log('🎬 第4階段：卡片渲染動畫');
             await this.waitForCardRenderAnimation();
             
-            // 🎯 最終階段：箭頭產生動畫
-            console.log('🎬 最終階段：箭頭產生動畫');
-            await this.executeArrowGeneration();
+            // 🔥 移除：最終階段的箭頭產生動畫
+            console.log('🎬 最終階段：動畫序列完成（不產生箭頭）');
             
             console.log('🎉 === 完整動畫序列結束 ===');
             
@@ -2830,11 +2745,13 @@ class AnimationSequenceController {
         return new Promise(resolve => setTimeout(resolve, 1000));
     }
     
+    // 🔥 移除：不再執行箭頭產生
     async executeArrowGeneration() {
-        console.log('🏹 執行箭頭產生（動畫序列的最後階段）');
-        return generateMatchingArrows();
+        console.log('🚫 箭頭產生功能已被禁用');
+        return Promise.resolve();
     }
 }
+
 
 // 創建動畫控制器實例
 const animationController = new AnimationSequenceController();
@@ -2856,95 +2773,9 @@ function toggleDebugMode() {
 }
 
 
-// 增強版的 createArrow 函數（包含調試資訊）
 function createArrowWithDebug(fromElement, toElement, type) {
-    if (!fromElement || !toElement) {
-        console.error('❌ 箭頭建立失敗：缺少元素', { 
-            fromElement: !!fromElement, 
-            toElement: !!toElement,
-            type 
-        });
-        return;
-    }
-    
-    // 獲取元素位置
-    const fromRect = fromElement.getBoundingClientRect();
-    const toRect = toElement.getBoundingClientRect();
-    
-    // 考慮頁面滾動
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    
-    // 計算箭頭起終點
-    const startX = fromRect.left + scrollX + fromRect.width;
-    const startY = fromRect.top + scrollY + fromRect.height / 2;
-    const endX = toRect.left + scrollX;
-    const endY = toRect.top + scrollY + toRect.height / 2;
-    
-    // 計算距離和角度
-    const deltaX = endX - startX;
-    const deltaY = endY - startY;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const angle = Math.atan2(deltaY, deltaX);
-    
-    // 🔥 調試模式：輸出詳細計算過程
-    if (window.debugMode) {
-        console.log(`🏹 建立 ${type} 箭頭:`, {
-            從元素: fromElement.textContent.substring(0, 30) + '...',
-            到元素: toElement.textContent.substring(0, 30) + '...',
-            從位置: { x: fromRect.left, y: fromRect.top, width: fromRect.width, height: fromRect.height },
-            到位置: { x: toRect.left, y: toRect.top, width: toRect.width, height: toRect.height },
-            滾動位置: { scrollX, scrollY },
-            箭頭起點: { x: startX, y: startY },
-            箭頭終點: { x: endX, y: endY },
-            距離: distance.toFixed(2) + 'px',
-            角度: (angle * 180 / Math.PI).toFixed(2) + '°',
-            顏色: type === 'task-to-vehicle' ? '紅色' : '綠色'
-        });
-    }
-    
-    // 創建箭頭元素
-    const arrow = document.createElement('div');
-    arrow.className = `matching-arrow ${type}`;
-    arrow.style.cssText = `
-        position: absolute;
-        left: ${startX}px;
-        top: ${startY - 1.5}px;
-        width: ${distance}px;
-        height: 3px;
-        transform: rotate(${angle}rad);
-        transform-origin: 0 50%;
-        z-index: 1500;
-        pointer-events: none;
-    `;
-    
-    document.body.appendChild(arrow);
-    
-    // 🔥 調試模式：在箭頭上添加標籤
-    if (window.debugMode) {
-        const label = document.createElement('div');
-        label.textContent = `${type} (${distance.toFixed(0)}px)`;
-        label.style.cssText = `
-            position: absolute;
-            left: ${startX + distance/2}px;
-            top: ${startY - 20}px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            z-index: 1600;
-            pointer-events: none;
-        `;
-        document.body.appendChild(label);
-        
-        // 5秒後移除標籤
-        setTimeout(() => {
-            if (label.parentNode) {
-                label.parentNode.removeChild(label);
-            }
-        }, 5000);
-    }
+    console.log('🚫 箭頭建立功能已被禁用');
+    return;
 }
 
 // 修改現有的 generateArrowsForTask 函數
@@ -2991,9 +2822,8 @@ window.toggleDebugMode = toggleDebugMode;
 
 // 調試用：手動測試箭頭
 function testArrow(taskId, driverId, vehicleId) {
-    console.log('🧪 手動測試箭頭');
-    window.debugMode = true;
-    generateArrowsForTask(taskId, driverId, vehicleId);
+    console.log('🚫 箭頭測試功能已被禁用');
+    return;
 }
 
 window.testArrow = testArrow;
@@ -3245,7 +3075,7 @@ async function closeDeliveryTasksModal() {
         }, 300);
     }
     
-    // 🔥 修改：按順序執行所有動畫，箭頭產生放在最後
+    // 🔥 修改：移除箭頭產生相關代碼
     try {
         // 第1步：顯示開始更新通知
         showNotification('正在更新儀表板數據...', 'info');
@@ -3289,26 +3119,15 @@ async function closeDeliveryTasksModal() {
         // 第7步：等待數據載入和渲染完成
         await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // 🎯 最後一步：產生配對關聯箭頭（紅箭頭、綠箭頭）
-        console.log('🏹 開始產生配對箭頭 - 這是所有動畫的最後一個步驟');
-        showNotification('正在產生配對關聯箭頭...', 'info');
-        
-        // 等待一小段時間確保所有元素都已渲染完成
-        setTimeout(() => {
-            generateMatchingArrows();
-            showNotification('✅ 配對關聯箭頭產生完成', 'success');
-        }, 800);
+        // 🔥 移除：不再產生配對關聯箭頭
+        showNotification('✅ 配對流程已完成', 'success');
         
     } catch (error) {
         console.error('更新儀表板數據時發生錯誤:', error);
         showNotification('儀表板數據更新失敗', 'error');
-        
-        // 即使發生錯誤，仍然嘗試產生箭頭（在最後）
-        setTimeout(() => {
-            generateMatchingArrows();
-        }, 1000);
     }
 }
+
 
 
 
@@ -5950,83 +5769,9 @@ function findCardByContent(selector, content) {
 }
 
 
-// 🔥 修正版本：更準確的座標計算
 function createArrow(fromElement, toElement, type) {
-    if (!fromElement || !toElement) {
-        console.warn('箭頭建立失敗：找不到元素', { fromElement, toElement });
-        return;
-    }
-    
-    // 使用 getBoundingClientRect 獲取準確位置
-    const fromRect = fromElement.getBoundingClientRect();
-    const toRect = toElement.getBoundingClientRect();
-    
-    // 考慮頁面滾動位置
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    
-    // 計算起點和終點（從卡片中心到中心）
-    const startX = fromRect.left + scrollX + fromRect.width;  // 從右邊緣開始
-    const startY = fromRect.top + scrollY + fromRect.height / 2;  // 垂直居中
-    const endX = toRect.left + scrollX;  // 到左邊緣結束
-    const endY = toRect.top + scrollY + toRect.height / 2;  // 垂直居中
-    
-    // 計算距離和角度
-    const deltaX = endX - startX;
-    const deltaY = endY - startY;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const angle = Math.atan2(deltaY, deltaX);
-    
-    // 🔥 添加調試資訊
-    console.log('箭頭座標計算:', {
-        type,
-        from: { x: startX, y: startY, element: fromElement.textContent.substring(0, 20) },
-        to: { x: endX, y: endY, element: toElement.textContent.substring(0, 20) },
-        distance,
-        angle: angle * 180 / Math.PI
-    });
-    
-    // 創建箭頭元素
-    const arrow = document.createElement('div');
-    arrow.className = `matching-arrow ${type}`;
-    arrow.style.cssText = `
-        position: absolute;
-        left: ${startX}px;
-        top: ${startY - 1.5}px;
-        width: ${distance}px;
-        height: 3px;
-        transform: rotate(${angle}rad);
-        transform-origin: 0 50%;
-        z-index: 1500;
-        pointer-events: none;
-        background: ${type === 'task-to-vehicle' ? '#ff4757' : '#4ecdc4'};
-    `;
-    
-    // 添加箭頭標記
-    const arrowHead = document.createElement('div');
-    arrowHead.style.cssText = `
-        position: absolute;
-        right: -8px;
-        top: -4px;
-        width: 0;
-        height: 0;
-        border-left: 8px solid ${type === 'task-to-vehicle' ? '#ff4757' : '#4ecdc4'};
-        border-top: 4px solid transparent;
-        border-bottom: 4px solid transparent;
-    `;
-    arrow.appendChild(arrowHead);
-    
-    document.body.appendChild(arrow);
-    
-    // 🔥 添加調試邊框（可選）
-    if (window.debugMode) {
-        fromElement.style.border = '2px solid red';
-        toElement.style.border = '2px solid blue';
-        setTimeout(() => {
-            fromElement.style.border = '';
-            toElement.style.border = '';
-        }, 3000);
-    }
+    console.log('🚫 箭頭建立功能已被禁用');
+    return;
 }
 
 
@@ -6047,11 +5792,11 @@ function addTaskCardClickEvents() {
     });
 }
 
-// 🔥 修正版本：更精確的配對關係處理
 async function highlightMatchingRelations(taskId) {
     try {
-        // 清除現有高亮和箭頭
-        clearExistingArrows();
+        // 清除現有高亮
+        const highlightedCards = document.querySelectorAll('.highlighted');
+        highlightedCards.forEach(card => card.classList.remove('highlighted'));
         
         console.log('🔍 查詢任務配對:', taskId);
         
@@ -6067,17 +5812,13 @@ async function highlightMatchingRelations(taskId) {
             
             console.log('✅ 找到配對資料:', { taskId, driverId, vehicleId });
             
-            // 高亮顯示相關卡片
+            // 只高亮顯示相關卡片，不產生箭頭
             highlightCard('task', taskId);
             if (driverId) highlightCard('driver', driverId);
             if (vehicleId) highlightCard('vehicle', vehicleId);
             
-            // 延遲產生箭頭，確保高亮動畫完成
-            setTimeout(() => {
-                generateArrowsForTask(taskId, driverId, vehicleId);
-            }, 300);
-            
-            showNotification(`✅ 已顯示 ${taskId} 的配對關聯`, 'success');
+            // 🔥 移除：不再產生箭頭
+            showNotification(`✅ 已高亮顯示 ${taskId} 的配對關聯`, 'success');
         } else {
             console.log('⚠️ 任務尚未配對:', taskId);
             showNotification(`任務 "${taskId}" 尚未完成配對`, 'warning');
@@ -6089,6 +5830,7 @@ async function highlightMatchingRelations(taskId) {
         showNotification('顯示配對關係失敗: ' + error.message, 'error');
     }
 }
+
 
 
 
@@ -6110,20 +5852,12 @@ function highlightCard(type, id) {
     }
 }
 
-// 為特定任務產生箭頭
 function generateArrowsForTask(taskId, driverId, vehicleId) {
-    const taskCard = findCardByContent('.task-card', taskId);
-    const driverCard = findCardByContent('.driver-card', driverId);
-    const vehicleCard = findCardByContent('.vehicle-card', vehicleId);
-    
-    if (taskCard && vehicleCard) {
-        createArrow(taskCard, vehicleCard, 'task-to-vehicle');
-    }
-    
-    if (vehicleCard && driverCard) {
-        createArrow(vehicleCard, driverCard, 'vehicle-to-driver');
-    }
+    // 🔥 完全禁用箭頭產生
+    console.log('🚫 箭頭產生功能已被禁用');
+    return;
 }
+
 
 // 初始化任務卡片點擊事件
 document.addEventListener('DOMContentLoaded', function() {
@@ -6132,15 +5866,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 窗口大小變更時重新繪製箭頭
 window.addEventListener('resize', function() {
-    const arrows = document.querySelectorAll('.matching-arrow');
-    if (arrows.length > 0) {
-        // 延遲重繪以確保佈局完成
-        setTimeout(() => {
-            clearExistingArrows();
-            generateMatchingArrows();
-        }, 100);
-    }
+    // 🔥 移除：不再重新繪製箭頭
+    console.log('🚫 箭頭功能已禁用，跳過重繪');
 });
+
 
 // 添加到全域物件
 window.generateMatchingArrows = generateMatchingArrows;
