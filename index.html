@@ -1109,14 +1109,17 @@
 }
 
         /* 用戶資訊樣式 */
-.user-info {
-    position: absolute;
-    top: 0px;
-    right: 60px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
+        /* 🔥 強制設定 user-info 位置 */
+        .user-info {
+            position: absolute !important;
+            top: 0px !important;
+            right: 60px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+            z-index: 1001 !important; /* 提高層級 */
+        }
+
 
 .user-details {
     display: flex;
