@@ -5,6 +5,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>昶青運務GAI數據管理系統</title>
     <style>
+        /* R2 圖片容器 */
+.r2-image-container {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+/* 懸停效果 */
+.r2-image-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* R2 圖片樣式 */
+.r2-image {
+    width: 100%;
+    height: auto;
+    max-width: 300px; /* 根據需要調整 */
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 圖片懸停效果 */
+.r2-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 載入動畫 */
+.r2-image {
+    opacity: 0;
+    animation: fadeInImage 0.6s ease-in-out forwards;
+}
+
+@keyframes fadeInImage {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .r2-image-container {
+        margin-top: 15px;
+        padding: 12px;
+    }
+    
+    .r2-image {
+        max-width: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .r2-image-container {
+        margin-top: 10px;
+        padding: 10px;
+    }
+    
+    .r2-image {
+        max-width: 200px;
+    }
+}
+
         /* 日期顯示容器 */
 .date-display-container {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -4178,6 +4257,14 @@ addUserInfoToHeader() {
                 🚪 登出
             </button>
         </div>
+                <!-- 新增：R2.png 顯示區域 -->
+        <div class="r2-image-container">
+    <div class="image-header">
+        <h3 class="image-title">系統資訊</h3>
+    </div>
+    <img src="path/to/R2.png" alt="R2 圖片" class="r2-image" />
+</div>
+
     `;
     
     // 將用戶資訊添加到主頁面的 header 中
