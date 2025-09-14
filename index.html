@@ -1686,7 +1686,7 @@ header {
 
         .kpi-section {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 25px;
         }
@@ -2715,6 +2715,9 @@ header {
                     <h3>可用車輛(26噸、35噸)</h3>
                     <div class="value" id="available-vehicles">0</div>
                 </div>
+                <div class="kpi-card">
+                <h3>運務士可出勤人數</h3>
+                <div class="value" id="available-drivers">0</div>
             </div>
             
             <div id="alert-section" class="alert-section">
@@ -2971,6 +2974,7 @@ async function executeAutoAssign() {
         document.getElementById('r-tasks').textContent = currentStats.rTasks;
         document.getElementById('assign-rate').textContent = currentStats.assignRate;
         document.getElementById('available-vehicles').textContent = currentStats.availableVehicles;
+        document.getElementById('available-drivers').textContent = currentStats.availableDrivers;
         
         // 隱藏進度動畫
         hideProgressModal();
@@ -4804,11 +4808,10 @@ async updateKPI() {
                 document.getElementById('q-tasks').textContent = stats.b2Tasks || 0;
                 document.getElementById('r-tasks').textContent = stats.b1Tasks || 0;
                 document.getElementById('assign-rate').textContent = `${stats.assignRate || 0}%`;
-                // 🔥 修改這裡：設定可用車輛預設為 42
                 document.getElementById('available-vehicles').textContent = 42;
+                document.getElementById('available-drivers').textContent = stats.availableDrivers || 0;
                 
-                // 🔥 修改這裡：設定可用車輛預設為 42
-                document.getElementById('available-vehicles').textContent = 42;
+                
             }
         } else {
             this.updateKPIFallback();
@@ -4829,6 +4832,11 @@ async updateKPI() {
             const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派' || t['配送狀態'] === '進行中').length;
             const assignRate = totalTasks > 0 ? Math.round((assignedTasks / totalTasks) * 100) : 0;
             const availableVehicles = this.vehicles.filter(v => v.status === '可用').length;
+            // 🔥 新增：計算可出勤運務士人數
+            const availableDrivers = app.drivers.filter(d => {
+                const status = d['狀態'] || d.status;
+                return status === '可派遣' || status === '可用' || status === 'available';
+            }).length;
             
             document.getElementById('total-tasks').textContent = totalTasks;
             document.getElementById('p-tasks').textContent = b3Tasks;
@@ -4836,6 +4844,7 @@ async updateKPI() {
             document.getElementById('r-tasks').textContent = b1Tasks;
             document.getElementById('assign-rate').textContent = `${assignRate}%`;
             document.getElementById('available-vehicles').textContent = availableVehicles;
+            document.getElementById('available-drivers').textContent = availableDrivers;
         }
         
         // 檢查告警
@@ -5931,7 +5940,8 @@ function monitorKPIChanges() {
         qTasks: document.getElementById('q-tasks').textContent,
         rTasks: document.getElementById('r-tasks').textContent,
         assignRate: document.getElementById('assign-rate').textContent,
-        availableVehicles: document.getElementById('available-vehicles').textContent
+        availableVehicles: document.getElementById('available-vehicles').textContent,
+        availableDrivers: document.getElementById('available-drivers').textContent
     };
     
     // 檢查是否所有數據都變成0
@@ -5949,6 +5959,7 @@ function monitorKPIChanges() {
         document.getElementById('r-tasks').textContent = lastValidStats.rTasks;
         document.getElementById('assign-rate').textContent = lastValidStats.assignRate;
         document.getElementById('available-vehicles').textContent = lastValidStats.availableVehicles;
+        document.getElementById('available-drivers').textContent = lastValidStats.availableDrivers;
         
         // 重新載入數據
         if (window.app) {
