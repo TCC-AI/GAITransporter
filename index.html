@@ -5,6 +5,102 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>昶青運務GAI數據管理系統</title>
     <style>
+        /* 日期顯示容器 */
+.date-display-container {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    padding: 20px 30px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 添加光澤效果 */
+.date-display-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.2), 
+        transparent
+    );
+    transition: left 0.5s;
+}
+
+.date-display-container:hover::before {
+    left: 100%;
+}
+
+/* 日期包裝器 */
+.today-date-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    position: relative;
+    z-index: 1;
+}
+
+/* 日期標籤 */
+.date-label {
+    font-size: 18px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    letter-spacing: 1px;
+}
+
+/* 日期數值 */
+.date-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+    font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+    letter-spacing: 2px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.date-value:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    .date-display-container {
+        padding: 15px 20px;
+        margin-bottom: 15px;
+    }
+    
+    .today-date-wrapper {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .date-label {
+        font-size: 16px;
+    }
+    
+    .date-value {
+        font-size: 20px;
+        letter-spacing: 1px;
+    }
+}
+
         /* 點擊時的強化效果 */
 .toolbar button.primary:active {
     animation: button-click-ripple 0.6s ease-out;
@@ -2455,10 +2551,13 @@
 
         <!-- 篩選器 -->
         <div class="filters">
-            <div class="filter-group">
-    <label>日期</label>
-    <input type="date" id="date-filter" onchange="applyFiltersAndUpdateTasks()">
+            <div class="date-display-container">
+    <div class="today-date-wrapper">
+        <span class="date-label">今日日期</span>
+        <span class="date-value" id="current-date">2025/09/14</span>
+    </div>
 </div>
+
             <div class="filter-group">
                 <label>客戶等級</label>
                 <select id="level-filter" onchange="applyFilters()">
@@ -2539,6 +2638,7 @@
         </div>
     </div>
 <script>
+    
     // 全域輔助函數
 window.getCurrentUserLevel = function() {
     if (!window.loginManager || !window.loginManager.currentUser) return 's1';
@@ -2595,7 +2695,50 @@ window.showNotification = function(message, type = 'info') {
         }, 3000);
     }
 };
-// 在 HTML 文件的 JavaScript 部分添加以下函數
+// 自動設置並更新今日日期
+function updateCurrentDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    
+    const formattedDate = `${year}/${month}/${day}`;
+    const dateElement = document.getElementById('current-date');
+    
+    if (dateElement) {
+        dateElement.textContent = formattedDate;
+        
+        // 添加更新動畫效果
+        dateElement.style.transform = 'scale(1.05)';
+        setTimeout(() => {
+            dateElement.style.transform = 'scale(1)';
+        }, 200);
+    }
+}
+
+// 頁面載入時設置日期
+document.addEventListener('DOMContentLoaded', function() {
+    updateCurrentDate();
+});
+
+// 每天午夜自動更新日期
+function scheduleNextDateUpdate() {
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    const timeUntilMidnight = tomorrow.getTime() - now.getTime();
+    
+    setTimeout(() => {
+        updateCurrentDate();
+        scheduleNextDateUpdate(); // 遞歸設置下一次更新
+    }, timeUntilMidnight);
+}
+
+// 啟動自動更新排程
+scheduleNextDateUpdate();
+
 
 // 獲取任務統計的函數
 function getTaskStats() {
