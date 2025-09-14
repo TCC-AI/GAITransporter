@@ -5889,53 +5889,12 @@ function applyFilters() {
     app.renderAll();
     app.updateKPI();
 }
+// 修改 generateMatchingArrows() 函數
 async function generateMatchingArrows() {
-    try {
-        console.log('🎯 === 開始執行箭頭產生程序（所有動畫的最後階段）===');
-        
-        // 清除現有箭頭
-        clearExistingArrows();
-        
-        // 顯示載入狀態
-        showNotification('正在分析配對關係...', 'info');
-        
-        // 從 Google Sheets 取得配對結果
-        const matchingResult = await app.callGAS('getMatchingData', {
-            sheetId: '1imMGGvAaNjlYpQ1CS63DWSewFQrmaTt3hNQAdrRUBjs',
-            sheetName: '待配送任務'
-        });
-        
-        if (matchingResult.success && matchingResult.data && matchingResult.data.length > 0) {
-            console.log(`🏹 找到 ${matchingResult.data.length} 個配對關係，開始逐一產生箭頭`);
-            
-            // 🔥 修改：增加延遲，確保在所有動畫之後
-            for (let i = 0; i < matchingResult.data.length; i++) {
-                const match = matchingResult.data[i];
-                
-                // 每個箭頭間隔200ms產生，營造漸進效果
-                setTimeout(() => {
-                    console.log(`🏹 產生第 ${i + 1} 個配對箭頭:`, match);
-                    createMatchingArrow(match);
-                    
-                    // 如果是最後一個箭頭
-                    if (i === matchingResult.data.length - 1) {
-                        setTimeout(() => {
-                            showNotification(`🎉 所有配對箭頭已完成！共顯示 ${matchingResult.data.length} 個配對關聯`, 'success');
-                            console.log('🎯 === 箭頭產生程序完成（動畫序列結束）===');
-                        }, 300);
-                    }
-                }, i * 200);
-            }
-            
-        } else {
-            console.log('⚠️ 沒有找到配對資料');
-            showNotification('目前沒有配對資料需要顯示箭頭', 'warning');
-        }
-        
-    } catch (error) {
-        console.error('❌ 產生配對箭頭失敗:', error);
-        showNotification('產生配對箭頭失敗: ' + error.message, 'error');
-    }
+    // 🔥 已禁用箭頭產生功能
+    console.log('🚫 箭頭產生功能已被禁用');
+    showNotification('配對關聯顯示已完成（不顯示箭頭）', 'info');
+    return;
 }
 
 
@@ -5949,44 +5908,11 @@ function clearExistingArrows() {
     highlightedCards.forEach(card => card.classList.remove('highlighted'));
 }
 
+// 修改 createMatchingArrow() 函數
 function createMatchingArrow(matchData) {
-    const { taskId, driverId, vehicleId } = matchData;
-    
-    console.log(`🎨 開始繪製箭頭 - 任務: ${taskId}, 司機: ${driverId}, 車輛: ${vehicleId}`);
-    
-    // 找到對應的卡片元素
-    const taskCard = findCardByContent('.task-card', taskId);
-    const driverCard = findCardByContent('.driver-card', driverId);
-    const vehicleCard = findCardByContent('.vehicle-card', vehicleId);
-    
-    // 驗證元素存在
-    if (!taskCard) {
-        console.warn(`⚠️ 找不到任務卡片: ${taskId}`);
-        return;
-    }
-    if (!vehicleCard) {
-        console.warn(`⚠️ 找不到車輛卡片: ${vehicleId}`);
-        return;
-    }
-    if (!driverCard) {
-        console.warn(`⚠️ 找不到司機卡片: ${driverId}`);
-        return;
-    }
-    
-    // 🔥 按順序產生箭頭：先紅箭頭，後綠箭頭
-    setTimeout(() => {
-        if (taskCard && vehicleCard) {
-            console.log('🔴 產生紅箭頭: 任務 → 車輛');
-            createArrow(taskCard, vehicleCard, 'task-to-vehicle');
-        }
-    }, 100);
-    
-    setTimeout(() => {
-        if (vehicleCard && driverCard) {
-            console.log('🟢 產生綠箭頭: 車輛 → 司機');
-            createArrow(vehicleCard, driverCard, 'vehicle-to-driver');
-        }
-    }, 300);
+    // 🔥 已禁用箭頭產生功能
+    console.log('🚫 箭頭產生功能已被禁用');
+    return;
 }
 
 
