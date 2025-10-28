@@ -2977,136 +2977,7 @@ function showNotification(message, type = 'info') {
 
 
     // Google Apps Script Web App URL (需要替換為實際的 URL)
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxBCHZEXmICtHoQOPFAUU7AqdoR1s7yCQ9yHo3czCuKr4C00mJ2a-IHR9fFDRq1KoFvuQ/exec';
-
-    // ============================================================
-// 🔥 緩存管理系統 (CacheManager)
-// 粘貼位置：GAS_URL 後面，在任何其他代碼之前
-// ============================================================
-
-class CacheManager {
-    constructor() {
-        this.cacheVersion = 'v2.0';
-        this.cacheName = `dispatch-system-${this.cacheVersion}`;
-        this.cacheKeys = {
-            tasks: 'dispatch_tasks_cache',
-            drivers: 'dispatch_drivers_cache',
-            vehicles: 'dispatch_vehicles_cache',
-            stats: 'dispatch_stats_cache',
-            lastUpdate: 'dispatch_last_update'
-        };
-        console.log('✅ CacheManager 已初始化');
-    }
-    
-    // 保存數據到緩存
-    async saveCache(key, data, ttl = 3600000) { // 預設 1 小時
-        try {
-            const cacheData = {
-                data: data,
-                timestamp: Date.now(),
-                ttl: ttl,
-                version: this.cacheVersion
-            };
-            const cacheKey = this.cacheKeys[key] || `dispatch_${key}`;
-            localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-            console.log(`✅ 緩存保存成功: ${key} (${data.length || 0} 項)`);
-            return true;
-        } catch (error) {
-            console.warn('⚠️ 緩存保存失敗:', error);
-            return false;
-        }
-    }
-    
-    // 讀取緩存
-    async getCache(key) {
-        try {
-            const cacheKey = this.cacheKeys[key] || `dispatch_${key}`;
-            const cached = localStorage.getItem(cacheKey);
-            
-            if (!cached) {
-                console.log(`📭 緩存不存在: ${key}`);
-                return null;
-            }
-            
-            const { data, timestamp, ttl, version } = JSON.parse(cached);
-            
-            // 檢查版本是否匹配
-            if (version !== this.cacheVersion) {
-                console.log(`🔄 緩存版本不匹配 (${version} vs ${this.cacheVersion})，清除舊緩存: ${key}`);
-                this.clearCache(key);
-                return null;
-            }
-            
-            // 檢查是否過期
-            const age = Date.now() - timestamp;
-            if (age > ttl) {
-                console.log(`⏰ 緩存已過期 (${Math.round(age/60000)} 分鐘): ${key}`);
-                this.clearCache(key);
-                return null;
-            }
-            
-            console.log(`✅ 使用緩存數據: ${key} (${Math.round(age/1000)} 秒前)`);
-            return data;
-            
-        } catch (error) {
-            console.warn('⚠️ 緩存讀取失敗:', error);
-            return null;
-        }
-    }
-    
-    // 清空指定緩存
-    clearCache(key) {
-        try {
-            const cacheKey = this.cacheKeys[key] || `dispatch_${key}`;
-            localStorage.removeItem(cacheKey);
-            console.log(`🗑️ 緩存已清除: ${key}`);
-            return true;
-        } catch (error) {
-            console.warn('⚠️ 緩存清除失敗:', error);
-            return false;
-        }
-    }
-    
-    // 清空所有緩存
-    clearAllCache() {
-        try {
-            Object.keys(this.cacheKeys).forEach(key => {
-                this.clearCache(key);
-            });
-            console.log('🗑️ 所有緩存已清除');
-            return true;
-        } catch (error) {
-            console.warn('⚠️ 全部緩存清除失敗:', error);
-            return false;
-        }
-    }
-    
-    // 獲取緩存狀態
-    getCacheStatus() {
-        const status = {};
-        Object.keys(this.cacheKeys).forEach(key => {
-            const cacheKey = this.cacheKeys[key];
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
-                try {
-                    const { timestamp, ttl } = JSON.parse(cached);
-                    const age = Date.now() - timestamp;
-                    const remaining = Math.round((ttl - age) / 60000); // 分鐘
-                    status[key] = `✅ 有效 (${remaining}分鐘)`;
-                } catch (e) {
-                    status[key] = '❌ 損壞';
-                }
-            } else {
-                status[key] = '❌ 無效';
-            }
-        });
-        return status;
-    }
-}
-
-// 🔥 立即創建全局實例
-const cacheManager = new CacheManager();
-console.log('🚀 緩存系統已啟動');
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzHWckSdKGJFT41V2XcLGKDzJV0JtcrqiCw4t4-0pCrZbMrEX2dhL6tFg_8kiUV40DmNw/exec';
 
 async function executeAutoAssign() {
     try {
@@ -4155,26 +4026,18 @@ function backToMainPage() {
             document.getElementById('app').style.display = 'none';
         }
         
-showMainSystem() {
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    
-    // 🔥 初始化主系統（優化版）
-    setTimeout(() => {
-        if (window.app) {
-            app.initPermissionControl();
+        showMainSystem() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
             
-            // 🔥 立即顯示骨架屏
-            app.showSkeletonScreen();
-            
-            // 🔥 後台載入數據（不阻塞 UI）
-            app.loadData();
-            
-            // 🔥 預加載數據以備後續使用
-            app.preloadDataInBackground();
+            // 初始化主系統
+            setTimeout(() => {
+                if (window.app) {
+                    app.initPermissionControl();
+                    app.loadData();
+                }
+            }, 100);
         }
-    }, 100);
-}
         
         async handleLogin(e) {
             e.preventDefault();
@@ -4397,110 +4260,6 @@ showMainSystem() {
                 dateFilter.value = new Date().toISOString().split('T')[0];
             }
         }
-
-        // ============================================================
-// 🔥 預加載方法
-// 粘貼位置：DispatchApp 類別內的任意位置
-// ============================================================
-
-// 在登入後立即預加載數據
-async preloadDataInBackground() {
-    console.log('🔄 === 開始後台預加載 ===');
-    
-    try {
-        // 並行獲取所有數據
-        const result = await this.callGAS('getAllDataAtOnce');
-        
-        if (result.success && result.data) {
-            const { tasks, drivers, vehicles } = result.data;
-            
-            // 保存到緩存
-            await Promise.all([
-                cacheManager.saveCache('tasks', tasks || []),
-                cacheManager.saveCache('drivers', drivers || []),
-                cacheManager.saveCache('vehicles', vehicles || [])
-            ]);
-            
-            console.log('✅ === 後台預加載完成 ===');
-        } else {
-            console.warn('⚠️ 後台預加載失敗:', result.error);
-        }
-    } catch (error) {
-        console.warn('⚠️ 預加載異常（不影響系統運行）:', error);
-    }
-}
-        // ============================================================
-// 🔥 骨架屏加載方法
-// 粘貼位置：DispatchApp constructor() 後面
-// ============================================================
-
-// 顯示骨架屏（替代舊的 showLoading）
-showSkeletonScreen() {
-    const kpiSection = document.querySelector('.kpi-section');
-    if (!kpiSection) {
-        console.warn('⚠️ 找不到 KPI 區域');
-        return;
-    }
-    
-    kpiSection.innerHTML = `
-        <style>
-            @keyframes shimmer {
-                0% { background-position: -1000px 0; }
-                100% { background-position: 1000px 0; }
-            }
-            .skeleton-card {
-                height: 100px;
-                background: linear-gradient(90deg, 
-                    #f0f0f0 25%, 
-                    #e0e0e0 50%, 
-                    #f0f0f0 75%);
-                background-size: 200% 100%;
-                animation: shimmer 2s infinite;
-                border-radius: 12px;
-                margin-bottom: 10px;
-            }
-        </style>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px;">
-            ${Array(7).fill(0).map(() => '<div class="skeleton-card"></div>').join('')}
-        </div>
-    `;
-    console.log('🎨 骨架屏已顯示');
-}
-
-// 隱藏骨架屏（淡出效果）
-hideSkeletonScreen() {
-    const skeletonCards = document.querySelectorAll('.skeleton-card');
-    if (skeletonCards.length === 0) return;
-    
-    skeletonCards.forEach(card => {
-        card.style.animation = 'none';
-        card.style.opacity = '0';
-        card.style.transition = 'opacity 0.3s ease-out';
-    });
-    
-    // 500ms 後清除 DOM
-    setTimeout(() => {
-        const kpiSection = document.querySelector('.kpi-section');
-        if (kpiSection && kpiSection.querySelector('.skeleton-card')) {
-            // skeleton 已被 renderAll() 替換
-        }
-    }, 300);
-    
-    console.log('✅ 骨架屏已隱藏');
-}
-
-// 顯示列表加載提示
-showListLoadingPlaceholder(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div style="text-align: center; padding: 40px; color: #999;">
-            <div style="font-size: 32px; margin-bottom: 10px; animation: spin 2s linear infinite;">⏳</div>
-            <div style="font-size: 14px;">載入中...</div>
-        </div>
-    `;
-}
         
         // 初始化權限控制
         initPermissionControl() {
@@ -4655,110 +4414,48 @@ addUserInfoToHeader() {
             return loginManager.checkPermission(action);
         }
         
-// ============================================================
-// 🔥 新的優化 loadData 函數
-// 完全替換原有函數（删除整個舊函數）
-// ============================================================
-
-// ============================================================
-// 🔥 前端優化：使用新 API
-// ============================================================
-
-// 原有的調用方式（❌ 3 次往返，9 秒）
-// await this.getTasks();     // 3秒
-// await this.getDrivers();   // 3秒
-// await this.getVehicles();  // 3秒
-
-// 新的優化方式（✅ 1 次往返，3 秒）
+ // 載入所有資料
 async loadData() {
-    try {
-        this.showNotification('正在載入數據...', 'info');
-        
-        // 🔥 使用新的統一 API（只需 1 次調用）
-        const result = await this.callGAS('getAllDataAtOnce', {});
-        
-        if (result.success) {
-            this.tasks = result.data.tasks;
-            this.drivers = result.data.drivers;
-            this.vehicles = result.data.vehicles;
-            
-            console.log(`✅ 數據載入完成 (耗時: ${result.readTime}ms)`);
-            this.renderAll();
-            this.showNotification('✅ 數據載入成功', 'success');
-        } else {
-            this.showNotification('❌ 數據載入失敗', 'error');
-        }
-        
-    } catch (error) {
-        console.error('❌ 載入數據失敗:', error);
-        this.showNotification('❌ 載入數據失敗', 'error');
+    // 🔥 新增：檢查是否暫停更新
+    if (window.pauseAutoUpdate) {
+        console.log('數據載入已暫停');
+        return;
     }
-}
-
-// 優化 KPI 加載
-async updateKPI() {
-    try {
-        // 🔥 使用快速統計 API（無需返回完整數據）
-        const result = await this.callGAS('getQuickStats', {});
-        
-        if (result.success) {
-            const stats = result.data;
-            document.getElementById('total-tasks').textContent = stats.totalTasks;
-            document.getElementById('assign-rate').textContent = `${stats.assignRate}%`;
-            document.getElementById('assigned-tasks').textContent = stats.assignedTasks;
-            
-            console.log(`✅ KPI 更新完成 (耗時: ${result.calcTime}ms)`);
-        }
-        
-    } catch (error) {
-        console.error('❌ KPI 更新失敗:', error);
+    
+    if (!this.checkPermission('reload')) {
+        this.showNotification('您沒有重新載入資料的權限', 'error');
+        return;
     }
-}
-
-// 🔥 新增方法：後台更新數據（非阻塞）
-async updateDataInBackground() {
-    console.log('🔄 後台正在更新數據...');
+    
+    this.showLoading(true);
     
     try {
-        // 🔥 調用新的統一 API（見後端方案）
-        const result = await this.callGAS('getAllDataAtOnce');
+        // 顯示載入動畫
+        document.getElementById('tasks-loading').classList.add('show');
+        document.getElementById('vehicles-loading').classList.add('show');
+        document.getElementById('drivers-loading').classList.add('show');
         
-        if (result.success && result.data) {
-            const { tasks, drivers, vehicles } = result.data;
-            
-            console.log(`✅ 後台取得新資料: 任務${tasks.length}, 司機${drivers.length}, 車輛${vehicles.length}`);
-            
-            // 更新本地數據
-            this.tasks = tasks || [];
-            this.drivers = drivers || [];
-            this.vehicles = vehicles || [];
-            
-            // 🔥 保存到緩存（1 小時過期）
-            await Promise.all([
-                cacheManager.saveCache('tasks', this.tasks, 3600000),
-                cacheManager.saveCache('drivers', this.drivers, 3600000),
-                cacheManager.saveCache('vehicles', this.vehicles, 3600000)
-            ]);
-            
-            // 重新渲染（如果數據有變化）
-            this.renderAll();
-            this.updateKPI();
-            this.hideSkeletonScreen();
-            this.checkAlerts();
-            
-            console.log('✅ === 資料更新完成 ===');
-            this.showNotification('✅ 資料已更新到最新版本', 'success');
-            
-        } else {
-            console.warn('⚠️ 後端 API 返回失敗:', result.error);
-            // 使用緩存數據，但不顯示成功訊息
-            this.showNotification('⚠️ 無法連接伺服器，使用快取資料', 'warning');
-        }
+        const [tasksRes, driversRes, vehiclesRes] = await Promise.all([
+            this.callGAS('getTasks'),
+            this.callGAS('getDrivers'),
+            this.callGAS('getVehicles')
+        ]);
+        
+        if (tasksRes.success) this.tasks = tasksRes.data || [];
+        if (driversRes.success) this.drivers = driversRes.data || [];
+        if (vehiclesRes.success) this.vehicles = vehiclesRes.data || [];
+        
+        this.renderAll();
+        this.updateKPI();
+        this.checkAlerts();
+        
+        this.showNotification('資料定位完成', 'success');
         
     } catch (error) {
-        console.error('❌ 後台更新失敗:', error);
-        // 保持緩存數據繼續使用，不中斷用戶體驗
-        console.log('💾 保持使用快取資料...');
+        console.error('載入資料失敗:', error);
+        this.showNotification('載入資料失敗，請重試', 'error');
+    } finally {
+        this.showLoading(false);
     }
 }
 
@@ -5128,37 +4825,39 @@ async updateDataInBackground() {
             document.getElementById('r-tasks').textContent = rTasks || 0;
         }
         
-
-
-// 🔥 輔助方法：更新 KPI 顯示
-updateKPIDisplay(stats) {
-    try {
-        if (stats.totalTasks !== undefined) {
-            document.getElementById('total-tasks').textContent = stats.totalTasks || 0;
-            document.getElementById('p-tasks').textContent = stats.b3Tasks || 0;
-            document.getElementById('q-tasks').textContent = stats.b2Tasks || 0;
-            document.getElementById('r-tasks').textContent = stats.b1Tasks || 0;
-            document.getElementById('assign-rate').textContent = `${stats.assignRate || 0}%`;
-            document.getElementById('available-vehicles').textContent = stats.availableVehicles || 42;
-            document.getElementById('available-drivers').textContent = stats.availableDrivers || 62;
-            console.log('✅ KPI 顯示已更新');
-        }
-    } catch (error) {
-        console.warn('⚠️ KPI 顯示更新失敗:', error);
+// 更新 KPI 數據
+async updateKPI() {
+    // 🔥 新增：檢查是否暫停更新
+    if (window.pauseAutoUpdate) {
+        console.log('KPI 更新已暫停');
+        return;
     }
-}
-
-// 🔥 後台更新統計（不阻塞）
-async updateStatsInBackground() {
+    
     try {
-        const result = await this.callGAS('getTaskStats');
-        if (result.success && result.data) {
-            await cacheManager.saveCache('stats', result.data, 1800000);
-            this.updateKPIDisplay(result.data);
-            console.log('✅ 統計資料已在後台更新');
+        // 調用新的統計API
+        const statsResult = await this.callGAS('getTaskStats');
+        
+        if (statsResult && statsResult.success) {
+            const stats = statsResult.data;
+            
+            // 🔥 新增：檢查數據有效性
+            if (stats.totalTasks !== undefined && stats.totalTasks !== null) {
+                document.getElementById('total-tasks').textContent = stats.totalTasks || 0;
+                document.getElementById('p-tasks').textContent = stats.b3Tasks || 0;
+                document.getElementById('q-tasks').textContent = stats.b2Tasks || 0;
+                document.getElementById('r-tasks').textContent = stats.b1Tasks || 0;
+                document.getElementById('assign-rate').textContent = `${stats.assignRate || 0}%`;
+                document.getElementById('available-vehicles').textContent = 42;
+                document.getElementById('available-drivers').textContent = stats.availableDrivers || 62;
+                
+                
+            }
+        } else {
+            this.updateKPIFallback();
         }
     } catch (error) {
-        console.warn('⚠️ 後台統計更新失敗', error);
+        console.error('更新KPI錯誤:', error);
+        this.updateKPIFallback();
     }
 }
 
@@ -6504,77 +6203,7 @@ async function highlightMatchingRelations(taskId) {
         showNotification('顯示配對關係失敗: ' + error.message, 'error');
     }
 }
-// ============================================================
-// 🔥 緩存管理相關全局函數
-// 粘貼位置：全局函數區末尾
-// ============================================================
 
-// 手動清除所有緩存
-function clearAllCacheData() {
-    const confirmed = confirm(
-        '⚠️ 確定要清除所有快取資料嗎？\n\n' +
-        '這將強制從伺服器重新載入所有資料。\n' +
-        '首屏加載會需要 10 秒左右。'
-    );
-    
-    if (confirmed) {
-        cacheManager.clearAllCache();
-        app.showNotification('✅ 快取已清除，即將重新載入...', 'success');
-        
-        // 1 秒後重新載入頁面
-        setTimeout(() => {
-            location.reload();
-        }, 1000);
-    }
-}
-
-// 顯示緩存狀態
-function showCacheStatus() {
-    const status = cacheManager.getCacheStatus();
-    const statusText = Object.entries(status)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join('\n');
-    
-    const message = 
-        '📊 快取狀態\n' +
-        '═══════════════════\n' +
-        statusText + '\n' +
-        '═══════════════════\n' +
-        '\n' +
-        '💡 提示：\n' +
-        '- 快取會自動在 1 小時後過期\n' +
-        '- 如果數據不同步，可清除快取\n' +
-        '- 清除後首屏加載需要 10 秒';
-    
-    alert(message);
-}
-
-// 驗證緩存可用性
-function validateCacheSystem() {
-    try {
-        localStorage.setItem('test_key', 'test_value');
-        const value = localStorage.getItem('test_key');
-        localStorage.removeItem('test_key');
-        
-        if (value === 'test_value') {
-            console.log('✅ 快取系統正常運行');
-            return true;
-        } else {
-            console.error('❌ localStorage 無法正確讀寫');
-            return false;
-        }
-    } catch (error) {
-        console.error('❌ 快取系統異常:', error);
-        return false;
-    }
-}
-
-// 暴露到全局作用域
-window.clearAllCacheData = clearAllCacheData;
-window.showCacheStatus = showCacheStatus;
-window.validateCacheSystem = validateCacheSystem;
-
-console.log('✅ 全局快取管理函數已註冊');
 
 
 
