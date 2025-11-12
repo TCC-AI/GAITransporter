@@ -5126,7 +5126,7 @@ async updateKPI() {
             const assignedTasks = this.tasks.filter(t => t['配送狀態'] === '已派');
             
             if (assignedTasks.length === 0) {
-                this.showNotification('沒有已指派的任務可以發佈', 'warning');
+                this.showNotification('任務發派完成!', 'warning');
                 return;
             }
             
